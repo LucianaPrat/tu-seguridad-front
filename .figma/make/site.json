@@ -1,0 +1,10 @@
+{
+  "description": "Enables users to upload detailed documents and example designs to visualize styles, colors, and sizes for effective project planning.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
