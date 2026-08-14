@@ -22,14 +22,37 @@ pnpm is the package manager. `.mise.toml` pins pnpm 10.34.3.
 | `pnpm build` | Production build to `dist/` |
 | `pnpm preview` | Serve the built output |
 | `pnpm typecheck` | `tsc --noEmit` |
-| `pnpm lint` | `oxfmt --check src` — format check, not a linter |
 | `pnpm test` | Vitest, single run |
 | `pnpm test:watch` | Vitest watch mode |
 | `pnpm test:coverage` | Vitest with v8 coverage |
-| `pnpm verify` | typecheck, lint, test, build — run before every commit |
-| `pnpm format` | oxfmt, writes changes |
+| `pnpm verify` | typecheck, test, build — run before every commit |
+| `pnpm lint` | `oxfmt --check src`. Currently fails repo-wide. See below |
+| `pnpm format` | **Do not run.** Corrupts TypeScript. See below |
 
-No ESLint in this repo. `lint` checks formatting only.
+No ESLint in this repo.
+
+### Do not run `pnpm format`
+
+oxfmt 0.2.0 drops the `;` member separator inside single-line TypeScript type
+literals and writes nothing in its place, producing code that does not parse:
+
+```ts
+// before
+children?: { label: string; to: string }[]
+// after oxfmt
+children?: { label: string to: string }[]   // TS1005: ';' expected
+```
+
+Reproducible on a 7-line file. It hits pre-existing code too —
+`src/components/layout/Sidebar.tsx` and any inline type literal.
+
+So `pnpm lint` fails on 45 of 55 files and its autofix cannot be trusted.
+Formatting is therefore not enforced, and `verify` deliberately excludes it.
+Match the style of the file you are editing.
+
+Unblocking it is a tooling decision for the repo owner: upgrade oxfmt once the
+bug is fixed upstream, or swap in Prettier. Do not paper over it by running
+`format` and committing the damage.
 
 ## Stack
 

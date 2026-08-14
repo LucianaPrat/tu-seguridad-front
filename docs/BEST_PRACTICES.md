@@ -23,6 +23,25 @@ Ops + tooling lessons from building this repo. Not architecture (see [`ARCHITECT
 - If `mise` is not on PATH, your shell may silently fall back to an nvm Node. `which node` before blaming the code.
 - `.mise.toml` pins pnpm 10.34.3. A different local pnpm still installs fine, but lockfile churn is on you.
 
+## oxfmt corrupts TypeScript — do not run `pnpm format`
+
+oxfmt 0.2.0 removes the `;` member separator inside single-line type literals and puts nothing in its place. Result does not parse.
+
+```ts
+children?: { label: string; to: string }[]   // before
+children?: { label: string to: string }[]    // after — TS1005: ';' expected
+```
+
+Reproducible on a 7-line file, so it is the formatter, not our code. It damages pre-existing Figma-exported code as well — `src/components/layout/Sidebar.tsx` has exactly that shape.
+
+Consequences, all deliberate:
+
+- `pnpm verify` runs typecheck, test and build only. Formatting is not enforced.
+- `pnpm lint` (`oxfmt --check src`) fails on 45 of 55 files. That is expected; the tree was never oxfmt-formatted, and formatting it would break the build.
+- If you run `format` by accident, `git checkout -- src/` restores it. Confirm with `pnpm typecheck` before committing anything.
+
+Fix is a repo-owner call: upgrade oxfmt after the upstream fix, or replace it with Prettier. Until then, match the style of the file you are editing.
+
 ## Tailwind v4 + shadcn/ui
 
 - `pnpm dlx shadcn@latest init` prompts for a preset with no flag to skip it, so it hangs a non-interactive shell and writes nothing. Hand-write `components.json` instead, then `shadcn add <component> -y` works unattended.
