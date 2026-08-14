@@ -15,7 +15,7 @@ export default function CameraMonitorPage() {
   const selected = cameras.find((c) => c.id === selectedId)!
 
   function updateCamera(patch: Partial<Camera>) {
-    setCameras((cs) => cs.map((c) => c.id === selectedId ? { ...c, ...patch } : c))
+    setCameras((cs) => cs.map((c) => (c.id === selectedId ? { ...c, ...patch } : c)))
   }
 
   function handleZonesChange(zones: MonitorZone[]) {
@@ -23,7 +23,9 @@ export default function CameraMonitorPage() {
   }
 
   function handleZoneAlertType(id: string, type: AlertType) {
-    updateCamera({ zones: selected.zones.map((z) => z.id === id ? { ...z, alertType: type } : z) })
+    updateCamera({
+      zones: selected.zones.map((z) => (z.id === id ? { ...z, alertType: type } : z)),
+    })
   }
 
   function handleSave() {
@@ -46,7 +48,9 @@ export default function CameraMonitorPage() {
       <div className="flex gap-5 min-h-0">
         {/* Camera list */}
         <div className="w-52 shrink-0">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Cámaras</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+            Cámaras
+          </p>
           <ul className="flex flex-col gap-1">
             {cameras.map((cam) => (
               <li key={cam.id}>
@@ -59,7 +63,9 @@ export default function CameraMonitorPage() {
                   }`}
                 >
                   <p className="font-medium truncate">{cam.name}</p>
-                  <p className={`text-xs truncate ${cam.id === selectedId ? "text-white/70" : "text-gray-400"}`}>
+                  <p
+                    className={`text-xs truncate ${cam.id === selectedId ? "text-white/70" : "text-gray-400"}`}
+                  >
                     {cam.location}
                   </p>
                 </button>
@@ -72,7 +78,9 @@ export default function CameraMonitorPage() {
         <div className="flex-1 min-w-0 flex flex-col gap-4">
           {/* Camera name */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <label className="text-sm font-medium text-gray-700 block mb-1.5">Nombre personalizado</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1.5">
+              Nombre personalizado
+            </label>
             <input
               value={selected.name}
               onChange={(e) => updateCamera({ name: e.target.value })}

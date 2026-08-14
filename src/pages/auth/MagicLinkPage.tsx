@@ -42,8 +42,9 @@ export default function MagicLinkPage() {
           <div>
             <p className="font-semibold text-foreground">Revisá tu correo</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Enviamos un enlace de acceso a <span className="font-medium text-secondary-foreground">{sentTo}</span>.
-              Hacé clic en el enlace para ingresar automáticamente.
+              Enviamos un enlace de acceso a{" "}
+              <span className="font-medium text-secondary-foreground">{sentTo}</span>. Hacé clic en
+              el enlace para ingresar automáticamente.
             </p>
           </div>
           <p className="text-xs text-muted-foreground mt-1">

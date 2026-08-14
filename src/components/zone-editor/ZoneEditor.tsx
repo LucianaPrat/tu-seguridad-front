@@ -25,7 +25,12 @@ const ALERT_BORDER: Record<AlertType, string> = {
   sospechoso: "#f59e0b",
 }
 
-export default function ZoneEditor({ imageUrl, zones, onChange, defaultAlertType }: ZoneEditorProps) {
+export default function ZoneEditor({
+  imageUrl,
+  zones,
+  onChange,
+  defaultAlertType,
+}: ZoneEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
 
@@ -44,7 +49,7 @@ export default function ZoneEditor({ imageUrl, zones, onChange, defaultAlertType
   function onMouseMove(e: React.MouseEvent) {
     if (!drag) return
     const { x, y } = getRelative(e)
-    setDrag((d) => d ? { ...d, currentX: x, currentY: y } : d)
+    setDrag((d) => (d ? { ...d, currentX: x, currentY: y } : d))
   }
 
   function onMouseUp() {
@@ -103,7 +108,10 @@ export default function ZoneEditor({ imageUrl, zones, onChange, defaultAlertType
             {zone.alertType === "intruso" ? "Intruso" : "Sospechoso"}
             <button
               className="ml-1 hover:opacity-70"
-              onMouseDown={(e) => { e.stopPropagation(); removeZone(zone.id) }}
+              onMouseDown={(e) => {
+                e.stopPropagation()
+                removeZone(zone.id)
+              }}
             >
               ×
             </button>

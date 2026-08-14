@@ -35,7 +35,8 @@ export default function TopBar() {
             />
           ) : (
             <div className="w-7 h-7 rounded-full bg-[#1a6b61] flex items-center justify-center text-white text-xs font-semibold">
-              {user?.firstName?.[0]}{user?.lastName?.[0]}
+              {user?.firstName?.[0]}
+              {user?.lastName?.[0]}
             </div>
           )}
           <span className="text-sm font-medium text-gray-800">{user?.firstName}</span>
@@ -47,7 +48,10 @@ export default function TopBar() {
             <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
             <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg py-1 w-44">
               <button
-                onClick={() => { navigate("/profile"); setMenuOpen(false) }}
+                onClick={() => {
+                  navigate("/profile")
+                  setMenuOpen(false)
+                }}
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
               >
                 Mi perfil

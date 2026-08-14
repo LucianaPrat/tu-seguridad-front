@@ -23,24 +23,25 @@ Ops + tooling lessons from building this repo. Not architecture (see [`ARCHITECT
 - If `mise` is not on PATH, your shell may silently fall back to an nvm Node. `which node` before blaming the code.
 - `.mise.toml` pins pnpm 10.34.3. A different local pnpm still installs fine, but lockfile churn is on you.
 
-## oxfmt corrupts TypeScript — do not run `pnpm format`
+## oxfmt: never go below 0.63.0
 
-oxfmt 0.2.0 removes the `;` member separator inside single-line type literals and puts nothing in its place. Result does not parse.
+The Figma Make scaffold pinned oxfmt `0.2.0`. That version removes the `;` member separator inside single-line type literals and puts nothing in its place, so the output does not parse:
 
 ```ts
 children?: { label: string; to: string }[]   // before
-children?: { label: string to: string }[]    // after — TS1005: ';' expected
+children?: { label: string to: string }[]    // after 0.2.0 — TS1005: ';' expected
 ```
 
-Reproducible on a 7-line file, so it is the formatter, not our code. It damages pre-existing Figma-exported code as well — `src/components/layout/Sidebar.tsx` has exactly that shape.
+Reproducible on a 7-line file, so it was the formatter, not our code. It damaged pre-existing Figma-exported code too — `src/components/layout/Sidebar.tsx` has exactly that shape. Nobody caught it because nobody had ever run `pnpm format`.
 
-Consequences, all deliberate:
+Fixed by upgrading to `0.63.0` (the scaffold was 61 minor versions behind). Same repro now round-trips correctly and `pnpm verify` stays green.
 
-- `pnpm verify` runs typecheck, test and build only. Formatting is not enforced.
-- `pnpm lint` (`oxfmt --check src`) fails on 45 of 55 files. That is expected; the tree was never oxfmt-formatted, and formatting it would break the build.
-- If you run `format` by accident, `git checkout -- src/` restores it. Confirm with `pnpm typecheck` before committing anything.
+Two things worth knowing:
 
-Fix is a repo-owner call: upgrade oxfmt after the upstream fix, or replace it with Prettier. Until then, match the style of the file you are editing.
+- Upgrading alone is not enough. 0.63.0 defaults to `semi: true` and this codebase has no semicolons, so a bare upgrade rewrites every statement. `.oxfmtrc.json` sets `semi: false` plus the rest of the house style. Do not delete it.
+- Format scope is `src`. Keep `vite.config.ts` out of it — Figma Make regenerates that file.
+
+If a format run ever produces something suspicious, `git checkout -- src/` restores it; confirm with `pnpm typecheck` before committing.
 
 ## Tailwind v4 + shadcn/ui
 

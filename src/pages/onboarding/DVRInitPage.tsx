@@ -27,11 +27,7 @@ export default function DVRInitPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <DVRForm
-            onSubmit={handleSubmit}
-            submitLabel="Conectar y continuar"
-            showTestConnection
-          />
+          <DVRForm onSubmit={handleSubmit} submitLabel="Conectar y continuar" showTestConnection />
         </div>
       </div>
     </div>

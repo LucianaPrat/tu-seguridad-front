@@ -45,11 +45,15 @@ export function AppRoutes() {
       <Route
         path="/login"
         element={
-          isLoggedIn
-            ? isDVRInit
-              ? <Navigate to="/" replace />
-              : <Navigate to="/onboarding/dvr" replace />
-            : <LoginPage />
+          isLoggedIn ? (
+            isDVRInit ? (
+              <Navigate to="/" replace />
+            ) : (
+              <Navigate to="/onboarding/dvr" replace />
+            )
+          ) : (
+            <LoginPage />
+          )
         }
       />
       <Route path="/register" element={<RegisterPage />} />
@@ -61,20 +65,67 @@ export function AppRoutes() {
       <Route
         path="/onboarding/dvr"
         element={
-          <RequireAuth>
-            {isDVRInit ? <Navigate to="/" replace /> : <DVRInitPage />}
-          </RequireAuth>
+          <RequireAuth>{isDVRInit ? <Navigate to="/" replace /> : <DVRInitPage />}</RequireAuth>
         }
       />
 
       {/* App routes */}
-      <Route path="/" element={<RequireDVR><DashboardPage /></RequireDVR>} />
-      <Route path="/dvr-config" element={<RequireDVR><DVRConfigPage /></RequireDVR>} />
-      <Route path="/cameras/monitor" element={<RequireDVR><CameraMonitorPage /></RequireDVR>} />
-      <Route path="/events" element={<RequireDVR><EventsPage /></RequireDVR>} />
-      <Route path="/members" element={<RequireDVR><MembersPage /></RequireDVR>} />
-      <Route path="/channels" element={<RequireDVR><CommChannelsPage /></RequireDVR>} />
-      <Route path="/profile" element={<RequireDVR><ProfilePage /></RequireDVR>} />
+      <Route
+        path="/"
+        element={
+          <RequireDVR>
+            <DashboardPage />
+          </RequireDVR>
+        }
+      />
+      <Route
+        path="/dvr-config"
+        element={
+          <RequireDVR>
+            <DVRConfigPage />
+          </RequireDVR>
+        }
+      />
+      <Route
+        path="/cameras/monitor"
+        element={
+          <RequireDVR>
+            <CameraMonitorPage />
+          </RequireDVR>
+        }
+      />
+      <Route
+        path="/events"
+        element={
+          <RequireDVR>
+            <EventsPage />
+          </RequireDVR>
+        }
+      />
+      <Route
+        path="/members"
+        element={
+          <RequireDVR>
+            <MembersPage />
+          </RequireDVR>
+        }
+      />
+      <Route
+        path="/channels"
+        element={
+          <RequireDVR>
+            <CommChannelsPage />
+          </RequireDVR>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <RequireDVR>
+            <ProfilePage />
+          </RequireDVR>
+        }
+      />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

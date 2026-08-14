@@ -66,14 +66,21 @@ export default function CommChannelsPage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100">
             <h2 className="text-sm font-semibold text-gray-900">Enrutamiento de alertas</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Seleccioná los canales que se usan para cada tipo de alerta.</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Seleccioná los canales que se usan para cada tipo de alerta.
+            </p>
           </div>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-50">
-                <th className="text-left px-5 py-2.5 text-xs font-semibold text-gray-500">Tipo de alerta</th>
+                <th className="text-left px-5 py-2.5 text-xs font-semibold text-gray-500">
+                  Tipo de alerta
+                </th>
                 {ALL_CHANNELS.map((ch) => (
-                  <th key={ch} className="text-center px-4 py-2.5 text-xs font-semibold text-gray-500">
+                  <th
+                    key={ch}
+                    className="text-center px-4 py-2.5 text-xs font-semibold text-gray-500"
+                  >
                     <span className="flex flex-col items-center gap-1">
                       {CHANNEL_ICONS[ch]}
                       {CHANNEL_LABELS[ch]}
@@ -106,26 +113,39 @@ export default function CommChannelsPage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100">
             <h2 className="text-sm font-semibold text-gray-900">Destinatarios de alertas</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Activá o desactivá quiénes reciben las alertas del espacio.</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Activá o desactivá quiénes reciben las alertas del espacio.
+            </p>
           </div>
           <ul className="divide-y divide-gray-50">
             {MEMBERS.map((member) => (
               <li key={member.id} className="flex items-center justify-between px-5 py-3">
                 <div className="flex items-center gap-3">
                   {member.avatarUrl ? (
-                    <img src={member.avatarUrl} alt={member.firstName} className="w-8 h-8 rounded-full object-cover" />
+                    <img
+                      src={member.avatarUrl}
+                      alt={member.firstName}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-[#1a6b61] flex items-center justify-center text-white text-xs font-semibold shrink-0">
-                      {member.firstName[0]}{member.lastName[0]}
+                      {member.firstName[0]}
+                      {member.lastName[0]}
                     </div>
                   )}
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{member.firstName} {member.lastName}</p>
-                    <p className="text-xs text-gray-400">{member.email} · {member.phone}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {member.firstName} {member.lastName}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {member.email} · {member.phone}
+                    </p>
                   </div>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-xs text-gray-500">{memberAlerts[member.id] ? "Activo" : "Inactivo"}</span>
+                  <span className="text-xs text-gray-500">
+                    {memberAlerts[member.id] ? "Activo" : "Inactivo"}
+                  </span>
                   <div
                     onClick={() => toggleMember(member.id)}
                     className={`w-9 h-5 rounded-full transition-colors relative cursor-pointer ${

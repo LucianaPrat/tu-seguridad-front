@@ -20,9 +20,7 @@ export default function AuthCard({ title, subtitle, children }: AuthCardProps) {
           {subtitle && <p className="text-sm text-gray-500 mt-1 text-center">{subtitle}</p>}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          {children}
-        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">{children}</div>
       </div>
     </div>
   )

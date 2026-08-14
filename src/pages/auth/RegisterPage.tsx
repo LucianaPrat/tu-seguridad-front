@@ -62,13 +62,47 @@ export default function RegisterPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <FormField label="Nombre" placeholder="Luciana" error={errors.firstName?.message} {...register("firstName")} />
-          <FormField label="Apellido" placeholder="García" error={errors.lastName?.message} {...register("lastName")} />
+          <FormField
+            label="Nombre"
+            placeholder="Luciana"
+            error={errors.firstName?.message}
+            {...register("firstName")}
+          />
+          <FormField
+            label="Apellido"
+            placeholder="García"
+            error={errors.lastName?.message}
+            {...register("lastName")}
+          />
         </div>
-        <FormField label="Email" type="email" placeholder="nombre@ejemplo.com" error={errors.email?.message} {...register("email")} />
-        <FormField label="Teléfono móvil" type="tel" placeholder="+54 9 11 1234-5678" error={errors.phone?.message} {...register("phone")} />
-        <FormField label="Contraseña" type="password" placeholder="Mínimo 8 caracteres" error={errors.password?.message} {...register("password")} />
-        <FormField label="Repetir contraseña" type="password" placeholder="••••••••" error={errors.repeatPassword?.message} {...register("repeatPassword")} />
+        <FormField
+          label="Email"
+          type="email"
+          placeholder="nombre@ejemplo.com"
+          error={errors.email?.message}
+          {...register("email")}
+        />
+        <FormField
+          label="Teléfono móvil"
+          type="tel"
+          placeholder="+54 9 11 1234-5678"
+          error={errors.phone?.message}
+          {...register("phone")}
+        />
+        <FormField
+          label="Contraseña"
+          type="password"
+          placeholder="Mínimo 8 caracteres"
+          error={errors.password?.message}
+          {...register("password")}
+        />
+        <FormField
+          label="Repetir contraseña"
+          type="password"
+          placeholder="••••••••"
+          error={errors.repeatPassword?.message}
+          {...register("repeatPassword")}
+        />
 
         <Button type="submit" loading={isSubmitting} className="w-full mt-1">
           Crear cuenta
@@ -77,7 +111,9 @@ export default function RegisterPage() {
 
       <p className="text-center text-sm text-muted-foreground mt-5">
         ¿Ya tenés cuenta?{" "}
-        <Link to="/login" className="text-primary font-medium hover:underline">Ingresar</Link>
+        <Link to="/login" className="text-primary font-medium hover:underline">
+          Ingresar
+        </Link>
       </p>
     </AuthCard>
   )

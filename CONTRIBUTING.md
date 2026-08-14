@@ -31,6 +31,6 @@ PR titles and descriptions on this repo always written in English, caveman-full 
 - GitHub repo's canonical casing is `LucianaPrat/tu-seguridad-front`. `gh api`-backed commands need that exact case or 404 — `git push`/`clone` redirect fine regardless of case.
 - `git worktree add` only checks out committed history. `.env` and any other untracked/uncommitted work do NOT come along automatically — copy them in by hand before running anything that needs them in a new worktree.
 
-Before your first commit, run `pnpm verify` — typecheck, tests, build in one shot. Needs Node 22; Node 20 breaks the test run. Do NOT run `pnpm format`: oxfmt 0.2.0 corrupts TypeScript type literals, details in [`docs/BEST_PRACTICES.md`](docs/BEST_PRACTICES.md).
+Before your first commit, run `pnpm verify` — typecheck, format check, tests, build in one shot. Needs Node 22; Node 20 breaks the test run. `pnpm format` fixes formatting complaints.
 
 How the frontend is put together: [`ARCHITECTURE.md`](ARCHITECTURE.md). Agent conventions and commands: [`AGENTS.md`](AGENTS.md). More tooling gotchas (Node version, shadcn CLI, Vitest, dev loop): [`docs/BEST_PRACTICES.md`](docs/BEST_PRACTICES.md).

@@ -75,18 +75,26 @@ export default function ProfilePage() {
                   <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-primary-foreground text-xl font-semibold">
-                    {firstName[0]}{lastName[0]}
+                    {firstName[0]}
+                    {lastName[0]}
                   </span>
                 )}
               </div>
               <label className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border shadow flex items-center justify-center cursor-pointer hover:bg-accent">
                 <Camera size={12} className="text-muted-foreground" />
                 <span className="sr-only">Cambiar foto de perfil</span>
-                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
               </label>
             </div>
             <div>
-              <p className="font-medium text-foreground">{firstName} {lastName}</p>
+              <p className="font-medium text-foreground">
+                {firstName} {lastName}
+              </p>
               <p className="text-sm text-muted-foreground">{email}</p>
             </div>
           </div>
@@ -122,7 +130,9 @@ export default function ProfilePage() {
             />
 
             <div className="flex items-center gap-3 pt-1">
-              <Button type="submit" icon={<Save size={14} />}>Guardar cambios</Button>
+              <Button type="submit" icon={<Save size={14} />}>
+                Guardar cambios
+              </Button>
               {profileSaved && (
                 <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
                   <CheckCircle size={14} /> Guardado
@@ -165,7 +175,9 @@ export default function ProfilePage() {
               {...passwordForm.register("repeat")}
             />
             <div className="flex items-center gap-3 pt-1">
-              <Button type="submit" variant="secondary">Cambiar contraseña</Button>
+              <Button type="submit" variant="secondary">
+                Cambiar contraseña
+              </Button>
               {passSaved && (
                 <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
                   <CheckCircle size={14} /> Contraseña actualizada

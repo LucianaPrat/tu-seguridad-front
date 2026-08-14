@@ -36,7 +36,10 @@ export default function PasswordRecoveryPage() {
           <p className="text-sm text-muted-foreground mt-1">
             Si el email está registrado, recibirás el enlace de restablecimiento.
           </p>
-          <Link to="/login" className="inline-block mt-5 text-sm text-primary font-medium hover:underline">
+          <Link
+            to="/login"
+            className="inline-block mt-5 text-sm text-primary font-medium hover:underline"
+          >
             Volver al inicio
           </Link>
         </div>
@@ -56,7 +59,9 @@ export default function PasswordRecoveryPage() {
             Enviar enlace de restablecimiento
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            <Link to="/login" className="text-primary hover:underline">Volver al inicio</Link>
+            <Link to="/login" className="text-primary hover:underline">
+              Volver al inicio
+            </Link>
           </p>
         </form>
       )}

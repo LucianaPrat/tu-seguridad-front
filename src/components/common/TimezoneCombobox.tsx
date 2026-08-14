@@ -47,10 +47,7 @@ export default function TimezoneCombobox({ value, onChange, error }: TimezoneCom
             <ChevronsUpDown size={14} className="shrink-0 text-muted-foreground" />
           </button>
         </PopoverTrigger>
-        <PopoverContent
-          align="start"
-          className="w-[var(--radix-popover-trigger-width)] p-0"
-        >
+        <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-0">
           <Command>
             <CommandInput placeholder="Buscar zona horaria..." />
             <CommandList>
@@ -65,7 +62,9 @@ export default function TimezoneCombobox({ value, onChange, error }: TimezoneCom
                       setOpen(false)
                     }}
                   >
-                    <Check className={cn("size-4", tz.iana === value ? "opacity-100" : "opacity-0")} />
+                    <Check
+                      className={cn("size-4", tz.iana === value ? "opacity-100" : "opacity-0")}
+                    />
                     <span className="flex-1">{tz.iana}</span>
                     <span className="ml-2 shrink-0 text-xs text-muted-foreground">{tz.offset}</span>
                   </CommandItem>

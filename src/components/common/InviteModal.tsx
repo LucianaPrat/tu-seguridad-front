@@ -47,12 +47,15 @@ export default function InviteModal({ open, onClose }: InviteModalProps) {
           <p className="text-sm text-muted-foreground mt-1">
             Revisá el correo. Si el email está disponible, recibirá el enlace de acceso.
           </p>
-          <Button variant="secondary" className="mt-4" onClick={handleClose}>Cerrar</Button>
+          <Button variant="secondary" className="mt-4" onClick={handleClose}>
+            Cerrar
+          </Button>
         </div>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
           <p className="text-sm text-secondary-foreground">
-            Ingresá el email de la persona que querés invitar al espacio. Le llegará un enlace de acceso.
+            Ingresá el email de la persona que querés invitar al espacio. Le llegará un enlace de
+            acceso.
           </p>
           <FormField
             label="Email"
@@ -62,7 +65,9 @@ export default function InviteModal({ open, onClose }: InviteModalProps) {
             {...register("email")}
           />
           <div className="flex justify-end gap-2 pt-1">
-            <Button variant="secondary" type="button" onClick={handleClose}>Cancelar</Button>
+            <Button variant="secondary" type="button" onClick={handleClose}>
+              Cancelar
+            </Button>
             <Button type="submit" loading={isSubmitting} icon={<Send size={14} />}>
               Enviar invitación
             </Button>

@@ -2,7 +2,15 @@ import { Badge as ShadcnBadge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 interface BadgeProps {
-  variant: "online" | "offline" | "intruso" | "sospechoso" | "configured" | "unconfigured" | "active" | "inactive"
+  variant:
+    | "online"
+    | "offline"
+    | "intruso"
+    | "sospechoso"
+    | "configured"
+    | "unconfigured"
+    | "active"
+    | "inactive"
   label?: string
   className?: string
 }
@@ -43,7 +51,9 @@ export default function Badge({ variant, label, className }: BadgeProps) {
 
   return (
     <ShadcnBadge variant="outline" className={cn(VARIANTS[variant], className)}>
-      {dot && <span aria-hidden="true" className={cn("w-1.5 h-1.5 rounded-full inline-block", dot)} />}
+      {dot && (
+        <span aria-hidden="true" className={cn("w-1.5 h-1.5 rounded-full inline-block", dot)} />
+      )}
       {label ?? DEFAULT_LABELS[variant]}
     </ShadcnBadge>
   )
