@@ -1,7 +1,7 @@
 import { useState } from "react"
 import AppShell from "@/components/layout/AppShell"
-import PageHeader from "@/components/ui/PageHeader"
-import Badge from "@/components/ui/Badge"
+import PageHeader from "@/components/common/PageHeader"
+import Badge from "@/components/common/Badge"
 import { EVENTS, type AlertType } from "@/data/mockData"
 import { Filter, CheckCircle, Clock, Phone, Mail, MessageSquare } from "lucide-react"
 

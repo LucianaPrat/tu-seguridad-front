@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom"
-import { useSession } from "@/context/SessionContext"
+import { useSessionStore } from "@/stores/sessionStore"
 import DVRForm, { type DVRFormValues } from "@/components/dvr/DVRForm"
 import { Shield } from "lucide-react"
 
 export default function DVRInitPage() {
-  const { initDVR } = useSession()
+  const { initDVR } = useSessionStore()
   const navigate = useNavigate()
 
   function handleSubmit(values: DVRFormValues) {

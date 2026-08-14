@@ -11,3 +11,6 @@ logs/
 *.log
 .claude-replay.*
 .tmp-*
+coverage/
+.claude/worktrees/
+.claude/settings.local.json

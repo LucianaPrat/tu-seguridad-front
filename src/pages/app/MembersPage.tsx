@@ -1,9 +1,9 @@
 import { useState } from "react"
 import AppShell from "@/components/layout/AppShell"
-import PageHeader from "@/components/ui/PageHeader"
-import Button from "@/components/ui/Button"
-import Badge from "@/components/ui/Badge"
-import InviteModal from "@/components/ui/InviteModal"
+import PageHeader from "@/components/common/PageHeader"
+import Button from "@/components/common/Button"
+import Badge from "@/components/common/Badge"
+import InviteModal from "@/components/common/InviteModal"
 import { MEMBERS } from "@/data/mockData"
 import { UserPlus } from "lucide-react"
 

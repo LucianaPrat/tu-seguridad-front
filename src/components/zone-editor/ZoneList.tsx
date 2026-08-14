@@ -1,6 +1,6 @@
 import { Trash2 } from "lucide-react"
 import type { AlertType, MonitorZone } from "@/data/mockData"
-import Badge from "@/components/ui/Badge"
+import Badge from "@/components/common/Badge"
 
 interface ZoneListProps {
   zones: MonitorZone[]

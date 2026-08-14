@@ -1,9 +1,13 @@
-import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import AuthCard from "@/components/auth/AuthCard"
-import FormField from "@/components/ui/FormField"
-import Button from "@/components/ui/Button"
-import { useSession } from "@/context/SessionContext"
+import FormField from "@/components/common/FormField"
+import Button from "@/components/common/Button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useSessionStore } from "@/stores/sessionStore"
+import { loginSchema, type LoginValues } from "@/lib/schemas"
 import { Mail } from "lucide-react"
 
 // Face-Auth icon
@@ -17,30 +21,22 @@ function FaceAuthIcon() {
 }
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [emailError, setEmailError] = useState("")
-  const [passError, setPassError] = useState("")
-  const [loading, setLoading] = useState(false)
-
-  const { login } = useSession()
+  const { login } = useSessionStore()
   const navigate = useNavigate()
 
-  function validateEmail(val: string) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
-  }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  })
 
-  function handleLogin(e: React.FormEvent) {
-    e.preventDefault()
-    let valid = true
-    if (!validateEmail(email)) { setEmailError("Ingresá un email válido"); valid = false } else setEmailError("")
-    if (!password) { setPassError("Ingresá tu contraseña"); valid = false } else setPassError("")
-    if (!valid) return
-    setLoading(true)
-    setTimeout(() => {
-      login(email)
-      navigate("/onboarding/dvr")
-    }, 800)
+  async function onSubmit(values: LoginValues) {
+    await new Promise((resolve) => setTimeout(resolve, 800))
+    login(values.email)
+    navigate("/onboarding/dvr")
   }
 
   function handleFaceAuth() {
@@ -51,71 +47,78 @@ export default function LoginPage() {
   return (
     <AuthCard title="Iniciar sesión" subtitle="Ingresá a tu panel de seguridad">
       {/* ── Primary form: email + password ── */}
-      <form onSubmit={handleLogin} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
         <FormField
           label="Email"
           type="email"
           placeholder="nombre@ejemplo.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          error={emailError}
+          error={errors.email?.message}
+          {...register("email")}
         />
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="text-sm font-medium text-gray-700">Contraseña</label>
-            <Link to="/auth/recover" className="text-xs text-[#1a6b61] hover:underline">
+        {/* Own layout: recovery link shares the label row, so this field uses
+            the shadcn primitives directly instead of FormField. */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Contraseña</Label>
+            <Link to="/auth/recover" className="text-xs text-primary hover:underline">
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
-          <input
+          <Input
+            id="password"
             type="password"
             placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={`w-full px-3 py-2.5 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-[#1a6b61]/30 focus:border-[#1a6b61] placeholder:text-gray-400 ${
-              passError ? "border-red-400 bg-red-50" : "border-gray-200 bg-white hover:border-gray-300"
-            }`}
+            aria-invalid={Boolean(errors.password)}
+            aria-describedby={errors.password ? "password-error" : undefined}
+            className="h-auto bg-card py-2.5"
+            {...register("password")}
           />
-          {passError && <p className="text-xs text-red-600 mt-1">{passError}</p>}
+          {errors.password && (
+            <p id="password-error" className="text-xs text-destructive">
+              {errors.password.message}
+            </p>
+          )}
         </div>
 
-        <Button type="submit" loading={loading} className="w-full mt-1">
+        <Button type="submit" loading={isSubmitting} className="w-full mt-1">
           Ingresar
         </Button>
       </form>
 
       {/* ── Divider ── */}
       <div className="flex items-center gap-3 my-5">
-        <hr className="flex-1 border-gray-200" />
-        <span className="text-xs text-gray-400 font-medium">o</span>
-        <hr className="flex-1 border-gray-200" />
+        <hr className="flex-1 border-border" />
+        <span className="text-xs text-muted-foreground font-medium">o</span>
+        <hr className="flex-1 border-border" />
       </div>
 
       {/* ── Alternative buttons ── */}
       <div className="flex flex-col gap-3">
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={() => navigate("/auth/magic-link")}
-          className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+          icon={<Mail size={15} className="text-muted-foreground" />}
+          className="w-full"
         >
-          <Mail size={15} className="text-gray-500" />
           Continuar con Magic Link
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={handleFaceAuth}
-          className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+          icon={<FaceAuthIcon />}
+          className="w-full"
         >
-          <FaceAuthIcon />
           Continuar con Face-Auth
-        </button>
+        </Button>
       </div>
 
       {/* ── Register link ── */}
-      <p className="text-center text-sm text-gray-500 mt-5">
+      <p className="text-center text-sm text-muted-foreground mt-5">
         ¿No tenés cuenta?{" "}
-        <Link to="/register" className="text-[#1a6b61] font-medium hover:underline">
+        <Link to="/register" className="text-primary font-medium hover:underline">
           Registrarse
         </Link>
       </p>

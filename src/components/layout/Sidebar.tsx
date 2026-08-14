@@ -12,7 +12,7 @@ import {
   ChevronRight,
   MessageCircle,
 } from "lucide-react"
-import { useSession } from "@/context/SessionContext"
+import { useSessionStore } from "@/stores/sessionStore"
 
 interface NavItem {
   label: string
@@ -59,7 +59,7 @@ function NavItemLink({ item }: { item: NavItem }) {
 }
 
 export default function Sidebar() {
-  const { logout, user } = useSession()
+  const { logout, user } = useSessionStore()
   const navigate = useNavigate()
 
   function handleLogout() {

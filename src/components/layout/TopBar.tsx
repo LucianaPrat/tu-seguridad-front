@@ -1,10 +1,10 @@
 import { Bell, ChevronDown } from "lucide-react"
-import { useSession } from "@/context/SessionContext"
+import { useSessionStore } from "@/stores/sessionStore"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 export default function TopBar() {
-  const { user, logout } = useSession()
+  const { user, logout } = useSessionStore()
   const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
 
