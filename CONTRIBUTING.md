@@ -27,8 +27,10 @@ PR titles and descriptions on this repo always written in English, caveman-full 
 ## Setup gotchas
 
 - Verify git identity before your first commit in a new clone/worktree: `git config user.name` / `user.email` must resolve to repo-level identity (`danielfrascarelli` / `dsanfra@gmail.com`), not whatever your global git config says.
-- `gh` may have more than one account logged in. Confirm push access before pushing: `gh repo view LucianaPrat/tu-seguridad-back --json viewerPermission`. `READ` means switch account: `gh auth switch --user danielfrascarelli`.
-- GitHub repo's canonical casing is `LucianaPrat/tu-seguridad-back`. `gh api`-backed commands need that exact case or 404 — `git push`/`clone` redirect fine regardless of case.
+- `gh` may have more than one account logged in. Confirm push access before pushing: `gh repo view LucianaPrat/tu-seguridad-front --json viewerPermission`. `READ` means switch account: `gh auth switch --user danielfrascarelli`.
+- GitHub repo's canonical casing is `LucianaPrat/tu-seguridad-front`. `gh api`-backed commands need that exact case or 404 — `git push`/`clone` redirect fine regardless of case.
 - `git worktree add` only checks out committed history. `.env` and any other untracked/uncommitted work do NOT come along automatically — copy them in by hand before running anything that needs them in a new worktree.
 
-More tooling gotchas (Prisma, Jest, general dev loop): [`docs/BEST_PRACTICES.md`](docs/BEST_PRACTICES.md).
+Before your first commit, run `pnpm verify` — typecheck, tests, build in one shot. Needs Node 22; Node 20 breaks the test run. Do NOT run `pnpm format`: oxfmt 0.2.0 corrupts TypeScript type literals, details in [`docs/BEST_PRACTICES.md`](docs/BEST_PRACTICES.md).
+
+How the frontend is put together: [`ARCHITECTURE.md`](ARCHITECTURE.md). Agent conventions and commands: [`AGENTS.md`](AGENTS.md). More tooling gotchas (Node version, shadcn CLI, Vitest, dev loop): [`docs/BEST_PRACTICES.md`](docs/BEST_PRACTICES.md).

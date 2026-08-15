@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import { SessionProvider, useSession } from "@/context/SessionContext"
+import { QueryClientProvider } from "@tanstack/react-query"
 import type { ReactNode } from "react"
+import { queryClient } from "@/lib/queryClient"
+import { useSessionStore } from "@/stores/sessionStore"
 
 // Auth pages
 import LoginPage from "@/pages/auth/LoginPage"
@@ -22,20 +24,20 @@ import CommChannelsPage from "@/pages/app/CommChannelsPage"
 import ProfilePage from "@/pages/app/ProfilePage"
 
 function RequireAuth({ children }: { children: ReactNode }) {
-  const { isLoggedIn } = useSession()
+  const { isLoggedIn } = useSessionStore()
   if (!isLoggedIn) return <Navigate to="/login" replace />
   return <>{children}</>
 }
 
 function RequireDVR({ children }: { children: ReactNode }) {
-  const { isLoggedIn, isDVRInit } = useSession()
+  const { isLoggedIn, isDVRInit } = useSessionStore()
   if (!isLoggedIn) return <Navigate to="/login" replace />
   if (!isDVRInit) return <Navigate to="/onboarding/dvr" replace />
   return <>{children}</>
 }
 
-function AppRoutes() {
-  const { isLoggedIn, isDVRInit } = useSession()
+export function AppRoutes() {
+  const { isLoggedIn, isDVRInit } = useSessionStore()
 
   return (
     <Routes>
@@ -82,10 +84,10 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <SessionProvider>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
         <AppRoutes />
-      </SessionProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </QueryClientProvider>
   )
 }

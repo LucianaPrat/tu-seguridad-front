@@ -1,7 +1,7 @@
 import { useState, useRef } from "react"
 import { MoreHorizontal, Radio, Settings } from "lucide-react"
 import type { Camera } from "@/data/mockData"
-import Badge from "@/components/ui/Badge"
+import Badge from "@/components/common/Badge"
 import { useNavigate } from "react-router-dom"
 
 interface CameraCardProps {

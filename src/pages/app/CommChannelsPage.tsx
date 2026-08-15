@@ -1,7 +1,7 @@
 import { useState } from "react"
 import AppShell from "@/components/layout/AppShell"
-import PageHeader from "@/components/ui/PageHeader"
-import Button from "@/components/ui/Button"
+import PageHeader from "@/components/common/PageHeader"
+import Button from "@/components/common/Button"
 import { CHANNEL_CONFIG, MEMBERS, type AlertType, type ChannelType } from "@/data/mockData"
 import { Save, Phone, Mail, MessageSquare } from "lucide-react"
 

@@ -1,32 +1,112 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700&display=swap');
 @import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * shadcn/ui semantic tokens, filled with brand values.
+ * primary/ring carry brand teal #1a6b61, background carries page grey #f4f7f6,
+ * so shadcn primitives look native without per-component overrides.
+ */
+:root {
+  --radius: 0.5rem;
+
+  --background: #f4f7f6;
+  --foreground: #111827;
+  --card: #ffffff;
+  --card-foreground: #111827;
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+  --primary: #1a6b61;
+  --primary-foreground: #ffffff;
+  --secondary: #ffffff;
+  --secondary-foreground: #374151;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #f3f4f6;
+  --accent-foreground: #374151;
+  --destructive: #dc2626;
+  --border: #e8eeed;
+  --input: #e5e7eb;
+  --ring: #1a6b61;
+}
+
+.dark {
+  --background: #0b1211;
+  --foreground: #f4f7f6;
+  --card: #131c1a;
+  --card-foreground: #f4f7f6;
+  --popover: #131c1a;
+  --popover-foreground: #f4f7f6;
+  --primary: #2f9d8f;
+  --primary-foreground: #06110f;
+  --secondary: #1c2725;
+  --secondary-foreground: #e5e7eb;
+  --muted: #1c2725;
+  --muted-foreground: #9ca3af;
+  --accent: #1c2725;
+  --accent-foreground: #e5e7eb;
+  --destructive: #ef4444;
+  --border: #24312e;
+  --input: #2b3835;
+  --ring: #2f9d8f;
+}
 
 @theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Brand-only aliases. No shadcn equivalent, referenced by app chrome. */
   --color-sidebar: #0d4f47;
   --color-sidebar-hover: #196058;
   --color-sidebar-active: #1d7068;
-  --color-primary: #1a6b61;
   --color-primary-dark: #0d4f47;
   --color-primary-light: #e6f4f2;
   --color-online: #22c55e;
   --color-offline: #ef4444;
   --color-page-bg: #f4f7f6;
-  --color-card: #ffffff;
-  --color-border: #e8eeed;
-  --color-muted: #6b7280;
   --color-intruso: #ef4444;
   --color-sospechoso: #f59e0b;
 }
 
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: #f4f7f6;
-  color: #111827;
-  margin: 0;
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+  }
 }
 
 ::-webkit-scrollbar {

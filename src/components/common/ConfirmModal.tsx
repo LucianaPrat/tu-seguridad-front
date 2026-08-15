@@ -1,7 +1,9 @@
 import { useState } from "react"
+import { AlertTriangle } from "lucide-react"
 import Modal from "./Modal"
 import Button from "./Button"
-import { AlertTriangle } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 
 interface ConfirmModalProps {
   open: boolean
@@ -60,17 +62,19 @@ export default function ConfirmModal({
           <AlertTriangle size={16} className="text-amber-600" />
         </div>
         <div>
-          <p className="text-sm text-gray-700">{message}</p>
+          <p className="text-sm text-secondary-foreground">{message}</p>
           {requireAcknowledge && (
-            <label className="mt-3 flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
+            <div className="mt-3 flex items-start gap-2">
+              <Checkbox
+                id="acknowledge"
                 checked={acknowledged}
-                onChange={(e) => setAcknowledged(e.target.checked)}
-                className="mt-0.5 accent-[#1a6b61]"
+                onCheckedChange={(checked) => setAcknowledged(checked === true)}
+                className="mt-0.5"
               />
-              <span className="text-sm text-gray-700">{acknowledgeLabel}</span>
-            </label>
+              <Label htmlFor="acknowledge" className="text-sm font-normal text-secondary-foreground">
+                {acknowledgeLabel}
+              </Label>
+            </div>
           )}
         </div>
       </div>

@@ -1,16 +1,13 @@
 import { useState } from "react"
-import FormField from "@/components/ui/FormField"
-import TimezoneCombobox from "@/components/ui/TimezoneCombobox"
-import Button from "@/components/ui/Button"
+import { Controller, useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import FormField from "@/components/common/FormField"
+import TimezoneCombobox from "@/components/common/TimezoneCombobox"
+import Button from "@/components/common/Button"
+import { dvrSchema, type DVRFormValues } from "@/lib/schemas"
 import { Eye, EyeOff, CheckCircle, XCircle } from "lucide-react"
 
-export interface DVRFormValues {
-  spaceName: string
-  dvrUrl: string
-  dvrUser: string
-  dvrPassword: string
-  timezone: string
-}
+export type { DVRFormValues }
 
 interface DVRFormProps {
   defaultValues?: Partial<DVRFormValues>
@@ -29,97 +26,95 @@ export default function DVRForm({
   showTestConnection = true,
   loading = false,
 }: DVRFormProps) {
-  const [values, setValues] = useState<DVRFormValues>({
-    spaceName: defaultValues?.spaceName ?? "",
-    dvrUrl: defaultValues?.dvrUrl ?? "",
-    dvrUser: defaultValues?.dvrUser ?? "",
-    dvrPassword: defaultValues?.dvrPassword ?? "",
-    timezone: defaultValues?.timezone ?? "",
-  })
-  const [errors, setErrors] = useState<Partial<DVRFormValues>>({})
   const [showPass, setShowPass] = useState(false)
   const [testState, setTestState] = useState<TestState>("idle")
 
-  function set(field: keyof DVRFormValues, value: string) {
-    setValues((v) => ({ ...v, [field]: value }))
-    setErrors((e) => ({ ...e, [field]: "" }))
-  }
+  const {
+    register,
+    control,
+    handleSubmit,
+    trigger,
+    formState: { errors },
+  } = useForm<DVRFormValues>({
+    resolver: zodResolver(dvrSchema),
+    defaultValues: {
+      spaceName: defaultValues?.spaceName ?? "",
+      dvrUrl: defaultValues?.dvrUrl ?? "",
+      dvrUser: defaultValues?.dvrUser ?? "",
+      dvrPassword: defaultValues?.dvrPassword ?? "",
+      timezone: defaultValues?.timezone ?? "",
+    },
+  })
 
-  function validate() {
-    const errs: Partial<DVRFormValues> = {}
-    if (!values.spaceName.trim()) errs.spaceName = "Requerido"
-    if (!values.dvrUrl.trim()) errs.dvrUrl = "Requerido"
-    if (!values.dvrUser.trim()) errs.dvrUser = "Requerido"
-    if (!values.dvrPassword.trim()) errs.dvrPassword = "Requerido"
-    if (!values.timezone) errs.timezone = "Seleccioná una zona horaria"
-    setErrors(errs)
-    return Object.keys(errs).length === 0
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (validate()) onSubmit(values)
-  }
-
-  function handleTest() {
-    if (!validate()) return
+  // Mocked until the DVR probe endpoint exists.
+  async function handleTest() {
+    const valid = await trigger()
+    if (!valid) return
     setTestState("loading")
-    setTimeout(() => {
-      setTestState(Math.random() > 0.3 ? "success" : "error")
-    }, 1500)
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    setTestState(Math.random() > 0.3 ? "success" : "error")
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
       <FormField
         label="Nombre del espacio"
         placeholder="Ej: Mi casa"
-        value={values.spaceName}
-        onChange={(e) => set("spaceName", e.target.value)}
-        error={errors.spaceName}
+        error={errors.spaceName?.message}
+        {...register("spaceName")}
       />
       <FormField
         label="URL del DVR"
         placeholder="http://192.168.1.100:8080"
-        value={values.dvrUrl}
-        onChange={(e) => set("dvrUrl", e.target.value)}
-        error={errors.dvrUrl}
+        error={errors.dvrUrl?.message}
+        {...register("dvrUrl")}
       />
       <div className="grid grid-cols-2 gap-3">
         <FormField
           label="Usuario DVR"
           placeholder="admin"
-          value={values.dvrUser}
-          onChange={(e) => set("dvrUser", e.target.value)}
-          error={errors.dvrUser}
+          error={errors.dvrUser?.message}
+          {...register("dvrUser")}
         />
         <FormField
           label="Contraseña DVR"
           type={showPass ? "text" : "password"}
           placeholder="••••••••"
-          value={values.dvrPassword}
-          onChange={(e) => set("dvrPassword", e.target.value)}
-          error={errors.dvrPassword}
+          error={errors.dvrPassword?.message}
           rightElement={
-            <button type="button" onClick={() => setShowPass((s) => !s)} className="text-gray-400 hover:text-gray-600">
+            <button
+              type="button"
+              onClick={() => setShowPass((s) => !s)}
+              aria-label={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
+              className="text-muted-foreground hover:text-foreground"
+            >
               {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
           }
+          {...register("dvrPassword")}
         />
       </div>
 
-      <div className="relative">
-        <TimezoneCombobox
-          value={values.timezone}
-          onChange={(iana) => set("timezone", iana)}
-          error={errors.timezone}
-        />
-      </div>
+      <Controller
+        control={control}
+        name="timezone"
+        render={({ field, fieldState }) => (
+          <TimezoneCombobox
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+          />
+        )}
+      />
 
-      {/* Test connection */}
       {showTestConnection && (
         <div className="flex items-center gap-3">
-          <Button type="button" variant="secondary" onClick={handleTest} loading={testState === "loading"}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleTest}
+            loading={testState === "loading"}
+          >
             Probar conexión
           </Button>
           {testState === "success" && (

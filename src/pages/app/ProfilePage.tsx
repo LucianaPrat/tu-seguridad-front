@@ -1,34 +1,48 @@
 import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import AppShell from "@/components/layout/AppShell"
-import PageHeader from "@/components/ui/PageHeader"
-import FormField from "@/components/ui/FormField"
-import Button from "@/components/ui/Button"
-import { useSession } from "@/context/SessionContext"
+import PageHeader from "@/components/common/PageHeader"
+import FormField from "@/components/common/FormField"
+import Button from "@/components/common/Button"
+import { useSessionStore } from "@/stores/sessionStore"
+import {
+  profilePasswordSchema,
+  profileSchema,
+  type ProfilePasswordValues,
+  type ProfileValues,
+} from "@/lib/schemas"
 import { Camera, Save, Lock, CheckCircle } from "lucide-react"
 
 export default function ProfilePage() {
-  const { user, updateUser } = useSession()
+  const { user, updateUser } = useSessionStore()
 
-  const [form, setForm] = useState({
-    firstName: user?.firstName ?? "",
-    lastName: user?.lastName ?? "",
-    email: user?.email ?? "",
-    phone: user?.phone ?? "",
-  })
   const [profileSaved, setProfileSaved] = useState(false)
+  const [passSaved, setPassSaved] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl ?? null)
 
-  const [passwords, setPasswords] = useState({ current: "", next: "", repeat: "" })
-  const [passErrors, setPassErrors] = useState({ current: "", next: "", repeat: "" })
-  const [passSaved, setPassSaved] = useState(false)
+  const profileForm = useForm<ProfileValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      firstName: user?.firstName ?? "",
+      lastName: user?.lastName ?? "",
+      email: user?.email ?? "",
+      phone: user?.phone ?? "",
+    },
+  })
 
-  function setF(field: string, value: string) {
-    setForm((f) => ({ ...f, [field]: value }))
-  }
+  const passwordForm = useForm<ProfilePasswordValues>({
+    resolver: zodResolver(profilePasswordSchema),
+    defaultValues: { current: "", next: "", repeat: "" },
+  })
 
-  function handleProfileSave(e: React.FormEvent) {
-    e.preventDefault()
-    updateUser(form)
+  // Watched so the avatar initials and header line track what is typed.
+  const firstName = profileForm.watch("firstName")
+  const lastName = profileForm.watch("lastName")
+  const email = profileForm.watch("email")
+
+  function handleProfileSave(values: ProfileValues) {
+    updateUser(values)
     setProfileSaved(true)
     setTimeout(() => setProfileSaved(false), 2500)
   }
@@ -38,16 +52,9 @@ export default function ProfilePage() {
     if (file) setAvatarPreview(URL.createObjectURL(file))
   }
 
-  function handlePasswordSave(e: React.FormEvent) {
-    e.preventDefault()
-    const errs = { current: "", next: "", repeat: "" }
-    if (!passwords.current) errs.current = "Requerido"
-    if (passwords.next.length < 8) errs.next = "Mínimo 8 caracteres"
-    if (passwords.next !== passwords.repeat) errs.repeat = "No coincide"
-    setPassErrors(errs)
-    if (errs.current || errs.next || errs.repeat) return
+  function handlePasswordSave() {
     setPassSaved(true)
-    setPasswords({ current: "", next: "", repeat: "" })
+    passwordForm.reset({ current: "", next: "", repeat: "" })
     setTimeout(() => setPassSaved(false), 2500)
   }
 
@@ -57,39 +64,62 @@ export default function ProfilePage() {
 
       <div className="flex flex-col gap-6 max-w-lg">
         {/* Profile section */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="text-sm font-semibold text-gray-900 mb-4">Información personal</h2>
+        <div className="bg-card rounded-2xl border shadow-sm p-6">
+          <h2 className="text-sm font-semibold text-foreground mb-4">Información personal</h2>
 
           {/* Avatar */}
           <div className="flex items-center gap-4 mb-5">
             <div className="relative">
-              <div className="w-16 h-16 rounded-full overflow-hidden bg-[#1a6b61] flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-primary flex items-center justify-center">
                 {avatarPreview ? (
                   <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-white text-xl font-semibold">
-                    {form.firstName[0]}{form.lastName[0]}
+                  <span className="text-primary-foreground text-xl font-semibold">
+                    {firstName[0]}{lastName[0]}
                   </span>
                 )}
               </div>
-              <label className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center cursor-pointer hover:bg-gray-50">
-                <Camera size={12} className="text-gray-500" />
+              <label className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border shadow flex items-center justify-center cursor-pointer hover:bg-accent">
+                <Camera size={12} className="text-muted-foreground" />
+                <span className="sr-only">Cambiar foto de perfil</span>
                 <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               </label>
             </div>
             <div>
-              <p className="font-medium text-gray-900">{form.firstName} {form.lastName}</p>
-              <p className="text-sm text-gray-500">{form.email}</p>
+              <p className="font-medium text-foreground">{firstName} {lastName}</p>
+              <p className="text-sm text-muted-foreground">{email}</p>
             </div>
           </div>
 
-          <form onSubmit={handleProfileSave} className="flex flex-col gap-4">
+          <form
+            onSubmit={profileForm.handleSubmit(handleProfileSave)}
+            className="flex flex-col gap-4"
+            noValidate
+          >
             <div className="grid grid-cols-2 gap-3">
-              <FormField label="Nombre" value={form.firstName} onChange={(e) => setF("firstName", e.target.value)} />
-              <FormField label="Apellido" value={form.lastName} onChange={(e) => setF("lastName", e.target.value)} />
+              <FormField
+                label="Nombre"
+                error={profileForm.formState.errors.firstName?.message}
+                {...profileForm.register("firstName")}
+              />
+              <FormField
+                label="Apellido"
+                error={profileForm.formState.errors.lastName?.message}
+                {...profileForm.register("lastName")}
+              />
             </div>
-            <FormField label="Email" type="email" value={form.email} onChange={(e) => setF("email", e.target.value)} />
-            <FormField label="Teléfono móvil" type="tel" value={form.phone} onChange={(e) => setF("phone", e.target.value)} />
+            <FormField
+              label="Email"
+              type="email"
+              error={profileForm.formState.errors.email?.message}
+              {...profileForm.register("email")}
+            />
+            <FormField
+              label="Teléfono móvil"
+              type="tel"
+              error={profileForm.formState.errors.phone?.message}
+              {...profileForm.register("phone")}
+            />
 
             <div className="flex items-center gap-3 pt-1">
               <Button type="submit" icon={<Save size={14} />}>Guardar cambios</Button>
@@ -103,35 +133,36 @@ export default function ProfilePage() {
         </div>
 
         {/* Password section */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-card rounded-2xl border shadow-sm p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Lock size={15} className="text-gray-500" />
-            <h2 className="text-sm font-semibold text-gray-900">Cambiar contraseña</h2>
+            <Lock size={15} className="text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-foreground">Cambiar contraseña</h2>
           </div>
-          <form onSubmit={handlePasswordSave} className="flex flex-col gap-4">
+          <form
+            onSubmit={passwordForm.handleSubmit(handlePasswordSave)}
+            className="flex flex-col gap-4"
+            noValidate
+          >
             <FormField
               label="Contraseña actual"
               type="password"
               placeholder="••••••••"
-              value={passwords.current}
-              onChange={(e) => setPasswords((p) => ({ ...p, current: e.target.value }))}
-              error={passErrors.current}
+              error={passwordForm.formState.errors.current?.message}
+              {...passwordForm.register("current")}
             />
             <FormField
               label="Nueva contraseña"
               type="password"
               placeholder="Mínimo 8 caracteres"
-              value={passwords.next}
-              onChange={(e) => setPasswords((p) => ({ ...p, next: e.target.value }))}
-              error={passErrors.next}
+              error={passwordForm.formState.errors.next?.message}
+              {...passwordForm.register("next")}
             />
             <FormField
               label="Repetir nueva contraseña"
               type="password"
               placeholder="••••••••"
-              value={passwords.repeat}
-              onChange={(e) => setPasswords((p) => ({ ...p, repeat: e.target.value }))}
-              error={passErrors.repeat}
+              error={passwordForm.formState.errors.repeat?.message}
+              {...passwordForm.register("repeat")}
             />
             <div className="flex items-center gap-3 pt-1">
               <Button type="submit" variant="secondary">Cambiar contraseña</Button>

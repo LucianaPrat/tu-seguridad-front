@@ -4,9 +4,9 @@ import AppShell from "@/components/layout/AppShell"
 import CameraCard from "@/components/camera/CameraCard"
 import CameraCardUnconfigured from "@/components/camera/CameraCardUnconfigured"
 import CameraGrid from "@/components/camera/CameraGrid"
-import Button from "@/components/ui/Button"
-import PageHeader from "@/components/ui/PageHeader"
-import InviteModal from "@/components/ui/InviteModal"
+import Button from "@/components/common/Button"
+import PageHeader from "@/components/common/PageHeader"
+import InviteModal from "@/components/common/InviteModal"
 import { CAMERAS, type Camera } from "@/data/mockData"
 
 export default function DashboardPage() {

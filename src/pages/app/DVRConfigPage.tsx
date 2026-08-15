@@ -1,8 +1,8 @@
 import { useState } from "react"
 import AppShell from "@/components/layout/AppShell"
 import DVRForm, { type DVRFormValues } from "@/components/dvr/DVRForm"
-import PageHeader from "@/components/ui/PageHeader"
-import ConfirmModal from "@/components/ui/ConfirmModal"
+import PageHeader from "@/components/common/PageHeader"
+import ConfirmModal from "@/components/common/ConfirmModal"
 
 const DEFAULT_VALUES: DVRFormValues = {
   spaceName: "Mi Espacio Seguro",
