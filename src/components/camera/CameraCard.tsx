@@ -65,7 +65,10 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
           {/* Context menu */}
           <div className="relative" ref={menuRef}>
             <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen((o) => !o) }}
+              onClick={(e) => {
+                e.stopPropagation()
+                setMenuOpen((o) => !o)
+              }}
               className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
             >
               <MoreHorizontal size={16} />
@@ -75,19 +78,28 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
                 <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
                 <div className="absolute right-0 bottom-full mb-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg py-1 w-44">
                   <button
-                    onClick={() => { navigate("/cameras/monitor"); setMenuOpen(false) }}
+                    onClick={() => {
+                      navigate("/cameras/monitor")
+                      setMenuOpen(false)
+                    }}
                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                   >
                     <Settings size={14} /> Configurar
                   </button>
                   <button
-                    onClick={() => { onToggleEnabled?.(camera.id); setMenuOpen(false) }}
+                    onClick={() => {
+                      onToggleEnabled?.(camera.id)
+                      setMenuOpen(false)
+                    }}
                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     {camera.isEnabled ? "Desactivar" : "Activar"}
                   </button>
                   <button
-                    onClick={() => { navigate("/events"); setMenuOpen(false) }}
+                    onClick={() => {
+                      navigate("/events")
+                      setMenuOpen(false)
+                    }}
                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     Ver eventos

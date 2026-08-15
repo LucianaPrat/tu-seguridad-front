@@ -6,7 +6,10 @@ import Button from "./Button"
 describe("Button", () => {
   it("defaults to the primary variant, which is shadcn's default", () => {
     render(<Button>Ingresar</Button>)
-    expect(screen.getByRole("button", { name: "Ingresar" })).toHaveAttribute("data-variant", "default")
+    expect(screen.getByRole("button", { name: "Ingresar" })).toHaveAttribute(
+      "data-variant",
+      "default",
+    )
   })
 
   it.each([
@@ -46,7 +49,11 @@ describe("Button", () => {
 
   it("does not fire onClick while loading", async () => {
     const onClick = vi.fn()
-    render(<Button loading onClick={onClick}>Guardar</Button>)
+    render(
+      <Button loading onClick={onClick}>
+        Guardar
+      </Button>,
+    )
 
     await userEvent.click(screen.getByRole("button"), { pointerEventsCheck: 0 })
 

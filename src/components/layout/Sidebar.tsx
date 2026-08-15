@@ -21,9 +21,7 @@ interface NavItem {
   children?: { label: string; to: string }[]
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { label: "Inicio", icon: <LayoutDashboard size={18} />, to: "/" },
-]
+const NAV_ITEMS: NavItem[] = [{ label: "Inicio", icon: <LayoutDashboard size={18} />, to: "/" }]
 
 const SERVICE_ITEMS: NavItem[] = [
   { label: "Monitoreo", icon: <Shield size={18} />, to: "/cameras/monitor" },
@@ -89,7 +87,9 @@ export default function Sidebar() {
         ))}
 
         <div className="pt-4 pb-1">
-          <p className="px-3 text-white/40 text-xs font-semibold uppercase tracking-wider">Servicios</p>
+          <p className="px-3 text-white/40 text-xs font-semibold uppercase tracking-wider">
+            Servicios
+          </p>
         </div>
         {SERVICE_ITEMS.map((item) => (
           <NavItemLink key={item.label} item={item} />
@@ -100,11 +100,15 @@ export default function Sidebar() {
           to="/dvr-config"
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isActive ? "bg-[#1d7068] text-white" : "text-white/75 hover:text-white hover:bg-white/10"
+              isActive
+                ? "bg-[#1d7068] text-white"
+                : "text-white/75 hover:text-white hover:bg-white/10"
             }`
           }
         >
-          <span className="shrink-0"><Shield size={18} /></span>
+          <span className="shrink-0">
+            <Shield size={18} />
+          </span>
           DVR
         </NavLink>
 
@@ -113,11 +117,15 @@ export default function Sidebar() {
           to="/channels"
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isActive ? "bg-[#1d7068] text-white" : "text-white/75 hover:text-white hover:bg-white/10"
+              isActive
+                ? "bg-[#1d7068] text-white"
+                : "text-white/75 hover:text-white hover:bg-white/10"
             }`
           }
         >
-          <span className="shrink-0"><MessageCircle size={18} /></span>
+          <span className="shrink-0">
+            <MessageCircle size={18} />
+          </span>
           Canales
         </NavLink>
 
@@ -126,16 +134,22 @@ export default function Sidebar() {
           to="/members"
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isActive ? "bg-[#1d7068] text-white" : "text-white/75 hover:text-white hover:bg-white/10"
+              isActive
+                ? "bg-[#1d7068] text-white"
+                : "text-white/75 hover:text-white hover:bg-white/10"
             }`
           }
         >
-          <span className="shrink-0"><User size={18} /></span>
+          <span className="shrink-0">
+            <User size={18} />
+          </span>
           Miembros
         </NavLink>
 
         <div className="pt-4 pb-1">
-          <p className="px-3 text-white/40 text-xs font-semibold uppercase tracking-wider">Cuenta</p>
+          <p className="px-3 text-white/40 text-xs font-semibold uppercase tracking-wider">
+            Cuenta
+          </p>
         </div>
         {ACCOUNT_ITEMS.map((item) => (
           <NavItemLink key={item.label} item={item} />

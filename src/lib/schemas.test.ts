@@ -9,7 +9,10 @@ import {
 } from "./schemas"
 
 /** First error message recorded for a field path, or undefined. */
-function messageFor(result: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } }, field: string) {
+function messageFor(
+  result: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } },
+  field: string,
+) {
   if (result.success) return undefined
   return result.error?.issues.find((issue) => issue.path[0] === field)?.message
 }
@@ -50,7 +53,11 @@ describe("registerSchema", () => {
   })
 
   it("requires at least 8 password characters", () => {
-    const result = registerSchema.safeParse({ ...valid, password: "short", repeatPassword: "short" })
+    const result = registerSchema.safeParse({
+      ...valid,
+      password: "short",
+      repeatPassword: "short",
+    })
     expect(messageFor(result, "password")).toBe("Mínimo 8 caracteres")
   })
 
@@ -76,12 +83,20 @@ describe("passwordChangeSchema", () => {
 
 describe("profilePasswordSchema", () => {
   it("requires the current password", () => {
-    const result = profilePasswordSchema.safeParse({ current: "", next: "hunter2hunter2", repeat: "hunter2hunter2" })
+    const result = profilePasswordSchema.safeParse({
+      current: "",
+      next: "hunter2hunter2",
+      repeat: "hunter2hunter2",
+    })
     expect(messageFor(result, "current")).toBe("Requerido")
   })
 
   it("reports its own mismatch wording", () => {
-    const result = profilePasswordSchema.safeParse({ current: "old", next: "hunter2hunter2", repeat: "typo" })
+    const result = profilePasswordSchema.safeParse({
+      current: "old",
+      next: "hunter2hunter2",
+      repeat: "typo",
+    })
     expect(messageFor(result, "repeat")).toBe("No coincide")
   })
 })

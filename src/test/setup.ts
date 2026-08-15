@@ -1,6 +1,6 @@
-import '@testing-library/jest-dom/vitest'
-import { cleanup } from '@testing-library/react'
-import { afterEach } from 'vitest'
+import "@testing-library/jest-dom/vitest"
+import { cleanup } from "@testing-library/react"
+import { afterEach } from "vitest"
 
 // jsdom has no layout engine, so Radix's pointer-capture calls are undefined.
 // Stub them or every Popover/Dialog interaction throws.

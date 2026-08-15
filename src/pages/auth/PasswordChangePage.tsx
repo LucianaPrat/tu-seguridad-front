@@ -33,8 +33,13 @@ export default function PasswordChangePage() {
             <CheckCircle size={20} className="text-green-600" />
           </div>
           <p className="font-medium text-foreground">Contraseña actualizada</p>
-          <p className="text-sm text-muted-foreground mt-1">Ya podés ingresar con tu nueva contraseña.</p>
-          <Link to="/login" className="inline-block mt-5 text-sm text-primary font-medium hover:underline">
+          <p className="text-sm text-muted-foreground mt-1">
+            Ya podés ingresar con tu nueva contraseña.
+          </p>
+          <Link
+            to="/login"
+            className="inline-block mt-5 text-sm text-primary font-medium hover:underline"
+          >
             Ir al inicio de sesión
           </Link>
         </div>

@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const disabled = cameras.filter((c) => c.isConfigured && !c.isEnabled)
 
   function toggleEnabled(id: string) {
-    setCameras((cs) => cs.map((c) => c.id === id ? { ...c, isEnabled: !c.isEnabled } : c))
+    setCameras((cs) => cs.map((c) => (c.id === id ? { ...c, isEnabled: !c.isEnabled } : c)))
   }
 
   return (
@@ -28,7 +28,11 @@ export default function DashboardPage() {
         title="Panel de cámaras"
         subtitle={`${configured.length} cámaras activas`}
         action={
-          <Button variant="secondary" icon={<UserPlus size={14} />} onClick={() => setInviteOpen(true)}>
+          <Button
+            variant="secondary"
+            icon={<UserPlus size={14} />}
+            onClick={() => setInviteOpen(true)}
+          >
             Invitar miembro
           </Button>
         }
@@ -80,7 +84,9 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 mb-3">
             <CameraIcon size={16} className="text-gray-400" />
             <h2 className="text-sm font-semibold text-gray-700">Cámaras sin configurar</h2>
-            <span className="text-xs text-gray-400">Cámaras detectadas que aún no han sido configuradas.</span>
+            <span className="text-xs text-gray-400">
+              Cámaras detectadas que aún no han sido configuradas.
+            </span>
           </div>
           <CameraGrid>
             {unconfigured.map((cam) => (

@@ -28,7 +28,14 @@ const WIDTHS = {
  * come from shadcn/ui Dialog — this wrapper only keeps the app's prop shape
  * and the sectioned header/body/footer layout.
  */
-export default function Modal({ open, onClose, title, children, footer, width = "md" }: ModalProps) {
+export default function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+  width = "md",
+}: ModalProps) {
   return (
     <Dialog
       open={open}

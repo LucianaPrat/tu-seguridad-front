@@ -16,7 +16,10 @@ export default function ZoneList({ zones, onRemove, onChangeAlertType }: ZoneLis
   return (
     <ul className="flex flex-col gap-2">
       {zones.map((zone, i) => (
-        <li key={zone.id} className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+        <li
+          key={zone.id}
+          className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100"
+        >
           <span className="text-sm text-gray-500 font-medium w-5 shrink-0">#{i + 1}</span>
           <div className="flex-1">
             <select

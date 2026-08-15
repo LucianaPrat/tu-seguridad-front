@@ -46,7 +46,9 @@ export default function ConfirmModal({
       width="sm"
       footer={
         <>
-          <Button variant="secondary" onClick={handleClose}>Cancelar</Button>
+          <Button variant="secondary" onClick={handleClose}>
+            Cancelar
+          </Button>
           <Button
             variant="danger"
             onClick={handleConfirm}
@@ -71,7 +73,10 @@ export default function ConfirmModal({
                 onCheckedChange={(checked) => setAcknowledged(checked === true)}
                 className="mt-0.5"
               />
-              <Label htmlFor="acknowledge" className="text-sm font-normal text-secondary-foreground">
+              <Label
+                htmlFor="acknowledge"
+                className="text-sm font-normal text-secondary-foreground"
+              >
                 {acknowledgeLabel}
               </Label>
             </div>

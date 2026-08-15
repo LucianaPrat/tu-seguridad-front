@@ -19,7 +19,13 @@ const CHANNEL_LABELS = {
 
 function formatTimestamp(iso: string) {
   const d = new Date(iso)
-  return d.toLocaleString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+  return d.toLocaleString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
 }
 
 function formatAckTime(iso: string) {
@@ -41,10 +47,7 @@ export default function EventsPage() {
 
   return (
     <AppShell>
-      <PageHeader
-        title="Eventos de seguridad"
-        subtitle={`${EVENTS.length} eventos registrados`}
-      />
+      <PageHeader title="Eventos de seguridad" subtitle={`${EVENTS.length} eventos registrados`} />
 
       {/* Filters */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
@@ -74,7 +77,10 @@ export default function EventsPage() {
           className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#1a6b61]/30 text-gray-600"
         />
         {filterDate && (
-          <button onClick={() => setFilterDate("")} className="text-xs text-gray-400 hover:text-gray-600">
+          <button
+            onClick={() => setFilterDate("")}
+            className="text-xs text-gray-400 hover:text-gray-600"
+          >
             Limpiar fecha
           </button>
         )}
@@ -86,11 +92,21 @@ export default function EventsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cámara</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Canal</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha y hora</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Reconocimiento</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Cámara
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Tipo
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Canal
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Fecha y hora
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Reconocimiento
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -119,8 +135,12 @@ export default function EventsPage() {
                         <div className="flex items-start gap-1.5">
                           <CheckCircle size={14} className="text-green-500 mt-0.5 shrink-0" />
                           <div>
-                            <p className="text-gray-800 text-xs font-medium">Reconocido por {ev.acknowledgedBy}</p>
-                            <p className="text-gray-400 text-xs">· {formatAckTime(ev.acknowledgedAt!)}</p>
+                            <p className="text-gray-800 text-xs font-medium">
+                              Reconocido por {ev.acknowledgedBy}
+                            </p>
+                            <p className="text-gray-400 text-xs">
+                              · {formatAckTime(ev.acknowledgedAt!)}
+                            </p>
                           </div>
                         </div>
                       ) : (

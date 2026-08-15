@@ -62,7 +62,8 @@ export const CAMERAS: Camera[] = [
     status: "online",
     isConfigured: true,
     isEnabled: true,
-    snapshotUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=280&fit=crop&auto=format",
+    snapshotUrl:
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=280&fit=crop&auto=format",
     snapshotAge: "2 min",
     monitorMode: "full",
     alertType: "intruso",
@@ -75,12 +76,11 @@ export const CAMERAS: Camera[] = [
     status: "online",
     isConfigured: true,
     isEnabled: true,
-    snapshotUrl: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=280&fit=crop&auto=format",
+    snapshotUrl:
+      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=280&fit=crop&auto=format",
     snapshotAge: "5 min",
     monitorMode: "partial",
-    zones: [
-      { id: "z1", x: 10, y: 10, width: 40, height: 35, alertType: "intruso" },
-    ],
+    zones: [{ id: "z1", x: 10, y: 10, width: 40, height: 35, alertType: "intruso" }],
   },
   {
     id: "cam-03",
@@ -89,7 +89,8 @@ export const CAMERAS: Camera[] = [
     status: "online",
     isConfigured: true,
     isEnabled: true,
-    snapshotUrl: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=280&fit=crop&auto=format",
+    snapshotUrl:
+      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=280&fit=crop&auto=format",
     snapshotAge: "1 min",
     monitorMode: "full",
     alertType: "sospechoso",
@@ -102,7 +103,8 @@ export const CAMERAS: Camera[] = [
     status: "offline",
     isConfigured: true,
     isEnabled: true,
-    snapshotUrl: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=280&fit=crop&auto=format",
+    snapshotUrl:
+      "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=280&fit=crop&auto=format",
     snapshotAge: "1 hr",
     monitorMode: "full",
     alertType: "intruso",
@@ -115,7 +117,8 @@ export const CAMERAS: Camera[] = [
     status: "online",
     isConfigured: false,
     isEnabled: true,
-    snapshotUrl: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400&h=280&fit=crop&auto=format",
+    snapshotUrl:
+      "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400&h=280&fit=crop&auto=format",
     snapshotAge: "3 min",
     monitorMode: "full",
     zones: [],
@@ -127,7 +130,8 @@ export const CAMERAS: Camera[] = [
     status: "online",
     isConfigured: false,
     isEnabled: true,
-    snapshotUrl: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=280&fit=crop&auto=format",
+    snapshotUrl:
+      "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=280&fit=crop&auto=format",
     snapshotAge: "7 min",
     monitorMode: "full",
     zones: [],
@@ -139,7 +143,8 @@ export const CAMERAS: Camera[] = [
     status: "online",
     isConfigured: false,
     isEnabled: false,
-    snapshotUrl: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=400&h=280&fit=crop&auto=format",
+    snapshotUrl:
+      "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=400&h=280&fit=crop&auto=format",
     snapshotAge: "12 min",
     monitorMode: "full",
     zones: [],
@@ -151,7 +156,8 @@ export const CAMERAS: Camera[] = [
     status: "offline",
     isConfigured: false,
     isEnabled: true,
-    snapshotUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=280&fit=crop&auto=format",
+    snapshotUrl:
+      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=280&fit=crop&auto=format",
     snapshotAge: "2 hr",
     monitorMode: "full",
     zones: [],
@@ -273,7 +279,8 @@ export const MEMBERS: Member[] = [
     isActive: true,
     lastLogin: "2025-07-28T22:00:00Z",
     receiveAlerts: true,
-    avatarUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=80&h=80&fit=crop&auto=format",
+    avatarUrl:
+      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=80&h=80&fit=crop&auto=format",
   },
   {
     id: "mem-02",
