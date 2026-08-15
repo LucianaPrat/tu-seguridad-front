@@ -27,7 +27,10 @@ main.tsx                 mount only
         components/common/  app wrappers with app prop vocabulary
           components/ui/    shadcn/ui primitives (Radix)
     stores/              Zustand — global client state
-    lib/                 cn, queryClient, Zod schemas
+    hooks/               TanStack Query hooks
+      api/               typed API calls
+        lib/http.ts      fetch client — bearer, cookie, error envelope
+    lib/                 cn, queryClient, http, Zod schemas
     data/                fixtures, standing in for the API
 ```
 
@@ -59,6 +62,10 @@ field:
 dashboard before initializing a DVR, so `isDVRInit` is a hard gate, not a
 banner.
 
+Above all of them sits `AuthGate`, outside `BrowserRouter`: no route renders
+while `authStatus` is `"unknown"`, so a guard never runs against a session that
+has not been restored yet.
+
 `/login` also redirects outward when already authenticated, so the back button
 cannot park a logged-in user on the login screen.
 
@@ -70,9 +77,13 @@ Three homes. Picking the wrong one is the main architectural mistake available
 here.
 
 **Zustand — `src/stores/`.** Global client state the server does not own.
-Today: `sessionStore` with `isLoggedIn`, `isDVRInit`, `user`. Tomorrow: JWT
-access token, WebSocket connection status, live alert list, per-camera online
-flags.
+Today: `sessionStore` with `authStatus`, `accessToken`, `isLoggedIn`,
+`isDVRInit`, `user`. Tomorrow: WebSocket connection status, live alert list,
+per-camera online flags.
+
+The access token is the one deliberate exception to "no server data in
+Zustand" — it is a client credential, not cached server state, and it must be
+readable synchronously from `http.ts` on every request.
 
 No provider. `useSessionStore()` without a selector is deliberate — session
 state changes rarely, and selector plumbing would be optimization the project
@@ -91,23 +102,54 @@ password-visibility toggles, upload previews. Do not lift these.
 
 ## Data layer
 
-Not built. Pages import fixtures from `src/data/mockData.ts` directly, and
-submit handlers `await` a `setTimeout` to imitate latency.
+Built for auth, fixtures for everything else. Pages other than login still
+import from `src/data/mockData.ts` directly, with submit handlers `await`ing a
+`setTimeout` to imitate latency.
 
 Domain types already live there and are the contract to hold onto:
 `Camera`, `SecurityEvent`, `Member`, `ChannelConfig`, `MonitorZone`,
 plus `AlertType` (`intruso` | `sospechoso`), `ChannelType` (`llamada` |
 `whatsapp` | `email`), `MonitorMode` (`full` | `partial`).
 
-When the API lands:
+Three layers, top to bottom:
 
-1. Add an HTTP client that attaches the access token and refreshes on 401.
-2. Add `src/api/<resource>.ts` returning typed promises.
-3. Add query hooks calling those, keyed per resource.
-4. Swap page imports from `mockData` to the hooks. Types should not move.
+1. `src/lib/http.ts` — the client. Prefixes `VITE_API_BASE_URL` (default
+   `http://localhost:3000/api/v1`), attaches `Authorization: Bearer` from
+   `sessionStore`, always sends `credentials: "include"` so the refresh cookie
+   rides along, and turns the backend envelope into `ApiError {status, code}`.
+   Framework errors (404, 429) carry no `code`, so it falls back to
+   `UNKNOWN_ERROR`; a failed `fetch` becomes status `0`.
+2. `src/api/<resource>.ts` — typed promises, Zod-parsed at the boundary.
+   `auth.ts` exists; the rest are not written.
+3. `src/hooks/` — TanStack Query hooks over those. `useAuth.ts` exports
+   `useSessionBootstrap`, `useLogin`, `useLogout`.
 
-Backend contract is at `http://localhost:3000/docs`. JWT with access plus
-refresh token.
+Then swap page imports from `mockData` to the hooks. Types should not move.
+
+Backend contract is at `http://localhost:3000/docs`.
+
+### Auth
+
+JWT, access plus refresh, split by where each can be reached from:
+
+- **Access token** — 15 minutes, held in `sessionStore` in memory. Never
+  persisted, so it cannot be read off disk and dies with the tab.
+- **Refresh token** — 7 days, an HttpOnly cookie the backend sets on
+  `/auth/login` and `/auth/refresh`, scoped to `Path=/api/v1/auth`. JS cannot
+  read it, so an XSS cannot exfiltrate the long-lived credential. It never
+  appears in a response body.
+
+On boot `AuthGate` runs `useSessionBootstrap`, which trades the cookie for a
+fresh access token and loads `/auth/me`. Routes stay unmounted until that
+settles — otherwise a reloaded operator flashes the login screen. A 401 there
+just means nobody is logged in.
+
+`SameSite=Lax` is enough while the frontend and API share a site; ports are not
+part of a site. A production split across registrable domains forces
+`SameSite=None; Secure`, which needs a CSRF token on `/auth/refresh`.
+
+Not built: the 401 auto-refresh interceptor. Required before any page consumes
+protected endpoints, since the access token expires in 15 minutes.
 
 ## Forms
 
@@ -153,8 +195,10 @@ Named so nobody assumes they exist:
 - **Video playback.** hls.js if the DVR serves HLS, native WebRTC if it serves
   low-latency. Player mounts only while a camera panel is open — constant
   streaming is explicitly out of scope.
-- **Real auth.** `sessionStore.login()` sets a fixture user. No token, no
-  refresh, no API call.
+- **Register, magic link, Face-Auth.** No backend endpoints. They still call
+  `sessionStore.login()`, which sets a fixture user and no token. Login itself
+  is real — see [Auth](#auth).
+- **401 auto-refresh.** `http.ts` does not retry on 401 yet.
 - **Dashboard hover-to-live thumbnails**, per `ui.md`. Static images today.
 
 ## Tests

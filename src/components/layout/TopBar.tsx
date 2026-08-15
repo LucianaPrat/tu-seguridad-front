@@ -1,14 +1,17 @@
 import { Bell, ChevronDown } from "lucide-react"
 import { useSessionStore } from "@/stores/sessionStore"
+import { useLogout } from "@/hooks/useAuth"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 export default function TopBar() {
-  const { user, logout } = useSessionStore()
+  const { user } = useSessionStore()
+  const { mutate: logout } = useLogout()
   const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
 
   function handleLogout() {
+    // Clears the session locally either way — see useLogout's onSettled.
     logout()
     navigate("/login")
   }

@@ -13,6 +13,7 @@ import {
   MessageCircle,
 } from "lucide-react"
 import { useSessionStore } from "@/stores/sessionStore"
+import { useLogout } from "@/hooks/useAuth"
 
 interface NavItem {
   label: string
@@ -57,10 +58,12 @@ function NavItemLink({ item }: { item: NavItem }) {
 }
 
 export default function Sidebar() {
-  const { logout, user } = useSessionStore()
+  const { user } = useSessionStore()
+  const { mutate: logout } = useLogout()
   const navigate = useNavigate()
 
   function handleLogout() {
+    // Clears the session locally either way — see useLogout's onSettled.
     logout()
     navigate("/login")
   }
