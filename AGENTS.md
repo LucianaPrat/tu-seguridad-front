@@ -75,8 +75,10 @@ proves a problem.
 ```
 src/
   main.tsx              React entry. Mounts App into #root, imports index.css
-  App.tsx               QueryClientProvider > BrowserRouter > route table
+  App.tsx               QueryClientProvider > AuthGate > BrowserRouter > routes
   index.css             Tailwind entry, theme tokens, base layer
+  api/                  Typed API calls, one module per resource. auth only
+  hooks/                TanStack Query hooks over api/. useAuth only
   components/
     ui/                 shadcn/ui primitives — CLI-owned, do not hand-edit
     common/             App wrappers over those primitives
@@ -91,9 +93,10 @@ src/
     app/                Dashboard, DVRConfig, CameraMonitor, Events, Members,
                         CommChannels, Profile
   stores/               Zustand stores. sessionStore holds auth + DVR-init state
-  lib/                  utils (cn), queryClient, schemas (all Zod)
-  data/                 mockData, timezones — fixtures, no backend wired yet
-  test/setup.ts         Vitest setup: jest-dom, RTL cleanup, jsdom stubs
+  lib/                  utils (cn), queryClient, http (REST client), schemas (Zod)
+  data/                 mockData, timezones — fixtures for everything but auth
+  test/                 setup.ts (jest-dom, RTL cleanup, jsdom stubs),
+                        renderWithProviders, mockFetch
   imports/              Figma-exported assets
 ```
 
@@ -168,7 +171,21 @@ TanStack Query owns REST data and its cache, never Zustand. `src/lib/queryClient
 sets defaults: `staleTime` 30s, `retry` 1, `refetchOnWindowFocus` off — live
 traffic arrives over WebSocket, so focus refetching would re-pull pushed data.
 
-No REST client exists yet. Pages read `src/data/mockData.ts`.
+`src/lib/http.ts` is the REST client: it prefixes `VITE_API_BASE_URL`
+(default `http://localhost:3000/api/v1`), attaches the bearer access token from
+`sessionStore`, always sends `credentials: "include"`, and normalises the
+backend's `{statusCode, code, message}` envelope into `ApiError`.
+
+Auth is wired: `src/api/auth.ts` plus `src/hooks/useAuth.ts`. Everything else
+still reads `src/data/mockData.ts`.
+
+The access token lives in `sessionStore` in memory only. The refresh token is
+an HttpOnly cookie the backend sets on `/auth/login` and `/auth/refresh`, so JS
+never touches it — that is deliberate, do not move tokens to localStorage.
+`AuthGate` in `App.tsx` holds the routes until the boot-time refresh settles.
+
+There is no 401 auto-refresh interceptor yet. The access token lives 15
+minutes, so add one before any page starts consuming protected endpoints.
 
 ## Tests
 

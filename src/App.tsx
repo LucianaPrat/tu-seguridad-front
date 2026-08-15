@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { QueryClientProvider } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 import { queryClient } from "@/lib/queryClient"
+import { useSessionBootstrap } from "@/hooks/useAuth"
 import { useSessionStore } from "@/stores/sessionStore"
 
 // Auth pages
@@ -22,6 +23,19 @@ import EventsPage from "@/pages/app/EventsPage"
 import MembersPage from "@/pages/app/MembersPage"
 import CommChannelsPage from "@/pages/app/CommChannelsPage"
 import ProfilePage from "@/pages/app/ProfilePage"
+
+/*
+ * Holds the routes back until the boot-time session restore settles. Without
+ * it a reloaded, logged-in operator flashes the login screen before the
+ * refresh call lands.
+ */
+function AuthGate({ children }: { children: ReactNode }) {
+  useSessionBootstrap()
+  const { authStatus } = useSessionStore()
+
+  if (authStatus === "unknown") return null
+  return <>{children}</>
+}
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { isLoggedIn } = useSessionStore()
@@ -136,9 +150,11 @@ export function AppRoutes() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
+      <AuthGate>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthGate>
     </QueryClientProvider>
   )
 }

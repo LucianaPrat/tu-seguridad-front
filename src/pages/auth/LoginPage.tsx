@@ -7,8 +7,18 @@ import Button from "@/components/common/Button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useSessionStore } from "@/stores/sessionStore"
+import { useLogin } from "@/hooks/useAuth"
+import { ApiError } from "@/lib/http"
 import { loginSchema, type LoginValues } from "@/lib/schemas"
 import { Mail } from "lucide-react"
+
+function loginErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 401) return "Email o contraseña incorrectos"
+    if (error.status === 0) return "No pudimos conectar con el servidor. Revisá tu conexión."
+  }
+  return "Ocurrió un error. Intentá de nuevo."
+}
 
 // Face-Auth icon
 function FaceAuthIcon() {
@@ -32,10 +42,12 @@ function FaceAuthIcon() {
 export default function LoginPage() {
   const { login } = useSessionStore()
   const navigate = useNavigate()
+  const { mutateAsync: submitLogin } = useLogin()
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -43,9 +55,12 @@ export default function LoginPage() {
   })
 
   async function onSubmit(values: LoginValues) {
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    login(values.email)
-    navigate("/onboarding/dvr")
+    try {
+      await submitLogin(values)
+      navigate("/onboarding/dvr")
+    } catch (error) {
+      setError("root", { message: loginErrorMessage(error) })
+    }
   }
 
   function handleFaceAuth() {
@@ -57,6 +72,15 @@ export default function LoginPage() {
     <AuthCard title="Iniciar sesión" subtitle="Ingresá a tu panel de seguridad">
       {/* ── Primary form: email + password ── */}
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
+        {/* Server-side failures: wrong credentials, dead backend. */}
+        {errors.root && (
+          <p
+            role="alert"
+            className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2"
+          >
+            {errors.root.message}
+          </p>
+        )}
         <FormField
           label="Email"
           type="email"

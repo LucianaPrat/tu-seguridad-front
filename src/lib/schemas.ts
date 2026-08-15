@@ -84,3 +84,18 @@ export type DVRFormValues = z.infer<typeof dvrSchema>
 
 export const inviteSchema = z.object({ email: emailField })
 export type InviteValues = z.infer<typeof inviteSchema>
+
+/*
+ * API response shapes. Parsed, not cast: a backend that drifts should fail
+ * loudly at the boundary instead of leaking undefined into the store.
+ * The refresh token is absent on purpose — it lives in an HttpOnly cookie.
+ */
+export const accessTokenSchema = z.object({ accessToken: z.string().min(1) })
+export type AccessTokenResponse = z.infer<typeof accessTokenSchema>
+
+export const meSchema = z.object({
+  id: z.number(),
+  email: z.email(),
+  role: z.string(),
+})
+export type MeResponse = z.infer<typeof meSchema>
