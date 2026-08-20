@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import FormField from "@/components/common/FormField"
 import TimezoneCombobox from "@/components/common/TimezoneCombobox"
 import Button from "@/components/common/Button"
+import { useTestDvrConnection } from "@/hooks/useDvr"
 import { dvrSchema, type DVRFormValues } from "@/lib/schemas"
 import { Eye, EyeOff, CheckCircle, XCircle } from "lucide-react"
 
@@ -17,8 +18,6 @@ interface DVRFormProps {
   loading?: boolean
 }
 
-type TestState = "idle" | "loading" | "success" | "error"
-
 export default function DVRForm({
   defaultValues,
   onSubmit,
@@ -27,12 +26,13 @@ export default function DVRForm({
   loading = false,
 }: DVRFormProps) {
   const [showPass, setShowPass] = useState(false)
-  const [testState, setTestState] = useState<TestState>("idle")
+  const testConnection = useTestDvrConnection()
 
   const {
     register,
     control,
     handleSubmit,
+    getValues,
     trigger,
     formState: { errors },
   } = useForm<DVRFormValues>({
@@ -46,13 +46,15 @@ export default function DVRForm({
     },
   })
 
-  // Mocked until the DVR probe endpoint exists.
+  /*
+   * Validates only the three fields the probe sends: the backend rejects a
+   * time zone on this route, and the space name is not its business either.
+   */
   async function handleTest() {
-    const valid = await trigger()
+    const valid = await trigger(["dvrUrl", "dvrUser", "dvrPassword"])
     if (!valid) return
-    setTestState("loading")
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setTestState(Math.random() > 0.3 ? "success" : "error")
+    const { dvrUrl, dvrUser, dvrPassword } = getValues()
+    testConnection.mutate({ url: dvrUrl, username: dvrUser, password: dvrPassword })
   }
 
   return (
@@ -113,16 +115,16 @@ export default function DVRForm({
             type="button"
             variant="secondary"
             onClick={handleTest}
-            loading={testState === "loading"}
+            loading={testConnection.isPending}
           >
             Probar conexión
           </Button>
-          {testState === "success" && (
+          {testConnection.isSuccess && (
             <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
               <CheckCircle size={15} /> Conexión exitosa
             </span>
           )}
-          {testState === "error" && (
+          {testConnection.isError && (
             <span className="flex items-center gap-1.5 text-sm text-red-600 font-medium">
               <XCircle size={15} /> No se pudo conectar
             </span>
