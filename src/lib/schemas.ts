@@ -69,13 +69,14 @@ export const profilePasswordSchema = z
 export type ProfilePasswordValues = z.infer<typeof profilePasswordSchema>
 
 /*
- * dvrUrl stays a plain required string rather than z.url(). Operators point
- * this at LAN recorders, and tightening it here would reject shapes the old
- * form accepted. Revisit once the backend states what it accepts.
+ * dvrUrl mirrors ConfigureDvrDto.url on the backend — @Matches(/^https?:\/\/\S+$/)
+ * — rather than z.url(), which would reject the LAN shapes operators type. The
+ * wizard PUTs this now, so a scheme-less host would come back as a generic 400
+ * under the form instead of an error next to the field.
  */
 export const dvrSchema = z.object({
   spaceName: required(),
-  dvrUrl: required(),
+  dvrUrl: required().regex(/^https?:\/\/\S+$/, "Debe empezar con http:// o https://"),
   dvrUser: required(),
   dvrPassword: required(),
   timezone: required("Seleccioná una zona horaria"),

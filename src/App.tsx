@@ -2,9 +2,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { QueryClientProvider } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 import { queryClient } from "@/lib/queryClient"
-import { useSessionBootstrap } from "@/hooks/useAuth"
+import { useLogout, useSessionBootstrap } from "@/hooks/useAuth"
 import { useDvr } from "@/hooks/useDvr"
 import { useSessionStore } from "@/stores/sessionStore"
+import Button from "@/components/common/Button"
 
 // Auth pages
 import LoginPage from "@/pages/auth/LoginPage"
@@ -39,13 +40,21 @@ function AuthGate({ children }: { children: ReactNode }) {
 }
 
 /*
- * ponytail: a reload prompt, not a retry button — the query already retries
- * once, and a stuck backend is not something this screen can resolve.
+ * Logging out is the only exit this screen can offer. A reload prompt was
+ * worse than nothing: the fixture login paths (register, Face-Auth) hold no
+ * access token, so GET /dvr answers 401 and both land here, and a reload
+ * replays the boot refresh, finds no cookie and drops back to /login anyway.
+ * Clearing the session first is what keeps the guard from looping.
  */
 function DVRUnavailable() {
+  const { mutate: logout } = useLogout()
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 text-center text-sm text-muted-foreground">
-      No pudimos leer la configuración de tu DVR. Recargá la página para intentar de nuevo.
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
+      <p className="text-sm text-muted-foreground">No pudimos leer la configuración de tu DVR.</p>
+      <Button variant="secondary" onClick={() => logout()}>
+        Volver a iniciar sesión
+      </Button>
     </div>
   )
 }

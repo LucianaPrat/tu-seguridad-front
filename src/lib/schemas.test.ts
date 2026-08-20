@@ -119,7 +119,12 @@ describe("dvrSchema", () => {
     expect(messageFor(result, "timezone")).toBe("Seleccioná una zona horaria")
   })
 
-  it("still accepts a bare host, since operators point this at recorders", () => {
-    expect(dvrSchema.safeParse({ ...valid, dvrUrl: "192.168.1.100" }).success).toBe(true)
+  it("rejects a scheme-less host, which the backend answers with a 400", () => {
+    const result = dvrSchema.safeParse({ ...valid, dvrUrl: "192.168.1.100" })
+    expect(messageFor(result, "dvrUrl")).toBe("Debe empezar con http:// o https://")
+  })
+
+  it("accepts an https recorder with a padded value", () => {
+    expect(dvrSchema.safeParse({ ...valid, dvrUrl: " https://dvr.lan:8080 " }).success).toBe(true)
   })
 })

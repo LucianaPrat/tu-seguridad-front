@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import App, { AppRoutes } from "./App"
 import { queryClient } from "@/lib/queryClient"
 import { useSessionStore } from "@/stores/sessionStore"
@@ -72,6 +73,19 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: "Conectar y continuar" })).not.toBeInTheDocument()
   })
 
+  /* Mirror of the case above: the wizard cannot be reached by typing the URL
+     once a recorder is stored, or a re-visit offers to overwrite it. */
+  it("bounces a stored-DVR user off the onboarding wizard", async () => {
+    mockFetchSequence([DVR])
+    useSessionStore.getState().login("luciana@example.com")
+    window.history.pushState({}, "", "/onboarding/dvr")
+
+    render(<App />)
+
+    expect(await screen.findByText("Panel de cámaras")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Conectar y continuar" })).not.toBeInTheDocument()
+  })
+
   it("redirects an unknown path back through the guard chain", () => {
     window.history.pushState({}, "", "/no-such-page")
 
@@ -136,5 +150,24 @@ describe("DVR gate on a failed read", () => {
 
     expect(await screen.findByText(/No pudimos leer la configuración/)).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Conectar y continuar" })).not.toBeInTheDocument()
+  })
+
+  /* The fixture login paths (register, Face-Auth) carry no access token, so
+     GET /dvr answers 401 and they land here. Without an exit the screen is a
+     dead end: reloading finds no refresh cookie either. */
+  it("offers a way out that clears the session first", async () => {
+    mockFetchSequence([
+      { status: 401, body: { statusCode: 401, code: "UNAUTHORIZED", message: "no token" } },
+      { status: 204 },
+    ])
+    useSessionStore.getState().login("luciana@example.com")
+
+    renderWithProviders(<AppRoutes />, { route: "/" })
+
+    const exit = await screen.findByRole("button", { name: "Volver a iniciar sesión" })
+    await userEvent.setup().click(exit)
+
+    expect(await screen.findByRole("button", { name: "Ingresar" })).toBeInTheDocument()
+    expect(useSessionStore.getState().isLoggedIn).toBe(false)
   })
 })

@@ -24,6 +24,10 @@ export function useDvr() {
     queryKey: dvrKeys.current,
     queryFn: dvrApi.getDvr,
     enabled: isLoggedIn,
+    // Recorder config only changes through useConfigureDvr, which seeds this
+    // cache itself. Without this the gate re-reads it on every guarded route
+    // mount past the 30s default.
+    staleTime: Infinity,
   })
 }
 
