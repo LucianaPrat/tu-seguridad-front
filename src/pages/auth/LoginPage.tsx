@@ -57,7 +57,7 @@ export default function LoginPage() {
   async function onSubmit(values: LoginValues) {
     try {
       await submitLogin(values)
-      navigate("/onboarding/dvr")
+      navigate("/")
     } catch (error) {
       setError("root", { message: loginErrorMessage(error) })
     }
@@ -65,7 +65,7 @@ export default function LoginPage() {
 
   function handleFaceAuth() {
     login("face@auth.com")
-    navigate("/onboarding/dvr")
+    navigate("/")
   }
 
   return (

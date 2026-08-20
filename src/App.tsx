@@ -2,8 +2,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { QueryClientProvider } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 import { queryClient } from "@/lib/queryClient"
-import { useSessionBootstrap } from "@/hooks/useAuth"
+import { useLogout, useSessionBootstrap } from "@/hooks/useAuth"
+import { useDvr } from "@/hooks/useDvr"
 import { useSessionStore } from "@/stores/sessionStore"
+import Button from "@/components/common/Button"
 
 // Auth pages
 import LoginPage from "@/pages/auth/LoginPage"
@@ -37,39 +39,64 @@ function AuthGate({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
-function RequireAuth({ children }: { children: ReactNode }) {
+/*
+ * Logging out is the only exit this screen can offer. A reload prompt was
+ * worse than nothing: the fixture login paths (register, Face-Auth) hold no
+ * access token, so GET /dvr answers 401 and both land here, and a reload
+ * replays the boot refresh, finds no cookie and drops back to /login anyway.
+ * Clearing the session first is what keeps the guard from looping.
+ */
+function DVRUnavailable() {
+  const { mutate: logout } = useLogout()
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
+      <p className="text-sm text-muted-foreground">No pudimos leer la configuración de tu DVR.</p>
+      <Button variant="secondary" onClick={() => logout()}>
+        Volver a iniciar sesión
+      </Button>
+    </div>
+  )
+}
+
+/*
+ * The recorder stored server-side is what decides onboarding, not a flag in
+ * the store: a flag dies with the tab, so every login walked back into the DVR
+ * wizard.
+ *
+ * Three answers, three behaviours. Pending renders nothing, or a configured
+ * space flashes the wizard on every load. A failed GET renders the notice: a
+ * dead or refusing backend is not the same as "never configured", and sending
+ * the operator into the wizard there offers to overwrite a recorder we merely
+ * failed to read. Only a resolved answer forks.
+ */
+function DVRGate({ need, children }: { need: "configured" | "missing"; children: ReactNode }) {
   const { isLoggedIn } = useSessionStore()
+  const { data: dvr, isPending, isError } = useDvr()
+
   if (!isLoggedIn) return <Navigate to="/login" replace />
-  return <>{children}</>
+  if (isPending) return null
+  if (isError) return <DVRUnavailable />
+  if (dvr) return need === "configured" ? <>{children}</> : <Navigate to="/" replace />
+  return need === "missing" ? <>{children}</> : <Navigate to="/onboarding/dvr" replace />
 }
 
 function RequireDVR({ children }: { children: ReactNode }) {
-  const { isLoggedIn, isDVRInit } = useSessionStore()
-  if (!isLoggedIn) return <Navigate to="/login" replace />
-  if (!isDVRInit) return <Navigate to="/onboarding/dvr" replace />
-  return <>{children}</>
+  return <DVRGate need="configured">{children}</DVRGate>
+}
+
+/** Mirror of RequireDVR: the wizard is only reachable while nothing is stored. */
+function RequireNoDVR({ children }: { children: ReactNode }) {
+  return <DVRGate need="missing">{children}</DVRGate>
 }
 
 export function AppRoutes() {
-  const { isLoggedIn, isDVRInit } = useSessionStore()
+  const { isLoggedIn } = useSessionStore()
 
   return (
     <Routes>
       {/* Public auth routes */}
-      <Route
-        path="/login"
-        element={
-          isLoggedIn ? (
-            isDVRInit ? (
-              <Navigate to="/" replace />
-            ) : (
-              <Navigate to="/onboarding/dvr" replace />
-            )
-          ) : (
-            <LoginPage />
-          )
-        }
-      />
+      <Route path="/login" element={isLoggedIn ? <Navigate to="/" replace /> : <LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/auth/recover" element={<PasswordRecoveryPage />} />
       <Route path="/auth/change-password" element={<PasswordChangePage />} />
@@ -79,7 +106,9 @@ export function AppRoutes() {
       <Route
         path="/onboarding/dvr"
         element={
-          <RequireAuth>{isDVRInit ? <Navigate to="/" replace /> : <DVRInitPage />}</RequireAuth>
+          <RequireNoDVR>
+            <DVRInitPage />
+          </RequireNoDVR>
         }
       />
 

@@ -15,14 +15,12 @@ interface SessionState {
   authStatus: AuthStatus
   accessToken: string | null
   isLoggedIn: boolean
-  isDVRInit: boolean
   user: SessionUser | null
   login: (email: string) => void
   setAccessToken: (token: string | null) => void
   setSession: (profile: MeResponse) => void
   setAuthReady: () => void
   logout: () => void
-  initDVR: (spaceName: string) => void
   updateUser: (data: Partial<SessionUser>) => void
 }
 
@@ -44,7 +42,6 @@ export const useSessionStore = create<SessionState>((set) => ({
   authStatus: "unknown",
   accessToken: null,
   isLoggedIn: false,
-  isDVRInit: false,
   user: null,
 
   /*
@@ -76,15 +73,8 @@ export const useSessionStore = create<SessionState>((set) => ({
       authStatus: "ready",
       accessToken: null,
       isLoggedIn: false,
-      isDVRInit: false,
       user: null,
     }),
-
-  initDVR: (spaceName) =>
-    set((state) => ({
-      isDVRInit: true,
-      user: state.user ? { ...state.user, spaceName } : state.user,
-    })),
 
   updateUser: (data) =>
     set((state) => ({
