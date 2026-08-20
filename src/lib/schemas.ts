@@ -99,3 +99,16 @@ export const meSchema = z.object({
   role: z.string(),
 })
 export type MeResponse = z.infer<typeof meSchema>
+
+/*
+ * GET /dvr and PUT /dvr answer with this. Only the fields the UI reads are
+ * listed — zod strips the rest (lastTestAt, timestamps).
+ */
+export const dvrResponseSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+  username: z.string(),
+  timezone: z.string(),
+  cameraCount: z.number(),
+})
+export type DvrResponse = z.infer<typeof dvrResponseSchema>

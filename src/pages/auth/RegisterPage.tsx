@@ -35,7 +35,7 @@ export default function RegisterPage() {
   async function onSubmit(values: RegisterValues) {
     await new Promise((resolve) => setTimeout(resolve, 800))
     login(values.email)
-    navigate("/onboarding/dvr")
+    navigate("/")
   }
 
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {

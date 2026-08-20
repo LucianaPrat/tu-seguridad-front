@@ -6,7 +6,6 @@ const INITIAL = {
   authStatus: "unknown" as const,
   accessToken: null,
   isLoggedIn: false,
-  isDVRInit: false,
   user: null,
 }
 
@@ -18,7 +17,6 @@ describe("sessionStore", () => {
   it("starts logged out with no user", () => {
     const state = useSessionStore.getState()
     expect(state.isLoggedIn).toBe(false)
-    expect(state.isDVRInit).toBe(false)
     expect(state.user).toBeNull()
   })
 
@@ -31,32 +29,13 @@ describe("sessionStore", () => {
     expect(state.user?.spaceName).toBe("Mi Espacio Seguro")
   })
 
-  it("logout clears user and both flags", () => {
+  it("logout clears user and session flags", () => {
     useSessionStore.getState().login("someone@example.com")
-    useSessionStore.getState().initDVR("Casa")
 
     useSessionStore.getState().logout()
 
     const state = useSessionStore.getState()
     expect(state.isLoggedIn).toBe(false)
-    expect(state.isDVRInit).toBe(false)
-    expect(state.user).toBeNull()
-  })
-
-  it("initDVR marks DVR ready and renames the space", () => {
-    useSessionStore.getState().login("someone@example.com")
-    useSessionStore.getState().initDVR("Depósito Norte")
-
-    const state = useSessionStore.getState()
-    expect(state.isDVRInit).toBe(true)
-    expect(state.user?.spaceName).toBe("Depósito Norte")
-  })
-
-  it("initDVR without a user still flips the flag and leaves user null", () => {
-    useSessionStore.getState().initDVR("Casa")
-
-    const state = useSessionStore.getState()
-    expect(state.isDVRInit).toBe(true)
     expect(state.user).toBeNull()
   })
 

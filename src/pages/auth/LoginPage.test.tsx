@@ -29,7 +29,6 @@ beforeEach(() => {
     authStatus: "ready",
     accessToken: null,
     isLoggedIn: false,
-    isDVRInit: false,
     user: null,
   })
 })
