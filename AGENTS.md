@@ -77,8 +77,8 @@ src/
   main.tsx              React entry. Mounts App into #root, imports index.css
   App.tsx               QueryClientProvider > AuthGate > BrowserRouter > routes
   index.css             Tailwind entry, theme tokens, base layer
-  api/                  Typed API calls, one module per resource. auth only
-  hooks/                TanStack Query hooks over api/. useAuth only
+  api/                  Typed API calls, one module per resource. auth + dvr
+  hooks/                TanStack Query hooks over api/. useAuth, useDvr
   components/
     ui/                 shadcn/ui primitives — CLI-owned, do not hand-edit
     common/             App wrappers over those primitives
@@ -176,7 +176,8 @@ traffic arrives over WebSocket, so focus refetching would re-pull pushed data.
 `sessionStore`, always sends `credentials: "include"`, and normalises the
 backend's `{statusCode, code, message}` envelope into `ApiError`.
 
-Auth is wired: `src/api/auth.ts` plus `src/hooks/useAuth.ts`. Everything else
+Auth is wired: `src/api/auth.ts` plus `src/hooks/useAuth.ts`. So is the DVR
+connection probe: `src/api/dvr.ts` plus `src/hooks/useDvr.ts`. Everything else
 still reads `src/data/mockData.ts`.
 
 The access token lives in `sessionStore` in memory only. The refresh token is

@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import FormField from "@/components/common/FormField"
 import TimezoneCombobox from "@/components/common/TimezoneCombobox"
 import Button from "@/components/common/Button"
+import { useTestDvrConnection } from "@/hooks/useDvr"
 import { dvrSchema, type DVRFormValues } from "@/lib/schemas"
 import { Eye, EyeOff, CheckCircle, XCircle } from "lucide-react"
 
@@ -17,8 +18,6 @@ interface DVRFormProps {
   loading?: boolean
 }
 
-type TestState = "idle" | "loading" | "success" | "error"
-
 export default function DVRForm({
   defaultValues,
   onSubmit,
@@ -27,12 +26,13 @@ export default function DVRForm({
   loading = false,
 }: DVRFormProps) {
   const [showPass, setShowPass] = useState(false)
-  const [testState, setTestState] = useState<TestState>("idle")
+  const testConnection = useTestDvrConnection()
 
   const {
     register,
     control,
     handleSubmit,
+    getValues,
     trigger,
     formState: { errors },
   } = useForm<DVRFormValues>({
@@ -46,13 +46,29 @@ export default function DVRForm({
     },
   })
 
-  // Mocked until the DVR probe endpoint exists.
+  /*
+   * Validates only the three fields the probe sends: the backend rejects a
+   * time zone on this route, and the space name is not its business either.
+   *
+   * Trimmed here because required() in schemas.ts is z.string().trim(), so
+   * handleSubmit saves trimmed values while getValues() returns raw input.
+   * Untrimmed, the probe could pass on credentials different from the stored
+   * ones — or fail on credentials that would have been saved fine.
+   */
   async function handleTest() {
-    const valid = await trigger()
+    const valid = await trigger(["dvrUrl", "dvrUser", "dvrPassword"])
     if (!valid) return
-    setTestState("loading")
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setTestState(Math.random() > 0.3 ? "success" : "error")
+    const { dvrUrl, dvrUser, dvrPassword } = getValues()
+    testConnection.mutate({
+      url: dvrUrl.trim(),
+      username: dvrUser.trim(),
+      password: dvrPassword.trim(),
+    })
+  }
+
+  /** A badge must not outlive the values it describes. */
+  function resetProbe() {
+    if (!testConnection.isIdle) testConnection.reset()
   }
 
   return (
@@ -67,14 +83,14 @@ export default function DVRForm({
         label="URL del DVR"
         placeholder="http://192.168.1.100:8080"
         error={errors.dvrUrl?.message}
-        {...register("dvrUrl")}
+        {...register("dvrUrl", { onChange: resetProbe })}
       />
       <div className="grid grid-cols-2 gap-3">
         <FormField
           label="Usuario DVR"
           placeholder="admin"
           error={errors.dvrUser?.message}
-          {...register("dvrUser")}
+          {...register("dvrUser", { onChange: resetProbe })}
         />
         <FormField
           label="Contraseña DVR"
@@ -91,7 +107,7 @@ export default function DVRForm({
               {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
           }
-          {...register("dvrPassword")}
+          {...register("dvrPassword", { onChange: resetProbe })}
         />
       </div>
 
@@ -113,16 +129,16 @@ export default function DVRForm({
             type="button"
             variant="secondary"
             onClick={handleTest}
-            loading={testState === "loading"}
+            loading={testConnection.isPending}
           >
             Probar conexión
           </Button>
-          {testState === "success" && (
+          {testConnection.isSuccess && (
             <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
               <CheckCircle size={15} /> Conexión exitosa
             </span>
           )}
-          {testState === "error" && (
+          {testConnection.isError && (
             <span className="flex items-center gap-1.5 text-sm text-red-600 font-medium">
               <XCircle size={15} /> No se pudo conectar
             </span>
