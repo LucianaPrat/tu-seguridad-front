@@ -113,3 +113,44 @@ export const dvrResponseSchema = z.object({
   cameraCount: z.number(),
 })
 export type DvrResponse = z.infer<typeof dvrResponseSchema>
+
+/*
+ * GET /cameras and GET /cameras/:id. The API names alert levels in English
+ * (`intruder` / `suspicious`); `src/api/cameras.ts` translates them to the
+ * Spanish ones the UI speaks. Timestamps the page does not read are stripped.
+ */
+export const cameraResponseSchema = z.object({
+  id: z.string(),
+  externalId: z.string(),
+  name: z.string(),
+  location: z.string().nullish(),
+  status: z.enum(["online", "offline"]),
+  isConfigured: z.boolean(),
+  isEnabled: z.boolean(),
+  monitorMode: z.enum(["full", "partial"]),
+  alertType: z.enum(["intruder", "suspicious"]).nullish(),
+  lastSnapshotAt: z.string().nullish(),
+  latestSnapshotUrl: z.string().nullish(),
+})
+export type CameraResponse = z.infer<typeof cameraResponseSchema>
+
+/** Rectangles are percent of frame, so they survive a resolution change. */
+export const monitorZoneResponseSchema = z.object({
+  id: z.string(),
+  cameraId: z.string(),
+  x: z.number(),
+  y: z.number(),
+  width: z.number(),
+  height: z.number(),
+  alertType: z.enum(["intruder", "suspicious"]),
+})
+export type MonitorZoneResponse = z.infer<typeof monitorZoneResponseSchema>
+
+/** POST /cameras/:id/snapshots. `url` is the authenticated route for the bytes. */
+export const snapshotResponseSchema = z.object({
+  id: z.string(),
+  cameraId: z.string(),
+  url: z.string(),
+  capturedAt: z.string(),
+})
+export type SnapshotResponse = z.infer<typeof snapshotResponseSchema>

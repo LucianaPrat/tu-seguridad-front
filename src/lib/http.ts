@@ -65,3 +65,29 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
 
   return payload as T
 }
+
+/**
+ * Snapshot bytes sit behind the same bearer token as the JSON routes, so an
+ * `<img src>` cannot fetch them — the browser sends no Authorization header.
+ * Callers turn the blob into an object URL. `path` already carries the API
+ * prefix (`/api/v1/snapshots/...`), so it resolves against the origin only.
+ */
+export async function requestBlob(path: string): Promise<Blob> {
+  const { accessToken } = useSessionStore.getState()
+
+  let response: Response
+  try {
+    response = await fetch(new URL(path, API_BASE_URL), {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+      credentials: "include",
+    })
+  } catch {
+    throw new ApiError(0, "NETWORK_ERROR", "No pudimos conectar con el servidor")
+  }
+
+  if (!response.ok) {
+    throw new ApiError(response.status, "UNKNOWN_ERROR", "No pudimos cargar la imagen")
+  }
+
+  return response.blob()
+}
