@@ -49,12 +49,26 @@ export default function DVRForm({
   /*
    * Validates only the three fields the probe sends: the backend rejects a
    * time zone on this route, and the space name is not its business either.
+   *
+   * Trimmed here because required() in schemas.ts is z.string().trim(), so
+   * handleSubmit saves trimmed values while getValues() returns raw input.
+   * Untrimmed, the probe could pass on credentials different from the stored
+   * ones — or fail on credentials that would have been saved fine.
    */
   async function handleTest() {
     const valid = await trigger(["dvrUrl", "dvrUser", "dvrPassword"])
     if (!valid) return
     const { dvrUrl, dvrUser, dvrPassword } = getValues()
-    testConnection.mutate({ url: dvrUrl, username: dvrUser, password: dvrPassword })
+    testConnection.mutate({
+      url: dvrUrl.trim(),
+      username: dvrUser.trim(),
+      password: dvrPassword.trim(),
+    })
+  }
+
+  /** A badge must not outlive the values it describes. */
+  function resetProbe() {
+    if (!testConnection.isIdle) testConnection.reset()
   }
 
   return (
@@ -69,14 +83,14 @@ export default function DVRForm({
         label="URL del DVR"
         placeholder="http://192.168.1.100:8080"
         error={errors.dvrUrl?.message}
-        {...register("dvrUrl")}
+        {...register("dvrUrl", { onChange: resetProbe })}
       />
       <div className="grid grid-cols-2 gap-3">
         <FormField
           label="Usuario DVR"
           placeholder="admin"
           error={errors.dvrUser?.message}
-          {...register("dvrUser")}
+          {...register("dvrUser", { onChange: resetProbe })}
         />
         <FormField
           label="Contraseña DVR"
@@ -93,7 +107,7 @@ export default function DVRForm({
               {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
           }
-          {...register("dvrPassword")}
+          {...register("dvrPassword", { onChange: resetProbe })}
         />
       </div>
 

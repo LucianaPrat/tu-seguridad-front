@@ -43,11 +43,17 @@ export default function DVRConfigPage() {
           </div>
         )}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          {/*
+            Probe stays off while this page is fixture-backed: DEFAULT_VALUES are
+            mock credentials and handleConfirm saves nothing, so the button would
+            POST fixtures at the real backend and a green badge would mean
+            nothing. Turn it back on with the real DVR config load.
+          */}
           <DVRForm
             defaultValues={DEFAULT_VALUES}
             onSubmit={handleSubmit}
             submitLabel="Guardar configuración"
-            showTestConnection
+            showTestConnection={false}
           />
         </div>
       </div>

@@ -120,9 +120,10 @@ Three layers, top to bottom:
    Framework errors (404, 429) carry no `code`, so it falls back to
    `UNKNOWN_ERROR`; a failed `fetch` becomes status `0`.
 2. `src/api/<resource>.ts` — typed promises, Zod-parsed at the boundary.
-   `auth.ts` exists; the rest are not written.
+   `auth.ts` and `dvr.ts` exist; the rest are not written.
 3. `src/hooks/` — TanStack Query hooks over those. `useAuth.ts` exports
-   `useSessionBootstrap`, `useLogin`, `useLogout`.
+   `useSessionBootstrap`, `useLogin`, `useLogout`. `useDvr.ts` exports
+   `useTestDvrConnection`.
 
 Then swap page imports from `mockData` to the hooks. Types should not move.
 

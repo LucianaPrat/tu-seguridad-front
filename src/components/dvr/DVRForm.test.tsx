@@ -5,11 +5,16 @@ import DVRForm from "@/components/dvr/DVRForm"
 import { renderWithProviders } from "@/test/renderWithProviders"
 import { mockFetchSequence } from "@/test/mockFetch"
 
+/*
+ * Values are padded on purpose. required() in schemas.ts trims, so handleSubmit
+ * saves trimmed values — the probe has to send the same thing or a green badge
+ * describes credentials that never get stored.
+ */
 async function fillProbeFields() {
   const user = userEvent.setup()
-  await user.type(screen.getByLabelText("URL del DVR"), "http://192.168.1.250")
-  await user.type(screen.getByLabelText("Usuario DVR"), "admin")
-  await user.type(screen.getByLabelText("Contraseña DVR"), "secret")
+  await user.type(screen.getByLabelText("URL del DVR"), " http://192.168.1.250 ")
+  await user.type(screen.getByLabelText("Usuario DVR"), " admin ")
+  await user.type(screen.getByLabelText("Contraseña DVR"), " secret ")
   return user
 }
 
@@ -42,6 +47,19 @@ describe("DVRForm test connection", () => {
     await user.click(screen.getByRole("button", { name: "Probar conexión" }))
 
     expect(await screen.findByText("No se pudo conectar")).toBeInTheDocument()
+  })
+
+  it("drops the badge once a probe field changes", async () => {
+    mockFetchSequence([{ body: { channelCount: 4 } }])
+    renderWithProviders(<DVRForm onSubmit={vi.fn()} />)
+
+    const user = await fillProbeFields()
+    await user.click(screen.getByRole("button", { name: "Probar conexión" }))
+    expect(await screen.findByText("Conexión exitosa")).toBeInTheDocument()
+
+    await user.type(screen.getByLabelText("URL del DVR"), "1")
+
+    expect(screen.queryByText("Conexión exitosa")).not.toBeInTheDocument()
   })
 
   it("does not call the API with empty credentials", async () => {
