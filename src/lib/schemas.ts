@@ -159,3 +159,25 @@ export const snapshotResponseSchema = z.object({
   capturedAt: z.string(),
 })
 export type SnapshotResponse = z.infer<typeof snapshotResponseSchema>
+
+/**
+ * GET /cameras/:id/live. `url` is not a secret: the media server asks this API
+ * to authorize the playlist and every segment, so the player is what has to
+ * carry the bearer token. `protocol` is a literal so a second transport lands
+ * here as a parse failure rather than as a silently unplayable card.
+ */
+export const liveStreamResponseSchema = z.object({
+  protocol: z.literal("hls"),
+  url: z.string(),
+})
+export type LiveStreamResponse = z.infer<typeof liveStreamResponseSchema>
+
+/** POST /invitations. The raw token is absent by design — it lives only in the
+ * delivered link, so an admin reading this answer still cannot use it. */
+export const invitationResponseSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  expiresAt: z.string(),
+  createdAt: z.string(),
+})
+export type InvitationResponse = z.infer<typeof invitationResponseSchema>

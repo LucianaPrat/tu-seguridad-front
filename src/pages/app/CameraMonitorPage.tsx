@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/common/PageHeader"
 import Button from "@/components/common/Button"
@@ -30,7 +31,10 @@ function errorMessage(error: unknown) {
 
 export default function CameraMonitorPage() {
   const { data: cameras, isPending, error } = useCameras()
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  // The dashboard deep-links here with the camera it wants configured. Read once
+  // — after that the list on the left is what picks.
+  const [searchParams] = useSearchParams()
+  const [selectedId, setSelectedId] = useState<string | null>(() => searchParams.get("camera"))
 
   const selected = cameras?.find((camera) => camera.id === selectedId) ?? cameras?.[0] ?? null
 
