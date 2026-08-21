@@ -15,3 +15,4 @@ logs/
 coverage/
 .claude/worktrees/
 .claude/settings.local.json
+AGENTS.local.md
