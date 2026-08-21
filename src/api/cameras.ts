@@ -6,6 +6,7 @@ import {
 } from "@/lib/schemas"
 import type { CameraResponse, MonitorZoneResponse } from "@/lib/schemas"
 import type { AlertType, MonitorMode, MonitorZone } from "@/data/mockData"
+import { bboxOf, rectPoints } from "@/lib/zones"
 
 /*
  * Cameras, their monitor behaviour and their zones. The API names alert levels
@@ -69,20 +70,25 @@ function toCamera(dto: CameraResponse): Camera {
 function toZone(dto: MonitorZoneResponse): MonitorZone {
   return {
     id: dto.id,
-    x: dto.x,
-    y: dto.y,
-    width: dto.width,
-    height: dto.height,
+    // A zone stored before outlines existed answers none, and then the
+    // rectangle is the shape. Fewer than three points is not a polygon either,
+    // and `bboxOf` of an empty array is Infinity, so length decides, not null.
+    points:
+      dto.points && dto.points.length >= 3
+        ? dto.points
+        : rectPoints(dto.x, dto.y, dto.width, dto.height),
     alertType: FROM_API[dto.alertType],
   }
 }
 
+/**
+ * The outline is the shape; the box travels with it because the API validates
+ * and stores it, and derives it from the outline anyway.
+ */
 function zoneBody(zone: MonitorZone) {
   return {
-    x: zone.x,
-    y: zone.y,
-    width: zone.width,
-    height: zone.height,
+    ...bboxOf(zone.points),
+    points: zone.points,
     alertType: TO_API[zone.alertType],
   }
 }

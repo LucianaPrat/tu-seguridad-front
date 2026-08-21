@@ -1,13 +1,16 @@
+import type { Point } from "@/lib/zones"
+
 export type AlertType = "intruso" | "sospechoso"
 export type ChannelType = "llamada" | "whatsapp" | "email"
 export type MonitorMode = "full" | "partial"
 
 export interface MonitorZone {
   id: string
-  x: number
-  y: number
-  width: number
-  height: number
+  /**
+   * Free-hand outline, percent of frame. The only shape a zone has — the
+   * bounding box the API stores and the label hangs on comes from `bboxOf`.
+   */
+  points: Point[]
   alertType: AlertType
 }
 
@@ -80,7 +83,18 @@ export const CAMERAS: Camera[] = [
       "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=280&fit=crop&auto=format",
     snapshotAge: "5 min",
     monitorMode: "partial",
-    zones: [{ id: "z1", x: 10, y: 10, width: 40, height: 35, alertType: "intruso" }],
+    zones: [
+      {
+        id: "z1",
+        points: [
+          { x: 10, y: 10 },
+          { x: 50, y: 10 },
+          { x: 50, y: 45 },
+          { x: 10, y: 45 },
+        ],
+        alertType: "intruso",
+      },
+    ],
   },
   {
     id: "cam-03",
