@@ -134,7 +134,11 @@ export const cameraResponseSchema = z.object({
 })
 export type CameraResponse = z.infer<typeof cameraResponseSchema>
 
-/** Rectangles are percent of frame, so they survive a resolution change. */
+/**
+ * Coordinates are percent of frame, so they survive a resolution change.
+ * `points` is the outline the operator drew; the API answers the four corners
+ * of the rectangle for a zone that was drawn as one, so it is always present.
+ */
 export const monitorZoneResponseSchema = z.object({
   id: z.string(),
   cameraId: z.string(),
@@ -142,6 +146,7 @@ export const monitorZoneResponseSchema = z.object({
   y: z.number(),
   width: z.number(),
   height: z.number(),
+  points: z.array(z.object({ x: z.number(), y: z.number() })).nullish(),
   alertType: z.enum(["intruder", "suspicious"]),
 })
 export type MonitorZoneResponse = z.infer<typeof monitorZoneResponseSchema>

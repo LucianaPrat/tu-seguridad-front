@@ -3,9 +3,11 @@ import * as camerasApi from "@/api/cameras"
 import { API_BASE_URL } from "@/lib/http"
 import { mockFetchSequence } from "@/test/mockFetch"
 import type { MonitorZone } from "@/data/mockData"
+import { rectPoints } from "@/lib/zones"
 
 const stored: MonitorZone = {
   id: "11111111-1111-4111-8111-111111111111",
+  points: rectPoints(10, 10, 20, 20),
   x: 10,
   y: 10,
   width: 20,
@@ -15,6 +17,7 @@ const stored: MonitorZone = {
 
 const drawn: MonitorZone = {
   id: "z-1700000000000",
+  points: rectPoints(50, 50, 10, 10),
   x: 50,
   y: 50,
   width: 10,
@@ -59,7 +62,10 @@ describe("saveZones", () => {
     const calls = fetchMock.mock.calls as [string, RequestInit][]
     expect(calls[0][0]).toBe(`${API_BASE_URL}/cameras/cam/zones`)
     expect(calls[0][1].method).toBe("POST")
-    expect(JSON.parse(calls[0][1].body as string).alertType).toBe("suspicious")
+    const posted = JSON.parse(calls[0][1].body as string)
+    expect(posted.alertType).toBe("suspicious")
+    // The outline rides along with its bounding box.
+    expect(posted.points).toEqual(rectPoints(50, 50, 10, 10))
     expect(calls[1][0]).toBe(`${API_BASE_URL}/zones/${stored.id}`)
     expect(calls[1][1].method).toBe("PUT")
     expect(calls[2][1].method).toBe("DELETE")
@@ -106,5 +112,48 @@ describe("updateCamera", () => {
     expect(body).not.toHaveProperty("location")
     expect(camera.alertType).toBe("intruso")
     expect(camera.snapshotUrl).toBe("/api/v1/snapshots/abc")
+  })
+})
+
+describe("listZones", () => {
+  it("reads a stored outline, and falls back to the rectangle corners without one", async () => {
+    mockFetchSequence([
+      {
+        body: [
+          {
+            id: "11111111-1111-4111-8111-111111111111",
+            cameraId: "cam",
+            x: 10,
+            y: 10,
+            width: 20,
+            height: 20,
+            alertType: "intruder",
+          },
+          {
+            id: "22222222-2222-4222-8222-222222222222",
+            cameraId: "cam",
+            x: 10,
+            y: 10,
+            width: 40,
+            height: 30,
+            points: [
+              { x: 30, y: 10 },
+              { x: 10, y: 40 },
+              { x: 50, y: 25 },
+            ],
+            alertType: "suspicious",
+          },
+        ],
+      },
+    ])
+
+    const zones = await camerasApi.listZones("cam")
+
+    expect(zones[0].points).toEqual(rectPoints(10, 10, 20, 20))
+    expect(zones[1].points).toEqual([
+      { x: 30, y: 10 },
+      { x: 10, y: 40 },
+      { x: 50, y: 25 },
+    ])
   })
 })

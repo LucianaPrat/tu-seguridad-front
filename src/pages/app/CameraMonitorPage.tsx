@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/common/PageHeader"
 import Button from "@/components/common/Button"
+import AlertTypeToggle from "@/components/common/AlertTypeToggle"
 import ZoneEditor from "@/components/zone-editor/ZoneEditor"
 import ZoneList from "@/components/zone-editor/ZoneList"
 import {
@@ -60,14 +61,15 @@ export default function CameraMonitorPage() {
   }, [selected, storedZones])
 
   // The poller only stores a frame when an alert fires, so a camera that never
-  // alerted has nothing to draw on. Pull one the first time zones are opened.
+  // alerted has nothing to show. Both modes display the frame — partial draws
+  // on it, full uses it as the reference — so pull one on the first visit.
   const capturedFor = useRef<string | null>(null)
   useEffect(() => {
-    if (!selected || selected.snapshotUrl || draft?.monitorMode !== "partial") return
+    if (!selected || selected.snapshotUrl) return
     if (capturedFor.current === selected.id) return
     capturedFor.current = selected.id
     capture.mutate(selected.id)
-  }, [selected, draft?.monitorMode, capture.mutate])
+  }, [selected, capture.mutate])
 
   function updateDraft(patch: Partial<Draft>) {
     setDraft((current) => (current ? { ...current, ...patch } : current))
@@ -200,94 +202,106 @@ export default function CameraMonitorPage() {
                     ))}
                   </div>
 
-                  {/* Full mode: single alert type */}
+                  {/* Full mode: one level for the whole frame */}
                   {draft.monitorMode === "full" && (
                     <div className="mt-4">
-                      <p className="text-sm font-medium text-gray-700 mb-2">Tipo de alerta</p>
-                      <div className="flex gap-2">
-                        {(["intruso", "sospechoso"] as AlertType[]).map((type) => (
-                          <button
-                            key={type}
-                            onClick={() => updateDraft({ alertType: type })}
-                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors capitalize ${
-                              draft.alertType === type
-                                ? type === "intruso"
-                                  ? "border-red-400 bg-red-50 text-red-700"
-                                  : "border-amber-400 bg-amber-50 text-amber-700"
-                                : "border-gray-200 text-gray-600 hover:border-gray-300"
-                            }`}
-                          >
-                            {type === "intruso" ? "🔴 Intruso" : "🟡 Sospechoso"}
-                          </button>
-                        ))}
-                      </div>
+                      <p className="text-sm font-medium text-gray-700 mb-2">Nivel de alerta</p>
+                      <AlertTypeToggle
+                        value={draft.alertType}
+                        onChange={(alertType) => updateDraft({ alertType })}
+                      />
                     </div>
                   )}
                 </div>
 
-                {/* Partial mode: zone editor over the real camera frame */}
-                {draft.monitorMode === "partial" && (
-                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-medium text-gray-700">Zonas de monitoreo</p>
-                      <div className="flex gap-2 items-center">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          icon={<CameraIcon size={14} />}
-                          onClick={() => capture.mutate(selected.id)}
-                          loading={capture.isPending}
-                        >
-                          Actualizar imagen
-                        </Button>
-                        <span className="text-xs text-gray-500">Tipo por defecto:</span>
-                        <select
-                          value={draft.alertType}
-                          onChange={(e) => updateDraft({ alertType: e.target.value as AlertType })}
-                          className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1a6b61]/30"
-                        >
-                          <option value="intruso">Intruso</option>
-                          <option value="sospechoso">Sospechoso</option>
-                        </select>
-                      </div>
+                {/* The camera frame. Partial draws zones on it, full uses it as
+                    the reference for what "the whole image" actually covers. */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                  <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+                    <p className="text-sm font-medium text-gray-700">
+                      {draft.monitorMode === "full" ? "Imagen monitoreada" : "Zonas de monitoreo"}
+                    </p>
+                    <div className="flex gap-3 items-center">
+                      {draft.monitorMode === "partial" && (
+                        <div className="flex gap-2 items-center">
+                          <span className="text-xs text-gray-500">Dibujar como:</span>
+                          <AlertTypeToggle
+                            value={draft.alertType}
+                            onChange={(alertType) => updateDraft({ alertType })}
+                            size="sm"
+                          />
+                        </div>
+                      )}
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        icon={<CameraIcon size={14} />}
+                        onClick={() => capture.mutate(selected.id)}
+                        loading={capture.isPending}
+                      >
+                        Actualizar imagen
+                      </Button>
                     </div>
+                  </div>
 
-                    {capture.error && (
-                      <p className="text-sm text-red-600 mb-2">{errorMessage(capture.error)}</p>
-                    )}
+                  {capture.error && (
+                    <p className="text-sm text-red-600 mb-2">{errorMessage(capture.error)}</p>
+                  )}
 
-                    {snapshotUrl ? (
+                  {!snapshotUrl && (
+                    <p className="text-sm text-gray-500 bg-gray-50 border border-gray-100 rounded-xl p-6 text-center">
+                      {capture.isPending
+                        ? "Pidiéndole una captura a la cámara…"
+                        : "Todavía no hay una captura de esta cámara. Tomá una para ver qué mira."}
+                    </p>
+                  )}
+
+                  {snapshotUrl && draft.monitorMode === "partial" && (
+                    <>
                       <ZoneEditor
                         imageUrl={snapshotUrl}
                         zones={draft.zones}
                         onChange={(zones) => updateDraft({ zones })}
                         defaultAlertType={draft.alertType}
                       />
-                    ) : (
-                      <p className="text-sm text-gray-500 bg-gray-50 border border-gray-100 rounded-xl p-6 text-center">
-                        {capture.isPending
-                          ? "Pidiéndole una captura a la cámara…"
-                          : "Todavía no hay una captura de esta cámara. Tomá una para dibujar las zonas."}
-                      </p>
-                    )}
+                      <div className="mt-4">
+                        <ZoneList
+                          zones={draft.zones}
+                          onRemove={(id) =>
+                            updateDraft({ zones: draft.zones.filter((zone) => zone.id !== id) })
+                          }
+                          onChangeAlertType={(id, type) =>
+                            updateDraft({
+                              zones: draft.zones.map((zone) =>
+                                zone.id === id ? { ...zone, alertType: type } : zone,
+                              ),
+                            })
+                          }
+                        />
+                      </div>
+                    </>
+                  )}
 
-                    <div className="mt-4">
-                      <ZoneList
-                        zones={draft.zones}
-                        onRemove={(id) =>
-                          updateDraft({ zones: draft.zones.filter((zone) => zone.id !== id) })
-                        }
-                        onChangeAlertType={(id, type) =>
-                          updateDraft({
-                            zones: draft.zones.map((zone) =>
-                              zone.id === id ? { ...zone, alertType: type } : zone,
-                            ),
-                          })
-                        }
+                  {snapshotUrl && draft.monitorMode === "full" && (
+                    <div className="relative rounded-xl overflow-hidden">
+                      <img src={snapshotUrl} alt="Captura de la cámara" className="w-full block" />
+                      <div
+                        className={`absolute inset-0 border-2 rounded-xl ${
+                          draft.alertType === "intruso"
+                            ? "border-red-500 bg-red-500/20"
+                            : "border-amber-500 bg-amber-500/20"
+                        }`}
                       />
+                      <span
+                        className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-semibold text-white ${
+                          draft.alertType === "intruso" ? "bg-red-500" : "bg-amber-500"
+                        }`}
+                      >
+                        Toda la imagen · {draft.alertType === "intruso" ? "Intruso" : "Sospechoso"}
+                      </span>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </>
             )}
           </div>

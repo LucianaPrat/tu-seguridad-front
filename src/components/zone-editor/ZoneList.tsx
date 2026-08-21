@@ -1,6 +1,6 @@
 import { Trash2 } from "lucide-react"
 import type { AlertType, MonitorZone } from "@/data/mockData"
-import Badge from "@/components/common/Badge"
+import AlertTypeToggle from "@/components/common/AlertTypeToggle"
 
 interface ZoneListProps {
   zones: MonitorZone[]
@@ -21,19 +21,15 @@ export default function ZoneList({ zones, onRemove, onChangeAlertType }: ZoneLis
           className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100"
         >
           <span className="text-sm text-gray-500 font-medium w-5 shrink-0">#{i + 1}</span>
-          <div className="flex-1">
-            <select
-              value={zone.alertType}
-              onChange={(e) => onChangeAlertType(zone.id, e.target.value as AlertType)}
-              className="text-sm border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1a6b61]/30 bg-white"
-            >
-              <option value="intruso">Intruso</option>
-              <option value="sospechoso">Sospechoso</option>
-            </select>
-          </div>
-          <Badge variant={zone.alertType} />
+          <AlertTypeToggle
+            value={zone.alertType}
+            onChange={(type) => onChangeAlertType(zone.id, type)}
+            size="sm"
+            className="flex-1"
+          />
           <button
             onClick={() => onRemove(zone.id)}
+            aria-label={`Borrar zona ${i + 1}`}
             className="p-1 text-gray-400 hover:text-red-500 transition-colors"
           >
             <Trash2 size={14} />
