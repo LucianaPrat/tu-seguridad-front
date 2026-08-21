@@ -6,12 +6,11 @@ export type MonitorMode = "full" | "partial"
 
 export interface MonitorZone {
   id: string
-  /** Free-hand outline, percent of frame. Its bounding box is x/y/width/height. */
+  /**
+   * Free-hand outline, percent of frame. The only shape a zone has — the
+   * bounding box the API stores and the label hangs on comes from `bboxOf`.
+   */
   points: Point[]
-  x: number
-  y: number
-  width: number
-  height: number
   alertType: AlertType
 }
 
@@ -93,10 +92,6 @@ export const CAMERAS: Camera[] = [
           { x: 50, y: 45 },
           { x: 10, y: 45 },
         ],
-        x: 10,
-        y: 10,
-        width: 40,
-        height: 35,
         alertType: "intruso",
       },
     ],

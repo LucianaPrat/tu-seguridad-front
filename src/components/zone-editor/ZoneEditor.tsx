@@ -75,17 +75,19 @@ export default function ZoneEditor({
   }
 
   function onPointerMove(e: React.PointerEvent) {
-    if (!path) return
     const point = getRelative(e)
-    if (tool === "rect") {
-      setPath([path[0], point])
-      return
-    }
-    const last = path[path.length - 1]
-    if (Math.abs(point.x - last.x) + Math.abs(point.y - last.y) < MIN_STEP) return
-    // At the cap the outline stops gaining detail but still follows the cursor,
-    // so the zone closes where the operator let go either way.
-    setPath(path.length >= MAX_POINTS ? [...path.slice(0, -1), point] : [...path, point])
+    // Updater form, not `path` from the closure: the browser delivers moves
+    // faster than React flushes, so several land in one task and every one of
+    // them would read the same stale path and overwrite the previous sample.
+    setPath((path) => {
+      if (!path) return path
+      if (tool === "rect") return [path[0], point]
+      const last = path[path.length - 1]
+      if (Math.abs(point.x - last.x) + Math.abs(point.y - last.y) < MIN_STEP) return path
+      // At the cap the outline stops gaining detail but still follows the
+      // cursor, so the zone closes where the operator let go either way.
+      return path.length >= MAX_POINTS ? [...path.slice(0, -1), point] : [...path, point]
+    })
   }
 
   function onPointerUp() {
@@ -93,10 +95,7 @@ export default function ZoneEditor({
     const shape = shapeOf(path)
     const box = bboxOf(shape)
     if (shape.length > 2 && box.width > MIN_SIZE && box.height > MIN_SIZE) {
-      onChange([
-        ...zones,
-        { id: `z-${Date.now()}`, points: shape, ...box, alertType: defaultAlertType },
-      ])
+      onChange([...zones, { id: `z-${Date.now()}`, points: shape, alertType: defaultAlertType }])
     }
     setPath(null)
   }
@@ -146,43 +145,50 @@ export default function ZoneEditor({
           ))}
       </svg>
 
-      {/* Labels ride on the bounding box — the polygon has no corner to pin to. */}
-      {zones.map((zone) => (
-        <div
-          key={zone.id}
-          className="absolute flex items-center gap-1 px-1.5 py-0.5 text-xs font-semibold text-white rounded"
-          style={{
-            left: `${zone.x}%`,
-            top: `${zone.y}%`,
-            // A zone drawn against the top edge has no room above it for the
-            // label, and the frame clips overflow.
-            transform: zone.y < 6 ? "none" : "translateY(-100%)",
-            backgroundColor: ALERT_STROKE[zone.alertType],
-          }}
-        >
-          <button
-            title="Cambiar nivel de alerta"
-            onPointerDown={(e) => {
-              e.stopPropagation()
-              updateZone(zone.id, {
-                alertType: zone.alertType === "intruso" ? "sospechoso" : "intruso",
-              })
+      {/*
+        Labels ride on the bounding box — the polygon has no corner to pin to.
+        Derived here rather than stored on the zone: the outline is the one
+        shape, and a stored box could disagree with it.
+      */}
+      {zones.map((zone) => {
+        const box = bboxOf(zone.points)
+        return (
+          <div
+            key={zone.id}
+            className="absolute flex items-center gap-1 px-1.5 py-0.5 text-xs font-semibold text-white rounded"
+            style={{
+              left: `${box.x}%`,
+              top: `${box.y}%`,
+              // A zone drawn against the top edge has no room above it for the
+              // label, and the frame clips overflow.
+              transform: box.y < 6 ? "none" : "translateY(-100%)",
+              backgroundColor: ALERT_STROKE[zone.alertType],
             }}
           >
-            {zone.alertType === "intruso" ? "Intruso" : "Sospechoso"}
-          </button>
-          <button
-            aria-label="Borrar zona"
-            className="hover:opacity-70"
-            onPointerDown={(e) => {
-              e.stopPropagation()
-              onChange(zones.filter((z) => z.id !== zone.id))
-            }}
-          >
-            ×
-          </button>
-        </div>
-      ))}
+            <button
+              title="Cambiar nivel de alerta"
+              onPointerDown={(e) => {
+                e.stopPropagation()
+                updateZone(zone.id, {
+                  alertType: zone.alertType === "intruso" ? "sospechoso" : "intruso",
+                })
+              }}
+            >
+              {zone.alertType === "intruso" ? "Intruso" : "Sospechoso"}
+            </button>
+            <button
+              aria-label="Borrar zona"
+              className="hover:opacity-70"
+              onPointerDown={(e) => {
+                e.stopPropagation()
+                onChange(zones.filter((z) => z.id !== zone.id))
+              }}
+            >
+              ×
+            </button>
+          </div>
+        )
+      })}
 
       <div
         className="absolute top-2 right-2 flex gap-1 bg-black/60 rounded-lg p-1"

@@ -3,25 +3,17 @@ import * as camerasApi from "@/api/cameras"
 import { API_BASE_URL } from "@/lib/http"
 import { mockFetchSequence } from "@/test/mockFetch"
 import type { MonitorZone } from "@/data/mockData"
-import { rectPoints } from "@/lib/zones"
+import { bboxOf, rectPoints } from "@/lib/zones"
 
 const stored: MonitorZone = {
   id: "11111111-1111-4111-8111-111111111111",
   points: rectPoints(10, 10, 20, 20),
-  x: 10,
-  y: 10,
-  width: 20,
-  height: 20,
   alertType: "intruso",
 }
 
 const drawn: MonitorZone = {
   id: "z-1700000000000",
   points: rectPoints(50, 50, 10, 10),
-  x: 50,
-  y: 50,
-  width: 10,
-  height: 10,
   alertType: "sospechoso",
 }
 
@@ -44,12 +36,14 @@ describe("saveZones", () => {
         status: 201,
         body: {
           ...drawn,
+          // The wire format carries the bounding box; the domain zone does not.
+          ...bboxOf(drawn.points),
           id: "33333333-3333-4333-8333-333333333333",
           cameraId: "cam",
           alertType: "suspicious",
         },
       },
-      { body: { ...stored, cameraId: "cam", alertType: "intruder" } },
+      { body: { ...stored, ...bboxOf(stored.points), cameraId: "cam", alertType: "intruder" } },
       { status: 204 },
     ])
 

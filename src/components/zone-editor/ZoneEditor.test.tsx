@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { act, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import ZoneEditor from "@/components/zone-editor/ZoneEditor"
 import { rectPoints } from "@/lib/zones"
@@ -62,10 +62,6 @@ describe("ZoneEditor", () => {
         { x: 60, y: 10 },
         { x: 60, y: 60 },
       ],
-      x: 10,
-      y: 10,
-      width: 50,
-      height: 50,
       alertType: "intruso",
     })
   })
@@ -85,6 +81,33 @@ describe("ZoneEditor", () => {
     // Only the anchor and the last corner matter: the moves in between do not
     // bend a rectangle.
     expect(onChange.mock.calls[0][0][0].points).toEqual(rectPoints(10, 10, 50, 50))
+  })
+
+  /**
+   * `user.pointer` awaits a flush per step, which no browser does. A fast trace
+   * lands several moves in one task, so the whole path has to survive without a
+   * render in between.
+   */
+  it("keeps every sample of a drag that never flushes between moves", async () => {
+    const { onChange, frame } = renderEditor()
+
+    const dispatch = (type: string, clientX: number, clientY: number) =>
+      frame.dispatchEvent(
+        new MouseEvent(type, { bubbles: true, clientX, clientY }) as unknown as PointerEvent,
+      )
+
+    // Every move in one task, the way a browser delivers a fast trace. The
+    // release is its own task there, so it is its own act here.
+    await act(async () => {
+      dispatch("pointerdown", 20, 10)
+      for (let i = 1; i <= 20; i++) dispatch("pointermove", 20 + i * 5, 10 + i * 4)
+    })
+    await act(async () => {
+      dispatch("pointerup", 120, 90)
+    })
+
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange.mock.calls[0][0][0].points).toHaveLength(21)
   })
 
   it("ignores a click that drew nothing", async () => {

@@ -71,12 +71,12 @@ function toZone(dto: MonitorZoneResponse): MonitorZone {
   return {
     id: dto.id,
     // A zone stored before outlines existed answers none, and then the
-    // rectangle is the shape.
-    points: dto.points ?? rectPoints(dto.x, dto.y, dto.width, dto.height),
-    x: dto.x,
-    y: dto.y,
-    width: dto.width,
-    height: dto.height,
+    // rectangle is the shape. Fewer than three points is not a polygon either,
+    // and `bboxOf` of an empty array is Infinity, so length decides, not null.
+    points:
+      dto.points && dto.points.length >= 3
+        ? dto.points
+        : rectPoints(dto.x, dto.y, dto.width, dto.height),
     alertType: FROM_API[dto.alertType],
   }
 }

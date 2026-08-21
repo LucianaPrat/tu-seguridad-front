@@ -2,10 +2,11 @@
  * Zone geometry. Every coordinate is percent of frame, on both sides of the
  * API, so a resolution change does not move a zone.
  *
- * A zone is a free-hand polygon. Its bounding box travels with it because the
- * UI needs somewhere to hang the label, and rectangles are what the older
- * stored zones are — `rectPoints` turns those into a polygon on the way in so
- * the editor only ever deals with one shape.
+ * A zone is a free-hand polygon, and that outline is its only shape. The
+ * bounding box is derived — `bboxOf` — wherever one is needed: the wire format
+ * the API stores, and the label the UI hangs on a zone. Older stored zones are
+ * rectangles, and `rectPoints` turns those into a polygon on the way in so the
+ * editor only ever deals with one shape.
  */
 
 export interface Point {
