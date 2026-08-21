@@ -9,7 +9,7 @@ import type { MonitorZone } from "@/data/mockData"
 export const cameraKeys = {
   all: ["cameras"] as const,
   zones: (cameraId: string) => ["cameras", cameraId, "zones"] as const,
-  snapshot: (url: string) => ["snapshot", url] as const,
+  snapshot: (url: string, version: string) => ["snapshot", url, version] as const,
 }
 
 export function useCameras() {
@@ -73,10 +73,14 @@ export function useCaptureSnapshot() {
  * Snapshot bytes need the bearer header, so they are fetched and handed to the
  * `<img>` as an object URL. Revoked on unmount, otherwise every camera switch
  * leaks a blob.
+ *
+ * The live frame is one row per camera rewritten in place, so the URL stays the
+ * same while the bytes change: `capturedAt` goes into the key, otherwise the
+ * cache would serve the first frame of the session forever.
  */
-export function useSnapshotImage(path: string | null) {
+export function useSnapshotImage(path: string | null, capturedAt: string | null) {
   const { data } = useQuery<Blob>({
-    queryKey: cameraKeys.snapshot(path ?? ""),
+    queryKey: cameraKeys.snapshot(path ?? "", capturedAt ?? ""),
     queryFn: () => requestBlob(path!),
     enabled: path !== null,
     staleTime: Infinity,

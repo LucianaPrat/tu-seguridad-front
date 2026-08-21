@@ -35,7 +35,10 @@ export default function CameraMonitorPage() {
 
   // Zones live behind their own route, so the panel waits for both queries.
   const { data: storedZones } = useZones(selected?.id ?? "")
-  const snapshotUrl = useSnapshotImage(selected?.snapshotUrl ?? null)
+  const snapshotUrl = useSnapshotImage(
+    selected?.snapshotUrl ?? null,
+    selected?.lastSnapshotAt ?? null,
+  )
   const save = useSaveCamera()
   const capture = useCaptureSnapshot()
 
