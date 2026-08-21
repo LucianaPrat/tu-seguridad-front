@@ -120,10 +120,22 @@ Three layers, top to bottom:
    Framework errors (404, 429) carry no `code`, so it falls back to
    `UNKNOWN_ERROR`; a failed `fetch` becomes status `0`.
 2. `src/api/<resource>.ts` — typed promises, Zod-parsed at the boundary.
-   `auth.ts` and `dvr.ts` exist; the rest are not written.
+   `auth.ts`, `dvr.ts` and `cameras.ts` exist; the rest are not written.
 3. `src/hooks/` — TanStack Query hooks over those. `useAuth.ts` exports
    `useSessionBootstrap`, `useLogin`, `useLogout`. `useDvr.ts` exports
-   `useTestDvrConnection`.
+   `useTestDvrConnection`. `useCameras.ts` exports `useCameras`, `useZones`,
+   `useSaveCamera`, `useCaptureSnapshot`, `useSnapshotImage`.
+
+Cameras are the first screen off fixtures: `/cameras/monitor` reads
+`GET /cameras` and `GET /cameras/:id/zones`, and saves with `PUT /cameras/:id`
+plus one call per zone — there is no bulk zone route, so `diffZones` splits the
+edited list into creates, updates and deletes. Zone rectangles are percent of
+frame on both sides, which is why the editor needs no conversion.
+
+Snapshots are the exception to "the page just calls the hook": `GET
+/snapshots/:id` answers raw bytes behind the bearer token, so an `<img src>`
+gets a 401. `requestBlob` fetches them with the header and `useSnapshotImage`
+turns the blob into an object URL, revoked on unmount.
 
 Then swap page imports from `mockData` to the hooks. Types should not move.
 

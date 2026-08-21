@@ -77,8 +77,10 @@ src/
   main.tsx              React entry. Mounts App into #root, imports index.css
   App.tsx               QueryClientProvider > AuthGate > BrowserRouter > routes
   index.css             Tailwind entry, theme tokens, base layer
-  api/                  Typed API calls, one module per resource. auth + dvr
-  hooks/                TanStack Query hooks over api/. useAuth, useDvr
+  api/                  Typed API calls, one module per resource. auth, dvr,
+                        cameras
+  hooks/                TanStack Query hooks over api/. useAuth, useDvr,
+                        useCameras
   components/
     ui/                 shadcn/ui primitives — CLI-owned, do not hand-edit
     common/             App wrappers over those primitives
@@ -177,8 +179,15 @@ traffic arrives over WebSocket, so focus refetching would re-pull pushed data.
 backend's `{statusCode, code, message}` envelope into `ApiError`.
 
 Auth is wired: `src/api/auth.ts` plus `src/hooks/useAuth.ts`. So is the DVR
-connection probe: `src/api/dvr.ts` plus `src/hooks/useDvr.ts`. Everything else
-still reads `src/data/mockData.ts`.
+connection probe: `src/api/dvr.ts` plus `src/hooks/useDvr.ts`, and the monitor
+behaviour screen: `src/api/cameras.ts` plus `src/hooks/useCameras.ts`.
+Everything else still reads `src/data/mockData.ts`.
+
+`cameras.ts` translates alert levels at the boundary — the API says
+`intruder` / `suspicious`, the UI says `intruso` / `sospechoso`. Snapshot bytes
+sit behind the same bearer token as the JSON routes, so `<img src>` cannot
+reach them: `requestBlob` in `lib/http.ts` fetches them and `useSnapshotImage`
+hands the component an object URL.
 
 The access token lives in `sessionStore` in memory only. The refresh token is
 an HttpOnly cookie the backend sets on `/auth/login` and `/auth/refresh`, so JS
