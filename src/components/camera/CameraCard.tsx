@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { MoreHorizontal, Radio, Settings } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import type { Camera } from "@/api/cameras"
@@ -27,6 +27,15 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
   const [menuOpen, setMenuOpen] = useState(false)
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const navigate = useNavigate()
+
+  // `handleLeave` clears the timer; unmount does not. The list refetch after
+  // `Desactivar` remounts the card under a stationary pointer, so a pending
+  // timer would fire into a dead component.
+  useEffect(() => {
+    return () => {
+      if (hoverTimer.current) clearTimeout(hoverTimer.current)
+    }
+  }, [])
 
   const snapshotUrl = useSnapshotImage(camera.snapshotUrl, camera.lastSnapshotAt)
   const age = relativeTime(camera.lastSnapshotAt)
