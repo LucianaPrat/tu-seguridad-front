@@ -2,7 +2,6 @@ import { NavLink, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
   Shield,
-  Camera,
   Calendar,
   PlayCircle,
   User,
@@ -26,7 +25,6 @@ const NAV_ITEMS: NavItem[] = [{ label: "Inicio", icon: <LayoutDashboard size={18
 
 const SERVICE_ITEMS: NavItem[] = [
   { label: "Monitoreo", icon: <Shield size={18} />, to: "/cameras/monitor" },
-  { label: "Cámaras", icon: <Camera size={18} />, to: "/" },
   { label: "Eventos", icon: <Calendar size={18} />, to: "/events" },
   { label: "Grabaciones", icon: <PlayCircle size={18} />, to: "#" },
 ]

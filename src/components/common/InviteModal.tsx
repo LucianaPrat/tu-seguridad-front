@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import Modal from "./Modal"
 import Button from "./Button"
 import FormField from "./FormField"
+import { useCreateInvitation } from "@/hooks/useInvitations"
+import { ApiError } from "@/lib/http"
 import { inviteSchema, type InviteValues } from "@/lib/schemas"
 import { Send } from "lucide-react"
 
@@ -12,8 +14,15 @@ interface InviteModalProps {
   onClose: () => void
 }
 
+/** A 409 ("ya pertenece al espacio") is the message worth showing, so the
+ * backend's own copy wins over anything generic. */
+function errorMessage(error: unknown) {
+  return error instanceof ApiError ? error.message : "No pudimos enviar la invitación"
+}
+
 export default function InviteModal({ open, onClose }: InviteModalProps) {
   const [sent, setSent] = useState(false)
+  const invite = useCreateInvitation()
 
   const {
     register,
@@ -25,13 +34,19 @@ export default function InviteModal({ open, onClose }: InviteModalProps) {
     defaultValues: { email: "" },
   })
 
-  async function onSubmit() {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setSent(true)
+  async function onSubmit({ email }: InviteValues) {
+    try {
+      await invite.mutateAsync(email)
+      setSent(true)
+    } catch {
+      // Rendered from `invite.error` below. Swallowed here only so the promise
+      // settles and `isSubmitting` releases the button.
+    }
   }
 
   function handleClose() {
     setSent(false)
+    invite.reset()
     reset({ email: "" })
     onClose()
   }
@@ -57,6 +72,11 @@ export default function InviteModal({ open, onClose }: InviteModalProps) {
             Ingresá el email de la persona que querés invitar al espacio. Le llegará un enlace de
             acceso.
           </p>
+          {invite.error && (
+            <p role="alert" className="text-sm text-red-600">
+              {errorMessage(invite.error)}
+            </p>
+          )}
           <FormField
             label="Email"
             type="email"

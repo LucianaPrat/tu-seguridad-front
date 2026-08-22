@@ -1,10 +1,11 @@
 import { request } from "@/lib/http"
 import {
   cameraResponseSchema,
+  liveStreamResponseSchema,
   monitorZoneResponseSchema,
   snapshotResponseSchema,
 } from "@/lib/schemas"
-import type { CameraResponse, MonitorZoneResponse } from "@/lib/schemas"
+import type { CameraResponse, LiveStreamResponse, MonitorZoneResponse } from "@/lib/schemas"
 import type { AlertType, MonitorMode, MonitorZone } from "@/data/mockData"
 import { bboxOf, rectPoints } from "@/lib/zones"
 
@@ -111,6 +112,25 @@ export async function updateCamera(id: string, settings: CameraSettings): Promis
     },
   })
   return toCamera(cameraResponseSchema.parse(data))
+}
+
+/**
+ * Admin only. Every `UpdateCameraDto` field is optional, so an `isEnabled`-only
+ * body is legal — and it is the whole point: this is what makes the dashboard's
+ * Desactivar survive a reload instead of dying with the component state.
+ */
+export async function setCameraEnabled(id: string, isEnabled: boolean): Promise<Camera> {
+  const data = await request<unknown>(`/cameras/${id}`, { method: "PUT", body: { isEnabled } })
+  return toCamera(cameraResponseSchema.parse(data))
+}
+
+/**
+ * Where to play the camera right now. Registering it makes the media server
+ * pull RTSP from the recorder, so this is a request with a cost — do not fire
+ * it for a pointer merely crossing a card.
+ */
+export async function getCameraLive(id: string): Promise<LiveStreamResponse> {
+  return liveStreamResponseSchema.parse(await request<unknown>(`/cameras/${id}/live`))
 }
 
 export async function listZones(cameraId: string): Promise<MonitorZone[]> {

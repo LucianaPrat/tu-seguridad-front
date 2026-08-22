@@ -4,11 +4,16 @@ import * as camerasApi from "@/api/cameras"
 import { requestBlob } from "@/lib/http"
 import { useSessionStore } from "@/stores/sessionStore"
 import type { Camera, CameraSettings } from "@/api/cameras"
+import type { LiveStreamResponse } from "@/lib/schemas"
 import type { MonitorZone } from "@/data/mockData"
 
 export const cameraKeys = {
-  all: ["cameras"] as const,
+  // Not `["cameras"]`: that is a prefix of `zones` and `live`, and
+  // `invalidateQueries` prefix-matches, so invalidating the list would re-register
+  // a camera with the media server.
+  list: ["cameras", "list"] as const,
   zones: (cameraId: string) => ["cameras", cameraId, "zones"] as const,
+  live: (cameraId: string) => ["cameras", cameraId, "live"] as const,
   snapshot: (url: string, version: string) => ["snapshot", url, version] as const,
 }
 
@@ -16,7 +21,7 @@ export function useCameras() {
   const isLoggedIn = useSessionStore((state) => state.isLoggedIn)
 
   return useQuery<Camera[]>({
-    queryKey: cameraKeys.all,
+    queryKey: cameraKeys.list,
     queryFn: camerasApi.listCameras,
     enabled: isLoggedIn,
   })
@@ -54,8 +59,41 @@ export function useSaveCamera() {
     },
     onSuccess: ({ camera, zones }) => {
       queryClient.setQueryData(cameraKeys.zones(camera.id), zones)
-      queryClient.invalidateQueries({ queryKey: cameraKeys.all })
+      queryClient.invalidateQueries({ queryKey: cameraKeys.list })
     },
+  })
+}
+
+/** Flips one camera on or off. The list is what the dashboard buckets from. */
+export function useSetCameraEnabled() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, isEnabled }: { id: string; isEnabled: boolean }) =>
+      camerasApi.setCameraEnabled(id, isEnabled),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: cameraKeys.list }),
+  })
+}
+
+/**
+ * Where to play one camera. Mounted only while a card is hovered, so the query
+ * lives and dies with the player.
+ *
+ * `retry: false` because the failures here are verdicts, not blips: a
+ * deployment without MEDIAMTX_ENABLED answers 409 every single time, and three
+ * attempts would only make that cost three requests. `retryOnMount: false` is
+ * the same argument across hovers — `staleTime` does not apply to a query that
+ * errored, so without it every re-hover of a streamless camera fires the 409
+ * again. The long `staleTime` covers the success case: re-hovering a playing
+ * card must not re-register it with the media server.
+ */
+export function useCameraLive(cameraId: string) {
+  return useQuery<LiveStreamResponse>({
+    queryKey: cameraKeys.live(cameraId),
+    queryFn: () => camerasApi.getCameraLive(cameraId),
+    retry: false,
+    retryOnMount: false,
+    staleTime: 5 * 60_000,
   })
 }
 
@@ -65,7 +103,7 @@ export function useCaptureSnapshot() {
   return useMutation({
     mutationFn: camerasApi.captureSnapshot,
     // The fresh frame is what the camera list reports as latestSnapshotUrl.
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: cameraKeys.all }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: cameraKeys.list }),
   })
 }
 
