@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  completeProfileSchema,
   dvrSchema,
   emailOnlySchema,
   loginSchema,
@@ -126,5 +127,42 @@ describe("dvrSchema", () => {
 
   it("accepts an https recorder with a padded value", () => {
     expect(dvrSchema.safeParse({ ...valid, dvrUrl: " https://dvr.lan:8080 " }).success).toBe(true)
+  })
+})
+
+describe("completeProfileSchema", () => {
+  const valid = {
+    firstName: "Ada",
+    lastName: "Lovelace",
+    phone: "+5491112345678",
+    password: "claveLarga123",
+    repeatPassword: "claveLarga123",
+  }
+
+  it("accepts an E.164 phone and a 12-character password", () => {
+    expect(completeProfileSchema.safeParse(valid).success).toBe(true)
+  })
+
+  it("rejects a phone without a country code", () => {
+    const result = completeProfileSchema.safeParse({ ...valid, phone: "1112345678" })
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects a password the backend would refuse", () => {
+    // The route wants 12 characters; the shared strongPassword still says 8.
+    const result = completeProfileSchema.safeParse({
+      ...valid,
+      password: "corta123",
+      repeatPassword: "corta123",
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it("reports a mismatch on the repeated field", () => {
+    const result = completeProfileSchema.safeParse({ ...valid, repeatPassword: "otraClave123" })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].path).toEqual(["repeatPassword"])
+    }
   })
 })

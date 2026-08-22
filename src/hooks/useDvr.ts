@@ -19,11 +19,15 @@ export function useTestDvrConnection() {
  */
 export function useDvr() {
   const isLoggedIn = useSessionStore((state) => state.isLoggedIn)
+  const profileCompleted = useSessionStore((state) => state.user?.profileCompleted === true)
 
   return useQuery<DvrResponse | null>({
     queryKey: dvrKeys.current,
     queryFn: dvrApi.getDvr,
-    enabled: isLoggedIn,
+    // An incomplete profile is answered 403 by every route but /auth/me and
+    // /auth/complete-profile, so asking here would only flash the gate's
+    // "no pudimos leer el DVR" notice on the way to the profile form.
+    enabled: isLoggedIn && profileCompleted,
     // Recorder config only changes through useConfigureDvr, which seeds this
     // cache itself. Without this the gate re-reads it on every guarded route
     // mount past the 30s default.

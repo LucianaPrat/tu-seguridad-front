@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event"
 import App, { AppRoutes } from "./App"
 import { queryClient } from "@/lib/queryClient"
 import { useSessionStore } from "@/stores/sessionStore"
+import { meResponse } from "@/test/fixtures"
 import { mockFetchSequence } from "@/test/mockFetch"
 import { renderWithProviders } from "@/test/renderWithProviders"
 
@@ -86,6 +87,22 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: "Conectar y continuar" })).not.toBeInTheDocument()
   })
 
+  it("parks an incomplete profile on the profile form and never reads the DVR", async () => {
+    const fetchMock = mockFetchSequence([])
+    useSessionStore.setState({
+      isLoggedIn: true,
+      accessToken: "atoken",
+      user: meResponse({ firstName: "", lastName: "", phone: "", profileCompleted: false }),
+    })
+
+    render(<App />)
+
+    // Every protected route answers 403 for such a session, GET /dvr included,
+    // so asking would only flash the "no pudimos leer el DVR" dead end.
+    expect(await screen.findByRole("button", { name: "Guardar y entrar" })).toBeInTheDocument()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it("redirects an unknown path back through the guard chain", () => {
     window.history.pushState({}, "", "/no-such-page")
 
@@ -101,11 +118,7 @@ describe("App session bootstrap", () => {
   })
 
   it("restores the session from the refresh cookie before rendering routes", async () => {
-    mockFetchSequence([
-      { body: { accessToken: "atoken" } },
-      { body: { id: 1, email: "admin@tu-seguridad.local", role: "admin" } },
-      NO_DVR,
-    ])
+    mockFetchSequence([{ body: { accessToken: "atoken" } }, { body: meResponse() }, NO_DVR])
 
     render(<App />)
 

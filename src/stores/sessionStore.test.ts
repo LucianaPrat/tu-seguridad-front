@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import { useSessionStore } from "./sessionStore"
+import { meResponse } from "@/test/fixtures"
 
 // Zustand stores are module singletons, so state survives between tests.
 const INITIAL = {
@@ -64,27 +65,29 @@ describe("sessionStore", () => {
       expect(state.isLoggedIn).toBe(false)
     })
 
-    it("setSession builds the user off the API profile", () => {
-      useSessionStore.getState().setSession({
-        id: 42,
-        email: "admin@tu-seguridad.local",
-        role: "admin",
-      })
+    it("setSession stores the API profile as the session user", () => {
+      const profile = meResponse({ id: 42, firstName: "Ada", spaceName: "Depósito" })
+
+      useSessionStore.getState().setSession(profile)
 
       const state = useSessionStore.getState()
       expect(state.isLoggedIn).toBe(true)
       expect(state.authStatus).toBe("ready")
-      // Member.id is a string; the API sends a number.
-      expect(state.user?.id).toBe("42")
-      expect(state.user?.email).toBe("admin@tu-seguridad.local")
-      expect(state.user?.role).toBe("admin")
-      // Display-only fields the API has no column for stay fixture-backed.
-      expect(state.user?.spaceName).toBe("Mi Espacio Seguro")
+      // No merge with a fixture: /auth/me is the whole identity.
+      expect(state.user).toEqual(profile)
+    })
+
+    it("login flags the fixture user as profile-complete", () => {
+      // Register and Face-Auth still take this path; a false flag would park
+      // them on the complete-profile form forever.
+      useSessionStore.getState().login("someone@example.com")
+
+      expect(useSessionStore.getState().user?.profileCompleted).toBe(true)
     })
 
     it("logout clears the access token and settles authStatus", () => {
       useSessionStore.getState().setAccessToken("atoken")
-      useSessionStore.getState().setSession({ id: 1, email: "a@a.com", role: "admin" })
+      useSessionStore.getState().setSession(meResponse())
 
       useSessionStore.getState().logout()
 

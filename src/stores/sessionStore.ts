@@ -1,12 +1,8 @@
 import { create } from "zustand"
-import type { Member } from "@/data/mockData"
-import { MEMBERS } from "@/data/mockData"
 import type { MeResponse } from "@/lib/schemas"
 
-export interface SessionUser extends Member {
-  spaceName: string
-  role: string
-}
+/** GET /auth/me is the whole session identity — no fields added on the client. */
+export type SessionUser = MeResponse
 
 /** "unknown" until the boot-time refresh settles. Guards must not run before then. */
 export type AuthStatus = "unknown" | "ready"
@@ -29,13 +25,23 @@ interface SessionState {
  * script can read. It dies with the tab; the HttpOnly refresh cookie is what
  * survives a reload, replayed by useSessionBootstrap.
  *
- * MOCK_USER still fills the display fields: the API's users table carries only
- * id, email and role, so name, phone, avatar and spaceName stay fixtures.
+ * FIXTURE_USER exists for login() alone — register and Face-Auth have no
+ * endpoint yet. `profileCompleted: true` is load-bearing: those paths hold no
+ * real profile, and a false flag would park them on the profile form.
  */
-const MOCK_USER: SessionUser = {
-  ...MEMBERS[0],
+const FIXTURE_USER: SessionUser = {
+  id: 0,
+  email: "luciana@ejemplo.com",
+  firstName: "Luciana",
+  lastName: "García",
+  phone: "+54 9 11 1234-5678",
+  avatarUrl: null,
+  isActive: true,
+  profileCompleted: true,
+  spaceId: "",
   spaceName: "Mi Espacio Seguro",
   role: "admin",
+  receiveAlerts: true,
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
@@ -49,22 +55,11 @@ export const useSessionStore = create<SessionState>((set) => ({
    * those have a backend endpoint yet. Real credentials go through
    * setAccessToken + setSession instead.
    */
-  login: (_email) => set({ authStatus: "ready", isLoggedIn: true, user: MOCK_USER }),
+  login: (_email) => set({ authStatus: "ready", isLoggedIn: true, user: FIXTURE_USER }),
 
   setAccessToken: (token) => set({ accessToken: token }),
 
-  setSession: (profile) =>
-    set({
-      authStatus: "ready",
-      isLoggedIn: true,
-      user: {
-        ...MOCK_USER,
-        // Member.id is a string, the API's is a number.
-        id: String(profile.id),
-        email: profile.email,
-        role: profile.role,
-      },
-    }),
+  setSession: (profile) => set({ authStatus: "ready", isLoggedIn: true, user: profile }),
 
   setAuthReady: () => set({ authStatus: "ready" }),
 
