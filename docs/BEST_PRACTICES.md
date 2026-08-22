@@ -54,6 +54,28 @@ If a format run ever produces something suspicious, `git checkout -- src/` resto
 
 - TS1149: two files in one directory differing only in casing fail `tsc`, even on a case-sensitive filesystem. `Button.tsx` cannot sit beside shadcn's `button.tsx`. That is why app wrappers live in `src/components/common/` and shadcn primitives own `src/components/ui/`.
 
+## React Query + StrictMode: never mutate() from an effect
+
+`main.tsx` mounts `React.StrictMode`, so every effect runs twice in dev. Calling
+`mutate()` from a mount effect breaks in a way that looks like a backend problem:
+the mutation starts on the first mount, StrictMode's simulated remount detaches
+that observer, and the result never reaches the live one — the component sits on
+`isPending` forever even though the network tab shows the request answering 200.
+
+Seen on the invitation accept screen: `POST /invitations/accept` and `GET
+/auth/me` both returned 200 and the page kept rendering "Validando tu
+invitación…". A `useRef` guard against the double call does not help; it stops
+the second call, which is the wrong half of the problem.
+
+Use a `useQuery` keyed by whatever the effect would have passed to `mutate()`.
+Query deduplication collapses the double mount into one request and caches the
+result, so whichever mount survives reads it. For a single-use credential add
+`staleTime: Infinity`, `gcTime: Infinity` and `retry: false` — a refetch of a
+spent token can only answer 401.
+
+Mutations are still right for anything a user event triggers. The rule is only
+about firing one on mount.
+
 ## Vitest
 
 - Radix components throw in jsdom without stubs for pointer capture, `scrollIntoView`, `matchMedia` and `ResizeObserver`. All four are stubbed in `src/test/setup.ts`.
