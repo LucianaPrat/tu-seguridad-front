@@ -48,11 +48,24 @@ export default function LiveThumbnail({ cameraId, onPlaying }: LiveThumbnailProp
         if (accessToken) xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`)
       },
     })
+    // Nothing is rendered from this — the stored snapshot stays visible
+    // underneath, which is the whole degradation story. It is logged because a
+    // dead stream is otherwise indistinguishable from a slow one: the media
+    // server answers the master playlist from a muxer that can still die before
+    // it has produced a single segment, and then the variant playlist 404s.
+    hls.on(Hls.Events.ERROR, (_event, failure) => {
+      if (!failure.fatal) return
+      console.error(
+        `[live] ${cameraId} ${failure.type}/${failure.details}`,
+        failure.response?.code ?? "",
+      )
+    })
+
     hls.loadSource(data.url)
     hls.attachMedia(video)
 
     return () => hls.destroy()
-  }, [data])
+  }, [cameraId, data])
 
   if (!data) return null
 
