@@ -8,7 +8,10 @@ import type { LiveStreamResponse } from "@/lib/schemas"
 import type { MonitorZone } from "@/data/mockData"
 
 export const cameraKeys = {
-  all: ["cameras"] as const,
+  // Not `["cameras"]`: that is a prefix of `zones` and `live`, and
+  // `invalidateQueries` prefix-matches, so invalidating the list would re-register
+  // a camera with the media server.
+  list: ["cameras", "list"] as const,
   zones: (cameraId: string) => ["cameras", cameraId, "zones"] as const,
   live: (cameraId: string) => ["cameras", cameraId, "live"] as const,
   snapshot: (url: string, version: string) => ["snapshot", url, version] as const,
@@ -18,7 +21,7 @@ export function useCameras() {
   const isLoggedIn = useSessionStore((state) => state.isLoggedIn)
 
   return useQuery<Camera[]>({
-    queryKey: cameraKeys.all,
+    queryKey: cameraKeys.list,
     queryFn: camerasApi.listCameras,
     enabled: isLoggedIn,
   })
@@ -56,7 +59,7 @@ export function useSaveCamera() {
     },
     onSuccess: ({ camera, zones }) => {
       queryClient.setQueryData(cameraKeys.zones(camera.id), zones)
-      queryClient.invalidateQueries({ queryKey: cameraKeys.all })
+      queryClient.invalidateQueries({ queryKey: cameraKeys.list })
     },
   })
 }
@@ -68,7 +71,7 @@ export function useSetCameraEnabled() {
   return useMutation({
     mutationFn: ({ id, isEnabled }: { id: string; isEnabled: boolean }) =>
       camerasApi.setCameraEnabled(id, isEnabled),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: cameraKeys.all }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: cameraKeys.list }),
   })
 }
 
@@ -100,7 +103,7 @@ export function useCaptureSnapshot() {
   return useMutation({
     mutationFn: camerasApi.captureSnapshot,
     // The fresh frame is what the camera list reports as latestSnapshotUrl.
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: cameraKeys.all }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: cameraKeys.list }),
   })
 }
 
