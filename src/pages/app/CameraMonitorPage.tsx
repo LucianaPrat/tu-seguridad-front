@@ -36,7 +36,14 @@ export default function CameraMonitorPage() {
   const [searchParams] = useSearchParams()
   const [selectedId, setSelectedId] = useState<string | null>(() => searchParams.get("camera"))
 
-  const selected = cameras?.find((camera) => camera.id === selectedId) ?? cameras?.[0] ?? null
+  // `?? cameras[0]` is right only while nothing was asked for. A non-null id
+  // that resolves to nothing — a stale bookmark, a camera the recorder no longer
+  // reports — must not fall through to camera 0: that is the wrong-camera write
+  // this deep link exists to kill.
+  const selected = selectedId
+    ? (cameras?.find((camera) => camera.id === selectedId) ?? null)
+    : (cameras?.[0] ?? null)
+  const notFound = selectedId !== null && !selected && (cameras?.length ?? 0) > 0
 
   // Zones live behind their own route, so the panel waits for both queries.
   const { data: storedZones } = useZones(selected?.id ?? "")
@@ -124,7 +131,7 @@ export default function CameraMonitorPage() {
         </p>
       )}
 
-      {selected && (
+      {cameras && cameras.length > 0 && (
         <div className="flex gap-5 min-h-0">
           {/* Camera list */}
           <div className="w-52 shrink-0">
@@ -137,14 +144,14 @@ export default function CameraMonitorPage() {
                   <button
                     onClick={() => setSelectedId(camera.id)}
                     className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors ${
-                      camera.id === selected.id
+                      camera.id === selected?.id
                         ? "bg-[#1a6b61] text-white font-medium"
                         : "bg-white border border-gray-100 text-gray-700 hover:border-gray-200"
                     }`}
                   >
                     <p className="font-medium truncate">{camera.name}</p>
                     <p
-                      className={`text-xs truncate ${camera.id === selected.id ? "text-white/70" : "text-gray-400"}`}
+                      className={`text-xs truncate ${camera.id === selected?.id ? "text-white/70" : "text-gray-400"}`}
                     >
                       {camera.location ?? `Canal ${camera.externalId}`}
                     </p>
@@ -156,9 +163,14 @@ export default function CameraMonitorPage() {
 
           {/* Config panel */}
           <div className="flex-1 min-w-0 flex flex-col gap-4">
-            {!draft && <p className="text-sm text-gray-500">Cargando configuración…</p>}
+            {notFound && (
+              <p className="text-sm text-gray-500">
+                La cámara del enlace ya no está disponible. Elegí otra de la lista.
+              </p>
+            )}
+            {selected && !draft && <p className="text-sm text-gray-500">Cargando configuración…</p>}
 
-            {draft && (
+            {selected && draft && (
               <>
                 {save.error && <p className="text-sm text-red-600">{errorMessage(save.error)}</p>}
 
