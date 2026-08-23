@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react"
-import { MoreHorizontal, Radio, Settings } from "lucide-react"
+import { Radio } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import type { Camera } from "@/api/cameras"
 import Badge from "@/components/common/Badge"
 import LiveThumbnail from "@/components/camera/LiveThumbnail"
+import CameraCardMenu from "@/components/camera/CameraCardMenu"
 import { useSnapshotImage } from "@/hooks/useCameras"
 import { relativeTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
@@ -24,7 +25,6 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
   const [hovered, setHovered] = useState(false)
   const [live, setLive] = useState(false)
   const [playing, setPlaying] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const navigate = useNavigate()
 
@@ -109,51 +109,7 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
           {camera.status === "online" && age && (
             <span className="text-xs text-gray-400">{age}</span>
           )}
-          {/* Context menu. Stops the click here so picking an item does not also
-              trigger the card's own navigation. */}
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={() => setMenuOpen((o) => !o)}
-              aria-label={`Acciones de ${camera.name}`}
-              className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              <MoreHorizontal size={16} />
-            </button>
-            {menuOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                <div className="absolute right-0 bottom-full mb-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg py-1 w-44">
-                  <button
-                    onClick={() => {
-                      navigate(configureUrl)
-                      setMenuOpen(false)
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <Settings size={14} /> Configurar
-                  </button>
-                  <button
-                    onClick={() => {
-                      onToggleEnabled?.(camera.id)
-                      setMenuOpen(false)
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  >
-                    {camera.isEnabled ? "Desactivar" : "Activar"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate("/events")
-                      setMenuOpen(false)
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  >
-                    Ver eventos
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          <CameraCardMenu camera={camera} onToggleEnabled={onToggleEnabled} />
         </div>
       </div>
     </div>

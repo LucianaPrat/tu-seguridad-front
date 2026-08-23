@@ -28,8 +28,10 @@ export default function DashboardPage() {
 
   const all = cameras ?? []
   const configured = all.filter((c) => c.isConfigured && c.isEnabled)
-  const unconfigured = all.filter((c) => !c.isConfigured)
-  const disabled = all.filter((c) => c.isConfigured && !c.isEnabled)
+  const unconfigured = all.filter((c) => !c.isConfigured && c.isEnabled)
+  // Disabled is the last bucket, configured or not — an operator can silence a
+  // camera before ever setting it up.
+  const disabled = all.filter((c) => !c.isEnabled)
 
   // Writes through the API, so the bucket a camera sits in survives a reload.
   function toggleEnabled(id: string) {
@@ -92,29 +94,9 @@ export default function DashboardPage() {
             )}
           </section>
 
-          {/* Disabled cameras */}
-          {disabled.length > 0 && (
-            <section className="mb-8">
-              <button
-                className="flex items-center gap-2 mb-3 text-sm font-semibold text-gray-500 hover:text-gray-700"
-                onClick={() => setDisabledOpen((o) => !o)}
-              >
-                {disabledOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
-                Cámaras desactivadas ({disabled.length})
-              </button>
-              {disabledOpen && (
-                <CameraGrid>
-                  {disabled.map((cam) => (
-                    <CameraCard key={cam.id} camera={cam} onToggleEnabled={toggleEnabled} />
-                  ))}
-                </CameraGrid>
-              )}
-            </section>
-          )}
-
           {/* Unconfigured cameras */}
           {unconfigured.length > 0 && (
-            <section>
+            <section className="mb-8">
               <div className="flex items-center gap-2 mb-3">
                 <CameraIcon size={16} className="text-gray-400" />
                 <h2 className="text-sm font-semibold text-gray-700">Cámaras sin configurar</h2>
@@ -124,9 +106,41 @@ export default function DashboardPage() {
               </div>
               <CameraGrid>
                 {unconfigured.map((cam) => (
-                  <CameraCardUnconfigured key={cam.id} camera={cam} />
+                  <CameraCardUnconfigured
+                    key={cam.id}
+                    camera={cam}
+                    onToggleEnabled={toggleEnabled}
+                  />
                 ))}
               </CameraGrid>
+            </section>
+          )}
+
+          {/* Disabled cameras */}
+          {disabled.length > 0 && (
+            <section>
+              <button
+                className="flex items-center gap-2 mb-3 text-sm font-semibold text-gray-500 hover:text-gray-700"
+                onClick={() => setDisabledOpen((o) => !o)}
+              >
+                {disabledOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                Cámaras desactivadas ({disabled.length})
+              </button>
+              {disabledOpen && (
+                <CameraGrid>
+                  {disabled.map((cam) =>
+                    cam.isConfigured ? (
+                      <CameraCard key={cam.id} camera={cam} onToggleEnabled={toggleEnabled} />
+                    ) : (
+                      <CameraCardUnconfigured
+                        key={cam.id}
+                        camera={cam}
+                        onToggleEnabled={toggleEnabled}
+                      />
+                    ),
+                  )}
+                </CameraGrid>
+              )}
             </section>
           )}
         </>
