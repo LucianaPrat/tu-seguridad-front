@@ -41,6 +41,14 @@ const RAW = camera({
   isConfigured: false,
   location: null,
 })
+const RAW_OFF = camera({
+  id: "cam-04",
+  externalId: "4",
+  name: "Cámara 04",
+  isConfigured: false,
+  isEnabled: false,
+  location: null,
+})
 
 describe("DashboardPage", () => {
   beforeEach(() => {
@@ -48,15 +56,20 @@ describe("DashboardPage", () => {
   })
 
   it("splits the API's cameras into configured, disabled and unconfigured", async () => {
-    mockFetchSequence([{ body: [ONLINE, OFF, RAW] }])
+    mockFetchSequence([{ body: [ONLINE, OFF, RAW, RAW_OFF] }])
     renderWithProviders(<DashboardPage />)
 
     expect(await screen.findByText("Cámara 01")).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Cámaras configuradas" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Cámaras desactivadas (1)" })).toBeInTheDocument()
+    // An unconfigured camera that was switched off sits with the disabled ones,
+    // not in the unconfigured section.
+    expect(screen.getByRole("button", { name: "Cámaras desactivadas (2)" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Cámaras sin configurar" })).toBeInTheDocument()
     expect(screen.getByText("Cámara 02")).toBeInTheDocument()
     expect(screen.getByText("Cámara 03")).toBeInTheDocument()
+    expect(screen.getByText("Cámara 04")).toBeInTheDocument()
+    // Unconfigured cards carry the action menu too, so they can be disabled.
+    expect(screen.getByRole("button", { name: "Acciones de Cámara 03" })).toBeInTheDocument()
   })
 
   it("PUTs isEnabled false when an operator disables a camera", async () => {

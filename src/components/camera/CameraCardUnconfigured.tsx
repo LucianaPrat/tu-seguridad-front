@@ -2,14 +2,19 @@ import { Settings } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import type { Camera } from "@/api/cameras"
 import { useSnapshotImage } from "@/hooks/useCameras"
+import CameraCardMenu from "@/components/camera/CameraCardMenu"
 
 interface CameraCardUnconfiguredProps {
   camera: Camera
+  onToggleEnabled?: (id: string) => void
 }
 
 /** A camera the recorder reported but nobody has set up yet. No live view — it
  * has no monitoring behaviour to watch. */
-export default function CameraCardUnconfigured({ camera }: CameraCardUnconfiguredProps) {
+export default function CameraCardUnconfigured({
+  camera,
+  onToggleEnabled,
+}: CameraCardUnconfiguredProps) {
   const navigate = useNavigate()
   const snapshotUrl = useSnapshotImage(camera.snapshotUrl, camera.lastSnapshotAt)
 
@@ -38,11 +43,14 @@ export default function CameraCardUnconfigured({ camera }: CameraCardUnconfigure
       </div>
 
       {/* Footer */}
-      <div className="px-3 py-2.5">
-        <p className="text-sm font-semibold text-gray-900 truncate">{camera.name}</p>
-        <p className="text-xs text-gray-400 truncate">
-          {camera.location ?? `Canal ${camera.externalId}`}
-        </p>
+      <div className="px-3 py-2.5 flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-gray-900 truncate">{camera.name}</p>
+          <p className="text-xs text-gray-400 truncate">
+            {camera.location ?? `Canal ${camera.externalId}`}
+          </p>
+        </div>
+        <CameraCardMenu camera={camera} onToggleEnabled={onToggleEnabled} />
       </div>
     </div>
   )
