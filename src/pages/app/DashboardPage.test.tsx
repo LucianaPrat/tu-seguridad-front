@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import userEvent from "@testing-library/user-event"
-import { screen, waitFor } from "@testing-library/react"
+import { fireEvent, screen, waitFor } from "@testing-library/react"
 import DashboardPage from "./DashboardPage"
 import { mockFetchSequence } from "@/test/mockFetch"
 import { renderWithProviders } from "@/test/renderWithProviders"
@@ -89,5 +89,20 @@ describe("DashboardPage", () => {
     expect(url).toContain("/cameras/cam-01")
     expect(init.method).toBe("PUT")
     expect(JSON.parse(init.body)).toEqual({ isEnabled: false })
+  })
+
+  it("shows Conectando while the live request is in flight, then Sin señal once it fails", async () => {
+    mockFetchSequence([{ body: [ONLINE] }, { status: 409 }])
+    renderWithProviders(<DashboardPage />)
+
+    const card = (await screen.findByText("Cámara 01")).closest(".group")
+    expect(card).not.toBeNull()
+
+    // The card waits 300 ms before it asks for the stream; real timers cover it,
+    // `findByText` polls for a full second.
+    fireEvent.mouseEnter(card!)
+
+    expect(await screen.findByText("Conectando")).toBeInTheDocument()
+    expect(await screen.findByText("Sin señal")).toBeInTheDocument()
   })
 })
