@@ -179,9 +179,17 @@ traffic arrives over WebSocket, so focus refetching would re-pull pushed data.
 backend's `{statusCode, code, message}` envelope into `ApiError`.
 
 Auth is wired: `src/api/auth.ts` plus `src/hooks/useAuth.ts`. So is the DVR
-connection probe: `src/api/dvr.ts` plus `src/hooks/useDvr.ts`, and the monitor
-behaviour screen: `src/api/cameras.ts` plus `src/hooks/useCameras.ts`.
-Everything else still reads `src/data/mockData.ts`.
+connection probe: `src/api/dvr.ts` plus `src/hooks/useDvr.ts`, the monitor
+behaviour screen: `src/api/cameras.ts` plus `src/hooks/useCameras.ts`, and the
+members screen: `src/api/members.ts` / `src/api/invitations.ts` plus
+`src/hooks/useMembers.ts` / `src/hooks/useInvitations.ts`. Events, channels and
+the profile screen still read `src/data/mockData.ts`.
+
+`/auth/me` is the whole session identity — `sessionStore` holds the parsed
+profile with no fixture merge. An invited account arrives with
+`profileCompleted: false`, and the backend answers 403 on every other route
+until `POST /auth/complete-profile` succeeds, so `DVRGate` sends such a session
+to `/onboarding/profile` and `useDvr` stays disabled until the flag flips.
 
 `cameras.ts` translates alert levels at the boundary — the API says
 `intruder` / `suspicious`, the UI says `intruso` / `sospechoso`. Snapshot bytes

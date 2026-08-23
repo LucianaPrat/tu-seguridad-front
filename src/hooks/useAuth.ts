@@ -2,7 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as authApi from "@/api/auth"
 import { ApiError } from "@/lib/http"
 import { useSessionStore } from "@/stores/sessionStore"
-import type { LoginValues, MeResponse } from "@/lib/schemas"
+import type { CompleteProfileValues, LoginValues, MeResponse } from "@/lib/schemas"
+
+/** What the route takes: the form's repeated password never leaves the browser. */
+export type CompleteProfilePayload = Omit<CompleteProfileValues, "repeatPassword">
 
 export const authKeys = {
   session: ["auth", "session"] as const,
@@ -54,6 +57,37 @@ export function useLogin() {
         return profile
       } catch (error) {
         // A token with no profile is a half-open session; drop it.
+        store.logout()
+        throw error
+      }
+    },
+  })
+}
+
+/*
+ * Sends the missing profile fields, then rebuilds the session off the token the
+ * route answers with — its claims are what the backend's profile gate reads.
+ *
+ * A 409 means somebody already completed this profile (a second tab), and the
+ * access token in hand still claims otherwise, which would bounce the operator
+ * between the gate and the form forever. Trading the refresh cookie for a fresh
+ * token is what breaks that loop.
+ */
+export function useCompleteProfile() {
+  return useMutation<MeResponse, unknown, CompleteProfilePayload>({
+    mutationFn: async (payload) => {
+      const store = useSessionStore.getState()
+      try {
+        store.setAccessToken(await authApi.completeProfile(payload))
+      } catch (error) {
+        if (!(error instanceof ApiError) || error.status !== 409) throw error
+        store.setAccessToken(await authApi.refresh())
+      }
+      try {
+        const profile = await authApi.me()
+        store.setSession(profile)
+        return profile
+      } catch (error) {
         store.logout()
         throw error
       }

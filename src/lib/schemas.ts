@@ -87,6 +87,26 @@ export const inviteSchema = z.object({ email: emailField })
 export type InviteValues = z.infer<typeof inviteSchema>
 
 /*
+ * Mirrors CompleteProfileDto on the backend: E.164 phone and a 12-character
+ * password floor. Both are checked here so a rejected profile is a field error
+ * instead of a generic 400 under the form. `strongPassword` stays at 8 for the
+ * screens still on fixtures.
+ */
+export const completeProfileSchema = z
+  .object({
+    firstName: required(),
+    lastName: required(),
+    phone: z.string().regex(/^\+[1-9]\d{7,14}$/, "Usá formato internacional, ej +5491122334455"),
+    password: z.string().min(12, "Mínimo 12 caracteres"),
+    repeatPassword: z.string(),
+  })
+  .refine((values) => values.password === values.repeatPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["repeatPassword"],
+  })
+export type CompleteProfileValues = z.infer<typeof completeProfileSchema>
+
+/*
  * API response shapes. Parsed, not cast: a backend that drifts should fail
  * loudly at the boundary instead of leaking undefined into the store.
  * The refresh token is absent on purpose — it lives in an HttpOnly cookie.
@@ -97,7 +117,16 @@ export type AccessTokenResponse = z.infer<typeof accessTokenSchema>
 export const meSchema = z.object({
   id: z.number(),
   email: z.email(),
-  role: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  phone: z.string(),
+  avatarUrl: z.string().nullable(),
+  isActive: z.boolean(),
+  profileCompleted: z.boolean(),
+  spaceId: z.string(),
+  spaceName: z.string(),
+  role: z.enum(["admin", "member"]),
+  receiveAlerts: z.boolean(),
 })
 export type MeResponse = z.infer<typeof meSchema>
 
@@ -181,3 +210,35 @@ export const invitationResponseSchema = z.object({
   createdAt: z.string(),
 })
 export type InvitationResponse = z.infer<typeof invitationResponseSchema>
+
+/** GET /invitations. Pending only, admin only. */
+export const invitationListResponseSchema = z.object({
+  items: invitationResponseSchema.array(),
+  total: z.number(),
+})
+export type InvitationListResponse = z.infer<typeof invitationListResponseSchema>
+
+/*
+ * GET /members. One row of the roster: no role field — a member's role only
+ * comes back for the caller, on /auth/me. `firstName`, `lastName` and `phone`
+ * are empty strings for someone who accepted an invitation and never finished,
+ * which is what `profileCompleted` flags.
+ */
+export const memberResponseSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  phone: z.string(),
+  avatarUrl: z.string().nullable(),
+  isActive: z.boolean(),
+  profileCompleted: z.boolean(),
+  lastLoginAt: z.string().nullable(),
+})
+export type MemberResponse = z.infer<typeof memberResponseSchema>
+
+export const memberListResponseSchema = z.object({
+  items: memberResponseSchema.array(),
+  total: z.number(),
+})
+export type MemberListResponse = z.infer<typeof memberListResponseSchema>

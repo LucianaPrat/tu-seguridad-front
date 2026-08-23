@@ -30,3 +30,21 @@ export async function logout(): Promise<void> {
 export async function me(): Promise<MeResponse> {
   return meSchema.parse(await request<unknown>("/auth/me"))
 }
+
+/*
+ * Fills in what an invitation left open. One of the two routes reachable with
+ * an incomplete profile, and it re-issues the session: `profileCompleted` is a
+ * token claim, so the old access token would keep answering 403 everywhere.
+ */
+export async function completeProfile(payload: {
+  firstName: string
+  lastName: string
+  phone: string
+  password: string
+}): Promise<string> {
+  const data = await request<unknown>("/auth/complete-profile", {
+    method: "POST",
+    body: payload,
+  })
+  return accessTokenSchema.parse(data).accessToken
+}

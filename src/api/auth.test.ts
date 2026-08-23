@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import * as authApi from "@/api/auth"
 import { API_BASE_URL } from "@/lib/http"
+import { meResponse } from "@/test/fixtures"
 import { mockFetchSequence } from "@/test/mockFetch"
 import { useSessionStore } from "@/stores/sessionStore"
 
@@ -53,18 +54,45 @@ describe("logout", () => {
 
 describe("me", () => {
   it("parses the profile", async () => {
-    mockFetchSequence([{ body: { id: 1, email: "admin@example.com", role: "admin" } }])
+    const profile = meResponse()
+    mockFetchSequence([{ body: profile }])
 
-    await expect(authApi.me()).resolves.toEqual({
-      id: 1,
-      email: "admin@example.com",
-      role: "admin",
-    })
+    await expect(authApi.me()).resolves.toEqual(profile)
   })
 
   it("throws when the profile shape drifts", async () => {
-    mockFetchSequence([{ body: { id: "1", email: "admin@example.com", role: "admin" } }])
+    mockFetchSequence([{ body: { ...meResponse(), id: "1" } }])
 
     await expect(authApi.me()).rejects.toThrow()
+  })
+
+  it("throws on a role the app does not know", async () => {
+    mockFetchSequence([{ body: { ...meResponse(), role: "owner" } }])
+
+    await expect(authApi.me()).rejects.toThrow()
+  })
+})
+
+describe("completeProfile", () => {
+  it("posts the profile and returns the re-issued token", async () => {
+    const fetchMock = mockFetchSequence([{ body: { accessToken: "reissued" } }])
+
+    const token = await authApi.completeProfile({
+      firstName: "Ada",
+      lastName: "Lovelace",
+      phone: "+5491112345678",
+      password: "unaClaveLarga1",
+    })
+
+    expect(token).toBe("reissued")
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe(`${API_BASE_URL}/auth/complete-profile`)
+    expect(init.method).toBe("POST")
+    expect(JSON.parse(init.body as string)).toEqual({
+      firstName: "Ada",
+      lastName: "Lovelace",
+      phone: "+5491112345678",
+      password: "unaClaveLarga1",
+    })
   })
 })

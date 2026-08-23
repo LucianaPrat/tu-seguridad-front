@@ -120,11 +120,14 @@ Three layers, top to bottom:
    Framework errors (404, 429) carry no `code`, so it falls back to
    `UNKNOWN_ERROR`; a failed `fetch` becomes status `0`.
 2. `src/api/<resource>.ts` — typed promises, Zod-parsed at the boundary.
-   `auth.ts`, `dvr.ts` and `cameras.ts` exist; the rest are not written.
+   `auth.ts`, `dvr.ts`, `cameras.ts`, `members.ts` and `invitations.ts` exist;
+   the rest are not written.
 3. `src/hooks/` — TanStack Query hooks over those. `useAuth.ts` exports
    `useSessionBootstrap`, `useLogin`, `useLogout`. `useDvr.ts` exports
    `useTestDvrConnection`. `useCameras.ts` exports `useCameras`, `useZones`,
-   `useSaveCamera`, `useCaptureSnapshot`, `useSnapshotImage`.
+   `useSaveCamera`, `useCaptureSnapshot`, `useSnapshotImage`. `useMembers.ts`
+   exports `useMembers`; `useInvitations.ts` exports `useCreateInvitation`,
+   `usePendingInvitations`, `useAcceptInvitation`.
 
 Cameras are the first screen off fixtures: `/cameras/monitor` reads
 `GET /cameras` and `GET /cameras/:id/zones`, and saves with `PUT /cameras/:id`
@@ -208,9 +211,14 @@ Named so nobody assumes they exist:
 - **Video playback.** hls.js if the DVR serves HLS, native WebRTC if it serves
   low-latency. Player mounts only while a camera panel is open — constant
   streaming is explicitly out of scope.
-- **Register, magic link, Face-Auth.** No backend endpoints. They still call
-  `sessionStore.login()`, which sets a fixture user and no token. Login itself
-  is real — see [Auth](#auth).
+- **Register, magic link, Face-Auth.** Endpoints exist (`POST /auth/register`,
+  `POST /auth/magic-link/request|consume`, `POST /auth/password-reset/confirm`)
+  but no page calls them: these screens still call `sessionStore.login()`, which
+  sets a fixture user and no token. The delivered links also point at paths this
+  app does not serve — the mailer sends `/auth/magic` and `/auth/reset-password`,
+  the router has `/auth/magic-link` and `/auth/change-password`, and neither
+  page reads a `?token=`. Login and the invitation flow are real — see
+  [Auth](#auth).
 - **401 auto-refresh.** `http.ts` does not retry on 401 yet.
 - **Dashboard hover-to-live thumbnails**, per `ui.md`. Static images today.
 

@@ -13,9 +13,11 @@ import RegisterPage from "@/pages/auth/RegisterPage"
 import PasswordRecoveryPage from "@/pages/auth/PasswordRecoveryPage"
 import PasswordChangePage from "@/pages/auth/PasswordChangePage"
 import MagicLinkPage from "@/pages/auth/MagicLinkPage"
+import InvitationAcceptPage from "@/pages/auth/InvitationAcceptPage"
 
 // Onboarding
 import DVRInitPage from "@/pages/onboarding/DVRInitPage"
+import CompleteProfilePage from "@/pages/onboarding/CompleteProfilePage"
 
 // App pages
 import DashboardPage from "@/pages/app/DashboardPage"
@@ -71,10 +73,17 @@ function DVRUnavailable() {
  * failed to read. Only a resolved answer forks.
  */
 function DVRGate({ need, children }: { need: "configured" | "missing"; children: ReactNode }) {
-  const { isLoggedIn } = useSessionStore()
+  const { isLoggedIn, user } = useSessionStore()
   const { data: dvr, isPending, isError } = useDvr()
 
   if (!isLoggedIn) return <Navigate to="/login" replace />
+  /*
+   * An invited account has no name, no phone and no password of its own, and
+   * the backend answers 403 on every route until it does — GET /dvr included.
+   * This has to sit above the isPending check: useDvr stays disabled for such a
+   * session, and a disabled query is pending forever.
+   */
+  if (user && !user.profileCompleted) return <Navigate to="/onboarding/profile" replace />
   if (isPending) return null
   if (isError) return <DVRUnavailable />
   if (dvr) return need === "configured" ? <>{children}</> : <Navigate to="/" replace />
@@ -101,8 +110,12 @@ export function AppRoutes() {
       <Route path="/auth/recover" element={<PasswordRecoveryPage />} />
       <Route path="/auth/change-password" element={<PasswordChangePage />} />
       <Route path="/auth/magic-link" element={<MagicLinkPage />} />
+      {/* The token in the emailed link is the credential, so this one is public. */}
+      <Route path="/invitations/accept" element={<InvitationAcceptPage />} />
 
       {/* Onboarding */}
+      {/* Guards itself: RequireDVR would bounce an incomplete profile back here. */}
+      <Route path="/onboarding/profile" element={<CompleteProfilePage />} />
       <Route
         path="/onboarding/dvr"
         element={

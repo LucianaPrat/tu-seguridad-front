@@ -4,8 +4,12 @@ import PageHeader from "@/components/common/PageHeader"
 import Button from "@/components/common/Button"
 import Badge from "@/components/common/Badge"
 import InviteModal from "@/components/common/InviteModal"
-import { MEMBERS } from "@/data/mockData"
-import { UserPlus } from "lucide-react"
+import { useMembers } from "@/hooks/useMembers"
+import { usePendingInvitations } from "@/hooks/useInvitations"
+import { useSessionStore } from "@/stores/sessionStore"
+import { ApiError } from "@/lib/http"
+import type { MemberResponse } from "@/lib/schemas"
+import { Mail, UserPlus } from "lucide-react"
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString("es-AR", {
@@ -17,73 +21,148 @@ function formatDate(iso: string) {
   })
 }
 
+/*
+ * An invitation that was accepted but never finished carries empty strings in
+ * firstName, lastName and phone — profileCompleted is what flags it. The email
+ * column already identifies such a row, so the name cell says what is missing
+ * instead of repeating the address.
+ */
+function displayName(member: MemberResponse) {
+  const name = `${member.firstName} ${member.lastName}`.trim()
+  return name || "Sin nombre"
+}
+
+function initials(member: MemberResponse) {
+  const letters = `${member.firstName[0] ?? ""}${member.lastName[0] ?? ""}`
+  return letters || member.email[0].toUpperCase()
+}
+
+const HEAD_CELL = "text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider"
+
 export default function MembersPage() {
   const [inviteOpen, setInviteOpen] = useState(false)
+  // Inviting is admin-only on the backend, so a member gets no button rather
+  // than a 403 behind one.
+  const isAdmin = useSessionStore((state) => state.user?.role === "admin")
+  const members = useMembers()
+  // Admin only on the backend; disabled for a plain member, so `data` stays
+  // undefined there and no pending rows render.
+  const invitations = usePendingInvitations()
+
+  const rows = members.data?.items ?? []
+  const pending = invitations.data?.items ?? []
 
   return (
     <AppShell>
       <PageHeader
         title="Miembros del espacio"
-        subtitle={`${MEMBERS.length} usuarios registrados`}
+        subtitle={
+          members.data ? `${members.data.total} usuarios registrados` : "Cargando miembros…"
+        }
         action={
-          <Button icon={<UserPlus size={14} />} onClick={() => setInviteOpen(true)}>
-            Invitar miembro
-          </Button>
+          isAdmin ? (
+            <Button icon={<UserPlus size={14} />} onClick={() => setInviteOpen(true)}>
+              Invitar miembro
+            </Button>
+          ) : undefined
         }
       />
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-100">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Miembro
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Estado
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Último acceso
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {MEMBERS.map((member) => (
-              <tr key={member.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    {member.avatarUrl ? (
-                      <img
-                        src={member.avatarUrl}
-                        alt={member.firstName}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-[#1a6b61] flex items-center justify-center text-white text-xs font-semibold shrink-0">
-                        {member.firstName[0]}
-                        {member.lastName[0]}
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {member.firstName} {member.lastName}
-                      </p>
-                      <p className="text-xs text-gray-400">{member.phone}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-gray-600">{member.email}</td>
-                <td className="px-4 py-3">
-                  <Badge variant={member.isActive ? "active" : "inactive"} />
-                </td>
-                <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(member.lastLogin)}</td>
+        {members.isPending ? (
+          <p className="px-4 py-6 text-sm text-muted-foreground">Cargando miembros…</p>
+        ) : members.isError ? (
+          <p role="alert" className="px-4 py-6 text-sm text-destructive">
+            {members.error instanceof ApiError
+              ? members.error.message
+              : "No pudimos cargar los miembros del espacio."}
+          </p>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className={HEAD_CELL}>Miembro</th>
+                <th className={HEAD_CELL}>Email</th>
+                <th className={HEAD_CELL}>Estado</th>
+                <th className={HEAD_CELL}>Último acceso</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {rows.length === 0 && pending.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-6 text-muted-foreground">
+                    Todavía no hay miembros en este espacio.
+                  </td>
+                </tr>
+              )}
+
+              {rows.map((member) => (
+                <tr key={`member-${member.id}`} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      {member.avatarUrl ? (
+                        <img
+                          src={member.avatarUrl}
+                          alt={displayName(member)}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-semibold shrink-0">
+                          {initials(member)}
+                        </div>
+                      )}
+                      <div>
+                        <p
+                          className={
+                            member.profileCompleted
+                              ? "font-medium text-gray-900"
+                              : "font-medium text-gray-400"
+                          }
+                        >
+                          {displayName(member)}
+                        </p>
+                        {member.profileCompleted ? (
+                          <p className="text-xs text-gray-400">{member.phone}</p>
+                        ) : (
+                          <Badge variant="unconfigured" label="Perfil incompleto" />
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">{member.email}</td>
+                  <td className="px-4 py-3">
+                    <Badge variant={member.isActive ? "active" : "inactive"} />
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 text-xs">
+                    {member.lastLoginAt ? formatDate(member.lastLoginAt) : "Nunca"}
+                  </td>
+                </tr>
+              ))}
+
+              {/* Invited and not joined yet: they are not members, so they carry
+                  no state of their own beyond the pending badge. */}
+              {pending.map((invitation) => (
+                <tr key={`invite-${invitation.id}`} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 shrink-0">
+                        <Mail size={14} />
+                      </div>
+                      <p className="text-gray-500">Invitación pendiente</p>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">{invitation.email}</td>
+                  <td className="px-4 py-3">
+                    <Badge variant="unconfigured" label="Pendiente" />
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 text-xs">
+                    Expira {formatDate(invitation.expiresAt)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <InviteModal open={inviteOpen} onClose={() => setInviteOpen(false)} />

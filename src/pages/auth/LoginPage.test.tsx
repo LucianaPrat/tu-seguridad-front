@@ -3,6 +3,7 @@ import { screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import LoginPage from "./LoginPage"
 import { useSessionStore } from "@/stores/sessionStore"
+import { meResponse } from "@/test/fixtures"
 import { mockFetchNetworkError, mockFetchSequence } from "@/test/mockFetch"
 import { renderWithProviders } from "@/test/renderWithProviders"
 
@@ -12,10 +13,7 @@ function renderPage() {
 
 /** Login answers with the token, then the page loads the profile off /auth/me. */
 function mockSuccessfulLogin() {
-  return mockFetchSequence([
-    { body: { accessToken: "atoken" } },
-    { body: { id: 7, email: "admin@tu-seguridad.local", role: "admin" } },
-  ])
+  return mockFetchSequence([{ body: { accessToken: "atoken" } }, { body: meResponse({ id: 7 }) }])
 }
 
 async function fillAndSubmit(email: string, password: string) {
@@ -90,7 +88,7 @@ describe("LoginPage", () => {
     const state = useSessionStore.getState()
     expect(state.accessToken).toBe("atoken")
     expect(state.user?.email).toBe("admin@tu-seguridad.local")
-    expect(state.user?.id).toBe("7")
+    expect(state.user?.id).toBe(7)
 
     const [loginUrl] = fetchMock.mock.calls[0] as [string]
     const [meUrl] = fetchMock.mock.calls[1] as [string]

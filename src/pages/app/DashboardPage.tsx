@@ -8,6 +8,7 @@ import Button from "@/components/common/Button"
 import PageHeader from "@/components/common/PageHeader"
 import InviteModal from "@/components/common/InviteModal"
 import { useCameras, useSetCameraEnabled } from "@/hooks/useCameras"
+import { useSessionStore } from "@/stores/sessionStore"
 import { ApiError } from "@/lib/http"
 import { cn } from "@/lib/utils"
 
@@ -22,6 +23,8 @@ export default function DashboardPage() {
   const setEnabled = useSetCameraEnabled()
   const [disabledOpen, setDisabledOpen] = useState(true)
   const [inviteOpen, setInviteOpen] = useState(false)
+  // POST /invitations is admin-only; a member gets no button instead of a 403.
+  const isAdmin = useSessionStore((state) => state.user?.role === "admin")
 
   const all = cameras ?? []
   const configured = all.filter((c) => c.isConfigured && c.isEnabled)
@@ -41,13 +44,15 @@ export default function DashboardPage() {
         title="Panel de cámaras"
         subtitle={`${configured.length} cámaras activas`}
         action={
-          <Button
-            variant="secondary"
-            icon={<UserPlus size={14} />}
-            onClick={() => setInviteOpen(true)}
-          >
-            Invitar miembro
-          </Button>
+          isAdmin ? (
+            <Button
+              variant="secondary"
+              icon={<UserPlus size={14} />}
+              onClick={() => setInviteOpen(true)}
+            >
+              Invitar miembro
+            </Button>
+          ) : undefined
         }
       />
 
