@@ -5,7 +5,7 @@ import type { Camera } from "@/api/cameras"
 import Badge from "@/components/common/Badge"
 import LiveThumbnail from "@/components/camera/LiveThumbnail"
 import CameraCardMenu from "@/components/camera/CameraCardMenu"
-import { useSnapshotImage } from "@/hooks/useCameras"
+import { useCaptureSnapshot, useSnapshotImage } from "@/hooks/useCameras"
 import { relativeTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
@@ -35,6 +35,7 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
   const [liveError, setLiveError] = useState(false)
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const navigate = useNavigate()
+  const capture = useCaptureSnapshot()
 
   // `handleLeave` clears the timer; unmount does not. The list refetch after
   // `Desactivar` remounts the card under a stationary pointer, so a pending
@@ -66,6 +67,10 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
   function handleLeave() {
     setHovered(false)
     if (hoverTimer.current) clearTimeout(hoverTimer.current)
+    // The stored frame can be hours old, so dropping out of a live view would
+    // swap tonight's picture back for this morning's. Only after real frames:
+    // a stream that never came up says nothing new about the camera.
+    if (playing && !capture.isPending) capture.mutate(camera.id)
     setLive(false)
     setPlaying(false)
     setLiveError(false)
