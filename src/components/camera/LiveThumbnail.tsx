@@ -7,6 +7,8 @@ interface LiveThumbnailProps {
   cameraId: string
   /** Fires once frames actually arrive — the card gates its "EN VIVO" pill on it. */
   onPlaying: () => void
+  /** Fires when the stream cannot play — the card swaps the pill for "sin señal". */
+  onError: () => void
 }
 
 /*
@@ -31,13 +33,25 @@ interface LiveThumbnailProps {
  * ponytail: hls.js only, protocol is "hls" today. Branch here if a second
  * transport lands.
  */
-export default function LiveThumbnail({ cameraId, onPlaying }: LiveThumbnailProps) {
-  const { data } = useCameraLive(cameraId)
+export default function LiveThumbnail({ cameraId, onPlaying, onError }: LiveThumbnailProps) {
+  const { data, isError } = useCameraLive(cameraId)
   const videoRef = useRef<HTMLVideoElement>(null)
+
+  // 409 (camera disabled, or no media server on this deployment), 404, 502, 504.
+  // `onError` stays out of the deps: it is a setState wrapper, and a fresh
+  // identity on every parent render would re-run this for nothing.
+  useEffect(() => {
+    if (isError) onError()
+  }, [isError])
 
   useEffect(() => {
     const video = videoRef.current
-    if (!data || !video || !Hls.isSupported()) return
+    if (!data || !video) return
+    // No MSE: nothing will ever play here, so say so instead of spinning.
+    if (!Hls.isSupported()) {
+      onError()
+      return
+    }
 
     const hls = new Hls({
       xhrSetup: (xhr) => {
@@ -55,6 +69,7 @@ export default function LiveThumbnail({ cameraId, onPlaying }: LiveThumbnailProp
     // it has produced a single segment, and then the variant playlist 404s.
     hls.on(Hls.Events.ERROR, (_event, failure) => {
       if (!failure.fatal) return
+      onError()
       console.error(
         `[live] ${cameraId} ${failure.type}/${failure.details}`,
         failure.response?.code ?? "",
