@@ -1,9 +1,12 @@
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
+import type { RefObject } from "react"
 import Hls from "hls.js"
 import { useCameraLive } from "@/hooks/useCameras"
 import { useSessionStore } from "@/stores/sessionStore"
 
 interface LiveThumbnailProps {
+  /** Owned by the card: it grabs the last frame off this element on mouse-out. */
+  videoRef: RefObject<HTMLVideoElement | null>
   cameraId: string
   /** Fires once frames actually arrive — the card gates its "EN VIVO" pill on it. */
   onPlaying: () => void
@@ -33,9 +36,13 @@ interface LiveThumbnailProps {
  * ponytail: hls.js only, protocol is "hls" today. Branch here if a second
  * transport lands.
  */
-export default function LiveThumbnail({ cameraId, onPlaying, onError }: LiveThumbnailProps) {
+export default function LiveThumbnail({
+  videoRef,
+  cameraId,
+  onPlaying,
+  onError,
+}: LiveThumbnailProps) {
   const { data, isError } = useCameraLive(cameraId)
-  const videoRef = useRef<HTMLVideoElement>(null)
 
   // 409 (camera disabled, or no media server on this deployment), 404, 502, 504.
   // `onError` stays out of the deps: it is a setState wrapper, and a fresh

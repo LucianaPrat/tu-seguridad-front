@@ -5,7 +5,7 @@ import type { Camera } from "@/api/cameras"
 import Badge from "@/components/common/Badge"
 import LiveThumbnail from "@/components/camera/LiveThumbnail"
 import CameraCardMenu from "@/components/camera/CameraCardMenu"
-import { useSnapshotImage } from "@/hooks/useCameras"
+import { useCaptureSnapshot, useSnapshotImage } from "@/hooks/useCameras"
 import { relativeTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
@@ -28,13 +28,40 @@ const HOVER_DELAY_MS = 300
  */
 const LIVE_TIMEOUT_MS = 8000
 
+/**
+ * The recorder takes about a second to answer a capture, and until it does the
+ * card would show the stale stored frame again — daylight right after the live
+ * feed showed night. The last decoded frame stands in for that second.
+ *
+ * hls.js feeds the element through MSE, so the buffers are same-origin and the
+ * canvas stays readable. Native HLS would taint it, which is what the catch is
+ * for: no stand-in is better than a thrown SecurityError.
+ */
+function grabFrame(video: HTMLVideoElement | null): string | null {
+  if (!video?.videoWidth) return null
+  const canvas = document.createElement("canvas")
+  canvas.width = video.videoWidth
+  canvas.height = video.videoHeight
+  canvas.getContext("2d")?.drawImage(video, 0, 0)
+  try {
+    // ponytail: data URL, ~100 kB held per hovered card. Swap for
+    // toBlob + createObjectURL if that ever shows up in a profile.
+    return canvas.toDataURL("image/jpeg", 0.7)
+  } catch {
+    return null
+  }
+}
+
 export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps) {
   const [hovered, setHovered] = useState(false)
   const [live, setLive] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [liveError, setLiveError] = useState(false)
+  const [lastFrame, setLastFrame] = useState<string | null>(null)
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
   const navigate = useNavigate()
+  const capture = useCaptureSnapshot()
 
   // `handleLeave` clears the timer; unmount does not. The list refetch after
   // `Desactivar` remounts the card under a stationary pointer, so a pending
@@ -52,10 +79,19 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
   }, [live, playing, liveError])
 
   const snapshotUrl = useSnapshotImage(camera.snapshotUrl, camera.lastSnapshotAt)
+
+  // The capture changes the query key, so `snapshotUrl` is null for a moment
+  // while the new blob loads — the stand-in has to outlive that gap and only
+  // step aside once real bytes are back.
+  useEffect(() => {
+    if (snapshotUrl) setLastFrame(null)
+  }, [snapshotUrl])
+
   const age = relativeTime(camera.lastSnapshotAt)
   const subtitle = camera.location ?? `Canal ${camera.externalId}`
   // The monitor page reads this id, so configuring "Cámara 04" edits that one.
   const configureUrl = `/cameras/monitor?camera=${camera.id}`
+  const thumbnail = lastFrame ?? snapshotUrl
 
   function handleEnter() {
     setHovered(true)
@@ -66,6 +102,13 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
   function handleLeave() {
     setHovered(false)
     if (hoverTimer.current) clearTimeout(hoverTimer.current)
+    // The stored frame can be hours old, so dropping out of a live view would
+    // swap tonight's picture back for this morning's. Only after real frames:
+    // a stream that never came up says nothing new about the camera.
+    if (playing) {
+      setLastFrame(grabFrame(videoRef.current))
+      if (!capture.isPending) capture.mutate(camera.id)
+    }
     setLive(false)
     setPlaying(false)
     setLiveError(false)
@@ -80,9 +123,9 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
     >
       {/* Thumbnail */}
       <div className="relative aspect-video overflow-hidden bg-gray-900">
-        {snapshotUrl ? (
+        {thumbnail ? (
           <img
-            src={snapshotUrl}
+            src={thumbnail}
             alt={`Última captura de ${camera.name}`}
             className={cn(
               "w-full h-full object-cover transition-all duration-300",
@@ -99,6 +142,7 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
             deployment has no media server — the snapshot is then the whole card. */}
         {live && (
           <LiveThumbnail
+            videoRef={videoRef}
             cameraId={camera.id}
             onPlaying={() => setPlaying(true)}
             onError={() => setLiveError(true)}

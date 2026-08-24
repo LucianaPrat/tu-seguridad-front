@@ -105,4 +105,36 @@ describe("DashboardPage", () => {
     expect(await screen.findByText("Conectando")).toBeInTheDocument()
     expect(await screen.findByText("Sin señal")).toBeInTheDocument()
   })
+
+  it("POSTs a fresh snapshot when a hover that played live ends", async () => {
+    const fetchMock = mockFetchSequence([
+      { body: [ONLINE] },
+      { body: { protocol: "hls", url: "http://127.0.0.1:8888/x/index.m3u8" } },
+      {
+        body: {
+          id: "s1",
+          cameraId: ONLINE.id,
+          url: "/snapshots/s1",
+          capturedAt: "2026-08-22T00:00:00.000Z",
+        },
+      },
+    ])
+    const { container } = renderWithProviders(<DashboardPage />)
+
+    const card = (await screen.findByText("Cámara 01")).closest(".group")
+    expect(card).not.toBeNull()
+
+    fireEvent.mouseEnter(card!)
+
+    await waitFor(() => expect(container.querySelector("video")).not.toBeNull())
+    fireEvent.playing(container.querySelector("video")!)
+
+    fireEvent.mouseLeave(card!)
+
+    await waitFor(() => {
+      const call = fetchMock.mock.calls.find((c) => c[0].endsWith("/cameras/cam-01/snapshots"))
+      expect(call).toBeDefined()
+      expect(call![1].method).toBe("POST")
+    })
+  })
 })
