@@ -8,7 +8,7 @@ import { useMembers } from "@/hooks/useMembers"
 import { usePendingInvitations } from "@/hooks/useInvitations"
 import { useSessionStore } from "@/stores/sessionStore"
 import { ApiError } from "@/lib/http"
-import type { MemberResponse } from "@/lib/schemas"
+import { displayName, initials } from "@/lib/members"
 import { Mail, UserPlus } from "lucide-react"
 
 function formatDate(iso: string) {
@@ -19,22 +19,6 @@ function formatDate(iso: string) {
     hour: "2-digit",
     minute: "2-digit",
   })
-}
-
-/*
- * An invitation that was accepted but never finished carries empty strings in
- * firstName, lastName and phone — profileCompleted is what flags it. The email
- * column already identifies such a row, so the name cell says what is missing
- * instead of repeating the address.
- */
-function displayName(member: MemberResponse) {
-  const name = `${member.firstName} ${member.lastName}`.trim()
-  return name || "Sin nombre"
-}
-
-function initials(member: MemberResponse) {
-  const letters = `${member.firstName[0] ?? ""}${member.lastName[0] ?? ""}`
-  return letters || member.email[0].toUpperCase()
 }
 
 const HEAD_CELL = "text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider"

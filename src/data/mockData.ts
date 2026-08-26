@@ -26,23 +26,6 @@ export interface SecurityEvent {
   acknowledgedAt?: string
 }
 
-export interface Member {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  isActive: boolean
-  lastLogin: string
-  receiveAlerts: boolean
-  avatarUrl?: string
-}
-
-export interface ChannelConfig {
-  alertType: AlertType
-  channels: ChannelType[]
-}
-
 export const EVENTS: SecurityEvent[] = [
   {
     id: "ev-01",
@@ -146,64 +129,4 @@ export const EVENTS: SecurityEvent[] = [
     acknowledgedBy: "Martín López",
     acknowledgedAt: "2025-07-22T14:25:50Z",
   },
-]
-
-export const MEMBERS: Member[] = [
-  {
-    id: "mem-01",
-    firstName: "Luciana",
-    lastName: "García",
-    email: "luciana@ejemplo.com",
-    phone: "+54 9 11 1234-5678",
-    isActive: true,
-    lastLogin: "2025-07-28T22:00:00Z",
-    receiveAlerts: true,
-    avatarUrl:
-      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=80&h=80&fit=crop&auto=format",
-  },
-  {
-    id: "mem-02",
-    firstName: "Martín",
-    lastName: "López",
-    email: "martin@ejemplo.com",
-    phone: "+54 9 11 9876-5432",
-    isActive: true,
-    lastLogin: "2025-07-27T15:30:00Z",
-    receiveAlerts: true,
-  },
-  {
-    id: "mem-03",
-    firstName: "Ana",
-    lastName: "Martínez",
-    email: "ana@ejemplo.com",
-    phone: "+54 9 351 555-0001",
-    isActive: false,
-    lastLogin: "2025-07-10T09:15:00Z",
-    receiveAlerts: false,
-  },
-  {
-    id: "mem-04",
-    firstName: "Carlos",
-    lastName: "Rodríguez",
-    email: "carlos@ejemplo.com",
-    phone: "+54 9 11 2222-3333",
-    isActive: true,
-    lastLogin: "2025-07-28T08:00:00Z",
-    receiveAlerts: true,
-  },
-  {
-    id: "mem-05",
-    firstName: "Sofía",
-    lastName: "Fernández",
-    email: "sofia@ejemplo.com",
-    phone: "+54 9 261 444-7777",
-    isActive: true,
-    lastLogin: "2025-07-25T18:45:00Z",
-    receiveAlerts: false,
-  },
-]
-
-export const CHANNEL_CONFIG: ChannelConfig[] = [
-  { alertType: "intruso", channels: ["llamada", "whatsapp"] },
-  { alertType: "sospechoso", channels: ["email"] },
 ]

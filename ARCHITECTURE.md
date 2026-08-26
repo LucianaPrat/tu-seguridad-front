@@ -120,14 +120,15 @@ Three layers, top to bottom:
    Framework errors (404, 429) carry no `code`, so it falls back to
    `UNKNOWN_ERROR`; a failed `fetch` becomes status `0`.
 2. `src/api/<resource>.ts` — typed promises, Zod-parsed at the boundary.
-   `auth.ts`, `dvr.ts`, `cameras.ts`, `members.ts` and `invitations.ts` exist;
-   the rest are not written.
+   `auth.ts`, `dvr.ts`, `cameras.ts`, `members.ts`, `invitations.ts` and
+   `channels.ts` exist; the rest are not written.
 3. `src/hooks/` — TanStack Query hooks over those. `useAuth.ts` exports
    `useSessionBootstrap`, `useLogin`, `useLogout`. `useDvr.ts` exports
    `useTestDvrConnection`. `useCameras.ts` exports `useCameras`, `useZones`,
    `useSaveCamera`, `useCaptureSnapshot`, `useSnapshotImage`. `useMembers.ts`
-   exports `useMembers`; `useInvitations.ts` exports `useCreateInvitation`,
-   `usePendingInvitations`, `useAcceptInvitation`.
+   exports `useMembers` and `useSetMemberAlerts`; `useInvitations.ts` exports
+   `useCreateInvitation`, `usePendingInvitations`, `useAcceptInvitation`;
+   `useChannels.ts` exports `useAlertRoutings`, `useSetAlertRouting`.
 
 Cameras are the first screen off fixtures: `/cameras/monitor` reads
 `GET /cameras` and `GET /cameras/:id/zones`, and saves with `PUT /cameras/:id`

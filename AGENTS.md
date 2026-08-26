@@ -182,8 +182,14 @@ Auth is wired: `src/api/auth.ts` plus `src/hooks/useAuth.ts`. So is the DVR
 connection probe: `src/api/dvr.ts` plus `src/hooks/useDvr.ts`, the monitor
 behaviour screen: `src/api/cameras.ts` plus `src/hooks/useCameras.ts`, and the
 members screen: `src/api/members.ts` / `src/api/invitations.ts` plus
-`src/hooks/useMembers.ts` / `src/hooks/useInvitations.ts`. Events, channels and
-the profile screen still read `src/data/mockData.ts`.
+`src/hooks/useMembers.ts` / `src/hooks/useInvitations.ts`, and the channels
+screen: `src/api/channels.ts` plus `src/hooks/useChannels.ts`. Events and the
+profile screen still read `src/data/mockData.ts`.
+
+`/channels` has no save button — every checkbox and switch writes on the spot,
+so both mutations are optimistic and roll back on failure. `PUT
+/alert-routings` and `PATCH /members/:id` are admin-only, so a plain member
+gets the same screen with every control disabled.
 
 `/auth/me` is the whole session identity — `sessionStore` holds the parsed
 profile with no fixture merge. An invited account arrives with
