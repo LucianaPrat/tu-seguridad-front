@@ -234,6 +234,7 @@ export const memberResponseSchema = z.object({
   isActive: z.boolean(),
   profileCompleted: z.boolean(),
   lastLoginAt: z.string().nullable(),
+  receiveAlerts: z.boolean(),
 })
 export type MemberResponse = z.infer<typeof memberResponseSchema>
 
@@ -242,3 +243,20 @@ export const memberListResponseSchema = z.object({
   total: z.number(),
 })
 export type MemberListResponse = z.infer<typeof memberListResponseSchema>
+
+/*
+ * GET/PUT /alert-routings. Always the full alert type x channel grid, six
+ * cells, even for a space that never wrote any of them. English on both axes;
+ * `src/api/channels.ts` translates to the Spanish names the UI uses.
+ */
+export const alertRoutingResponseSchema = z.object({
+  alertType: z.enum(["intruder", "suspicious"]),
+  channel: z.enum(["call", "whatsapp", "email"]),
+  enabled: z.boolean(),
+})
+export type AlertRoutingResponse = z.infer<typeof alertRoutingResponseSchema>
+
+export const alertRoutingListResponseSchema = z.object({
+  items: alertRoutingResponseSchema.array(),
+})
+export type AlertRoutingListResponse = z.infer<typeof alertRoutingListResponseSchema>

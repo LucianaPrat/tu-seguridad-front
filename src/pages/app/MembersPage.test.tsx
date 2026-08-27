@@ -37,6 +37,7 @@ function member(overrides: Record<string, unknown> = {}) {
     isActive: true,
     profileCompleted: true,
     lastLoginAt: "2026-07-28T22:00:00.000Z",
+    receiveAlerts: true,
     ...overrides,
   }
 }

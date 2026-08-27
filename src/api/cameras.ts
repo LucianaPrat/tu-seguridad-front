@@ -15,14 +15,14 @@ import { bboxOf, rectPoints } from "@/lib/zones"
  * pages keep using `AlertType`.
  */
 
-type ApiAlertType = "intruder" | "suspicious"
+export type ApiAlertType = "intruder" | "suspicious"
 
-const TO_API: Record<AlertType, ApiAlertType> = {
+export const ALERT_TO_API: Record<AlertType, ApiAlertType> = {
   intruso: "intruder",
   sospechoso: "suspicious",
 }
 
-const FROM_API: Record<ApiAlertType, AlertType> = {
+export const ALERT_FROM_API: Record<ApiAlertType, AlertType> = {
   intruder: "intruso",
   suspicious: "sospechoso",
 }
@@ -62,7 +62,7 @@ function toCamera(dto: CameraResponse): Camera {
     isConfigured: dto.isConfigured,
     isEnabled: dto.isEnabled,
     monitorMode: dto.monitorMode,
-    alertType: dto.alertType ? FROM_API[dto.alertType] : null,
+    alertType: dto.alertType ? ALERT_FROM_API[dto.alertType] : null,
     lastSnapshotAt: dto.lastSnapshotAt ?? null,
     snapshotUrl: dto.latestSnapshotUrl ?? null,
   }
@@ -78,7 +78,7 @@ function toZone(dto: MonitorZoneResponse): MonitorZone {
       dto.points && dto.points.length >= 3
         ? dto.points
         : rectPoints(dto.x, dto.y, dto.width, dto.height),
-    alertType: FROM_API[dto.alertType],
+    alertType: ALERT_FROM_API[dto.alertType],
   }
 }
 
@@ -90,7 +90,7 @@ function zoneBody(zone: MonitorZone) {
   return {
     ...bboxOf(zone.points),
     points: zone.points,
-    alertType: TO_API[zone.alertType],
+    alertType: ALERT_TO_API[zone.alertType],
   }
 }
 
@@ -107,7 +107,7 @@ export async function updateCamera(id: string, settings: CameraSettings): Promis
     // An empty location is "unset", and the backend validates a string it gets.
     body: {
       ...rest,
-      alertType: TO_API[settings.alertType],
+      alertType: ALERT_TO_API[settings.alertType],
       ...(location.trim() === "" ? {} : { location: location.trim() }),
     },
   })
