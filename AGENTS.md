@@ -94,6 +94,9 @@ src/
     onboarding/         DVRInitPage
     app/                Dashboard, DVRConfig, CameraMonitor, Events, Members,
                         CommChannels, Profile
+    events/             AcknowledgeAlertPage — public, reached from the button
+                        in an alert email. Not under app/: no AppShell, no
+                        session
   stores/               Zustand stores. sessionStore holds auth + DVR-init state
   lib/                  utils (cn), queryClient, http (REST client), schemas (Zod)
   data/                 mockData, timezones — fixtures for everything but auth
@@ -183,8 +186,22 @@ connection probe: `src/api/dvr.ts` plus `src/hooks/useDvr.ts`, the monitor
 behaviour screen: `src/api/cameras.ts` plus `src/hooks/useCameras.ts`, and the
 members screen: `src/api/members.ts` / `src/api/invitations.ts` plus
 `src/hooks/useMembers.ts` / `src/hooks/useInvitations.ts`, and the channels
-screen: `src/api/channels.ts` plus `src/hooks/useChannels.ts`. Events and the
-profile screen still read `src/data/mockData.ts`.
+screen: `src/api/channels.ts` plus `src/hooks/useChannels.ts`, and the events
+screen: `src/api/events.ts` plus `src/hooks/useEvents.ts`. Only the profile
+screen still reads `src/data/mockData.ts`.
+
+`/events/:id/acknowledge` is the one public route outside `pages/auth/`. It is
+where the *Mark as handled* button of an alert email lands, and the `?token=`
+it carries is the whole credential — `acknowledgeAlert` in `src/api/events.ts`
+posts it with `auth: false`, because the recipient reading mail on a phone has
+no session. Nothing is sent until the button on that page is pressed: the
+backend deliberately keeps acknowledging off a `GET` so link scanners cannot do
+it on a reader's behalf, and posting on mount would hand that back, since a
+scanner that renders the page runs the component too.
+
+There is no per-event screen yet. `/events/:id` renders the history list so the
+emailed *View the alert* button lands somewhere truthful instead of being
+bounced to the dashboard by the catch-all.
 
 `/channels` has no save button — every checkbox and switch writes on the spot,
 so both mutations are optimistic and roll back on failure. `PUT

@@ -15,6 +15,9 @@ import PasswordChangePage from "@/pages/auth/PasswordChangePage"
 import MagicLinkPage from "@/pages/auth/MagicLinkPage"
 import InvitationAcceptPage from "@/pages/auth/InvitationAcceptPage"
 
+// Public event actions
+import AcknowledgeAlertPage from "@/pages/events/AcknowledgeAlertPage"
+
 // Onboarding
 import DVRInitPage from "@/pages/onboarding/DVRInitPage"
 import CompleteProfilePage from "@/pages/onboarding/CompleteProfilePage"
@@ -112,6 +115,9 @@ export function AppRoutes() {
       <Route path="/auth/magic-link" element={<MagicLinkPage />} />
       {/* The token in the emailed link is the credential, so this one is public. */}
       <Route path="/invitations/accept" element={<InvitationAcceptPage />} />
+      {/* Same rule for the acknowledge button of an alert email: its token is the
+          credential, and the recipient reading mail on a phone has no session. */}
+      <Route path="/events/:id/acknowledge" element={<AcknowledgeAlertPage />} />
 
       {/* Onboarding */}
       {/* Guards itself: RequireDVR would bounce an incomplete profile back here. */}
@@ -152,6 +158,21 @@ export function AppRoutes() {
       />
       <Route
         path="/events"
+        element={
+          <RequireDVR>
+            <EventsPage />
+          </RequireDVR>
+        }
+      />
+      {/*
+       * Where an alert email's "View the alert" button lands. There is no
+       * per-event screen yet, so it renders the history list: the operator
+       * arrives at the right screen instead of the catch-all bouncing them to
+       * the dashboard with no explanation. Point this at a detail page the day
+       * one exists — the mail already sends the id.
+       */}
+      <Route
+        path="/events/:id"
         element={
           <RequireDVR>
             <EventsPage />
