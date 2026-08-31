@@ -58,3 +58,20 @@ export async function listEvents(params: ListEventsParams = {}): Promise<Securit
   )
   return { items: dto.items.map(toEvent), nextCursor: dto.nextCursor }
 }
+
+/*
+ * POST /events/acknowledgements with the token from an alert email.
+ *
+ * `auth: false` is the whole point: the token is the credential, and the person
+ * who just opened the mail on a phone is usually not logged in. The route
+ * answers 202 for a match, a repeat and a token that fails its signature alike,
+ * so a resolved promise means the call was accepted — never that this token was
+ * the one that acknowledged the alert.
+ */
+export async function acknowledgeAlert(token: string): Promise<void> {
+  await request<{ accepted: boolean }>("/events/acknowledgements", {
+    method: "POST",
+    body: { token },
+    auth: false,
+  })
+}

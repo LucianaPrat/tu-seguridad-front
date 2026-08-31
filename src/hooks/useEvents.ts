@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import * as eventsApi from "@/api/events"
 import { useSessionStore } from "@/stores/sessionStore"
 import type { ListEventsParams } from "@/api/events"
@@ -21,5 +21,23 @@ export function useEvents(filters: ListEventsParams = {}) {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     enabled: isLoggedIn,
+  })
+}
+
+/**
+ * Acknowledging from the link in an alert email. Not a query and not cached:
+ * it runs once, when the recipient presses the button, and the page renders
+ * straight off the mutation's own state.
+ *
+ * The event list is invalidated on success so an operator who *is* logged in
+ * sees the row flip without a reload. Harmless when nobody is: an invalidated
+ * key with no observer refetches nothing.
+ */
+export function useAcknowledgeAlert() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (token: string) => eventsApi.acknowledgeAlert(token),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
   })
 }
