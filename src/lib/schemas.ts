@@ -260,3 +260,32 @@ export const alertRoutingListResponseSchema = z.object({
   items: alertRoutingResponseSchema.array(),
 })
 export type AlertRoutingListResponse = z.infer<typeof alertRoutingListResponseSchema>
+
+/*
+ * GET /events. Keyset paged, newest first — `nextCursor` is opaque and only
+ * ever travels back as `?cursor=`, so nothing here parses it. English enums on
+ * the wire; `src/api/events.ts` translates to the Spanish names the UI uses.
+ * `channels` is the distinct set of channels the alert's deliveries used, empty
+ * while no delivery was planned yet.
+ */
+export const alertEventResponseSchema = z.object({
+  id: z.string(),
+  cameraId: z.string().nullable(),
+  zoneId: z.string().nullable(),
+  cameraLabel: z.string(),
+  alertType: z.enum(["intruder", "suspicious"]),
+  channels: z.enum(["call", "whatsapp", "email"]).array(),
+  detectedAt: z.string(),
+  snapshotUrl: z.string().nullable(),
+  personsDetected: z.number().nullable(),
+  confidence: z.number().nullable(),
+  acknowledgedAt: z.string().nullable(),
+  acknowledgedByUserId: z.number().nullable(),
+})
+export type AlertEventResponse = z.infer<typeof alertEventResponseSchema>
+
+export const alertEventPageResponseSchema = z.object({
+  items: alertEventResponseSchema.array(),
+  nextCursor: z.string().nullable(),
+})
+export type AlertEventPageResponse = z.infer<typeof alertEventPageResponseSchema>

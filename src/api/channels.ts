@@ -18,7 +18,7 @@ const CHANNEL_TO_API: Record<ChannelType, ApiChannel> = {
   email: "email",
 }
 
-const CHANNEL_FROM_API: Record<ApiChannel, ChannelType> = {
+export const CHANNEL_FROM_API: Record<ApiChannel, ChannelType> = {
   call: "llamada",
   whatsapp: "whatsapp",
   email: "email",

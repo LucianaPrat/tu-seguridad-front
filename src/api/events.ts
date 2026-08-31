@@ -1,0 +1,60 @@
+import { request } from "@/lib/http"
+import { ALERT_FROM_API, ALERT_TO_API } from "@/api/cameras"
+import { CHANNEL_FROM_API } from "@/api/channels"
+import { alertEventPageResponseSchema } from "@/lib/schemas"
+import type { AlertEventResponse } from "@/lib/schemas"
+import type { AlertType, ChannelType } from "@/data/mockData"
+
+export interface SecurityEvent {
+  id: string
+  /** Null once the camera that raised the alert is deleted. `cameraName` survives it. */
+  cameraId: string | null
+  cameraName: string
+  alertType: AlertType
+  /** Empty while no delivery was planned for the alert yet. */
+  channels: ChannelType[]
+  timestamp: string
+  acknowledgedAt: string | null
+  /** The page resolves the name from the roster; the event carries only the id. */
+  acknowledgedByUserId: number | null
+}
+
+export interface SecurityEventPage {
+  items: SecurityEvent[]
+  nextCursor: string | null
+}
+
+export interface ListEventsParams {
+  alertType?: AlertType
+  /** Inclusive lower bound on the detection time. `YYYY-MM-DD`, straight from the date input. */
+  from?: string
+  cursor?: string
+}
+
+function toEvent(dto: AlertEventResponse): SecurityEvent {
+  return {
+    id: dto.id,
+    cameraId: dto.cameraId,
+    cameraName: dto.cameraLabel,
+    alertType: ALERT_FROM_API[dto.alertType],
+    channels: dto.channels.map((channel) => CHANNEL_FROM_API[channel]),
+    timestamp: dto.detectedAt,
+    acknowledgedAt: dto.acknowledgedAt,
+    acknowledgedByUserId: dto.acknowledgedByUserId,
+  }
+}
+
+export async function listEvents(params: ListEventsParams = {}): Promise<SecurityEventPage> {
+  const query = new URLSearchParams()
+  if (params.alertType) query.set("alertType", ALERT_TO_API[params.alertType])
+  // The date input yields `YYYY-MM-DD`; the route validates ISO 8601. Parsed as
+  // local midnight on purpose — the operator picked a day in their own clock.
+  if (params.from) query.set("from", new Date(`${params.from}T00:00:00`).toISOString())
+  if (params.cursor) query.set("cursor", params.cursor)
+
+  const search = query.toString()
+  const dto = alertEventPageResponseSchema.parse(
+    await request<unknown>(`/events${search ? `?${search}` : ""}`),
+  )
+  return { items: dto.items.map(toEvent), nextCursor: dto.nextCursor }
+}
