@@ -27,6 +27,7 @@ import DashboardPage from "@/pages/app/DashboardPage"
 import DVRConfigPage from "@/pages/app/DVRConfigPage"
 import CameraMonitorPage from "@/pages/app/CameraMonitorPage"
 import EventsPage from "@/pages/app/EventsPage"
+import EventDetailPage from "@/pages/app/EventDetailPage"
 import MembersPage from "@/pages/app/MembersPage"
 import CommChannelsPage from "@/pages/app/CommChannelsPage"
 import ProfilePage from "@/pages/app/ProfilePage"
@@ -164,18 +165,13 @@ export function AppRoutes() {
           </RequireDVR>
         }
       />
-      {/*
-       * Where an alert email's "View the alert" button lands. There is no
-       * per-event screen yet, so it renders the history list: the operator
-       * arrives at the right screen instead of the catch-all bouncing them to
-       * the dashboard with no explanation. Point this at a detail page the day
-       * one exists — the mail already sends the id.
-       */}
+      {/* Where a row of the history table and an alert email's "View the alert"
+          button both land. */}
       <Route
         path="/events/:id"
         element={
           <RequireDVR>
-            <EventsPage />
+            <EventDetailPage />
           </RequireDVR>
         }
       />

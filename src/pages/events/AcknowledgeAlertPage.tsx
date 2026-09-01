@@ -1,4 +1,4 @@
-import { Link, useParams, useSearchParams } from "react-router-dom"
+import { Link, useParams, useSearchParams, useNavigate } from "react-router-dom"
 import { AlertTriangle, ArrowRight, CheckCircle, ShieldCheck } from "lucide-react"
 import AuthCard from "@/components/auth/AuthCard"
 import Button from "@/components/common/Button"
@@ -21,6 +21,7 @@ export default function AcknowledgeAlertPage() {
   const [searchParams] = useSearchParams()
   const token = searchParams.get("token")
   const { mutate, isPending, isSuccess, error } = useAcknowledgeAlert()
+  const navigate = useNavigate()
 
   const eventLink = (
     <Link
@@ -67,6 +68,9 @@ export default function AcknowledgeAlertPage() {
             persona.
           </p>
         </div>
+        <Button onClick={() => navigate("/")} className="w-full mt-4">
+          Ir al panel
+        </Button>
         <div className="mt-5 pt-4 border-t border-border">{eventLink}</div>
       </AuthCard>
     )

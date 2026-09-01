@@ -1,7 +1,7 @@
 import { request } from "@/lib/http"
 import { ALERT_FROM_API, ALERT_TO_API } from "@/api/cameras"
 import { CHANNEL_FROM_API } from "@/api/channels"
-import { alertEventPageResponseSchema } from "@/lib/schemas"
+import { alertEventPageResponseSchema, alertEventResponseSchema } from "@/lib/schemas"
 import type { AlertEventResponse } from "@/lib/schemas"
 import type { AlertType, ChannelType } from "@/data/mockData"
 
@@ -17,6 +17,11 @@ export interface SecurityEvent {
   acknowledgedAt: string | null
   /** The page resolves the name from the roster; the event carries only the id. */
   acknowledgedByUserId: number | null
+  /** Authenticated path of the frame that raised it. Behind the bearer, so `requestBlob` fetches it. */
+  snapshotUrl: string | null
+  /** Both null on an alert recorded before the pipeline stored its detections. */
+  personsDetected: number | null
+  confidence: number | null
 }
 
 export interface SecurityEventPage {
@@ -41,7 +46,15 @@ function toEvent(dto: AlertEventResponse): SecurityEvent {
     timestamp: dto.detectedAt,
     acknowledgedAt: dto.acknowledgedAt,
     acknowledgedByUserId: dto.acknowledgedByUserId,
+    snapshotUrl: dto.snapshotUrl,
+    personsDetected: dto.personsDetected,
+    confidence: dto.confidence,
   }
+}
+
+/** One alert, by id. Same DTO as a list row — the detail screen just shows more of it. */
+export async function getEvent(id: string): Promise<SecurityEvent> {
+  return toEvent(alertEventResponseSchema.parse(await request<unknown>(`/events/${id}`)))
 }
 
 export async function listEvents(params: ListEventsParams = {}): Promise<SecurityEventPage> {

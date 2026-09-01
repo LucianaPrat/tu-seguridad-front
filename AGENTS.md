@@ -92,8 +92,8 @@ src/
   pages/
     auth/               Login, Register, PasswordRecovery, PasswordChange, MagicLink
     onboarding/         DVRInitPage
-    app/                Dashboard, DVRConfig, CameraMonitor, Events, Members,
-                        CommChannels, Profile
+    app/                Dashboard, DVRConfig, CameraMonitor, Events,
+                        EventDetail, Members, CommChannels, Profile
     events/             AcknowledgeAlertPage — public, reached from the button
                         in an alert email. Not under app/: no AppShell, no
                         session
@@ -199,9 +199,9 @@ backend deliberately keeps acknowledging off a `GET` so link scanners cannot do
 it on a reader's behalf, and posting on mount would hand that back, since a
 scanner that renders the page runs the component too.
 
-There is no per-event screen yet. `/events/:id` renders the history list so the
-emailed *View the alert* button lands somewhere truthful instead of being
-bounced to the dashboard by the catch-all.
+`/events/:id` is the per-event screen: `GET /events/:id` plus the stored frame
+behind `useSnapshotImage`. Both a row of the history table and the emailed
+*View the alert* button land there.
 
 `/channels` has no save button — every checkbox and switch writes on the spot,
 so both mutations are optimistic and roll back on failure. `PUT
