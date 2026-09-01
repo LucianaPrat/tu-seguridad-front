@@ -1,10 +1,11 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as eventsApi from "@/api/events"
 import { useSessionStore } from "@/stores/sessionStore"
 import type { ListEventsParams } from "@/api/events"
 
 export const eventKeys = {
   list: (filters: ListEventsParams) => ["events", "list", filters] as const,
+  detail: (id: string) => ["events", "detail", id] as const,
 }
 
 /**
@@ -21,6 +22,21 @@ export function useEvents(filters: ListEventsParams = {}) {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     enabled: isLoggedIn,
+  })
+}
+
+/**
+ * One alert for the detail screen. Its own fetch rather than a lookup in the
+ * loaded list pages: the emailed "Ver la alerta" button lands here cold, on an
+ * event that may sit many pages back, or on none that were fetched at all.
+ */
+export function useEvent(id: string) {
+  const isLoggedIn = useSessionStore((state) => state.isLoggedIn)
+
+  return useQuery({
+    queryKey: eventKeys.detail(id),
+    queryFn: () => eventsApi.getEvent(id),
+    enabled: isLoggedIn && id !== "",
   })
 }
 

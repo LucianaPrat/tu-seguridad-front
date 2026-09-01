@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/common/PageHeader"
 import Badge from "@/components/common/Badge"
@@ -41,6 +42,7 @@ function formatAckTime(iso: string) {
 export default function EventsPage() {
   const [filterAlert, setFilterAlert] = useState<AlertType | "all">("all")
   const [filterDate, setFilterDate] = useState("")
+  const navigate = useNavigate()
 
   // Both filters are server-side: the route pages by keyset, so filtering the
   // loaded pages instead would hide matches that live further back.
@@ -135,8 +137,19 @@ export default function EventsPage() {
                   </tr>
                 ) : (
                   rows.map((ev) => (
-                    <tr key={ev.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-gray-800 font-medium">{ev.cameraName}</td>
+                    <tr
+                      key={ev.id}
+                      onClick={() => navigate(`/events/${ev.id}`)}
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
+                      <td className="px-4 py-3">
+                        <Link
+                          to={`/events/${ev.id}`}
+                          className="text-gray-800 font-medium hover:text-primary hover:underline"
+                        >
+                          {ev.cameraName}
+                        </Link>
+                      </td>
                       <td className="px-4 py-3">
                         <Badge variant={ev.alertType} />
                       </td>
