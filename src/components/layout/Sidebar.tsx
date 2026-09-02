@@ -158,10 +158,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
         <button
           data-tour="nav-help"
-          onClick={() => {
-            onNavigate?.()
-            startTour(navigate)
-          }}
+          onClick={() => startTour(navigate)}
           className={`w-full ${ROW} ${ROW_IDLE}`}
         >
           <HelpCircle size={18} className="shrink-0" />
@@ -192,7 +189,10 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
  */
 export default function Sidebar() {
   return (
-    <aside className="hidden lg:flex flex-col w-60 shrink-0 bg-[#0d4f47] overflow-y-auto">
+    <aside
+      data-nav="desktop"
+      className="hidden lg:flex flex-col w-60 shrink-0 bg-[#0d4f47] overflow-y-auto"
+    >
       <SidebarContent />
     </aside>
   )

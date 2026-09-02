@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { useNavigate, type NavigateFunction } from "react-router-dom"
 import { driver, type Driver, type PopoverDOM } from "driver.js"
 import { useSessionStore } from "@/stores/sessionStore"
+import { useNavStore } from "@/stores/navStore"
 import "driver.js/dist/driver.css"
 
 /*
@@ -28,9 +29,9 @@ interface TourStep {
   element?: string
   /** Dropped for a plain member, whose screen has no such control to point at. */
   adminOnly?: true
-  /** Anchored in the sidebar, which below `lg` lives in a closed drawer. */
-  desktopOnly?: true
-  /** The drawer's stand-in for those steps. */
+  /** Anchor lives inside the menu — the aside from `lg` up, the drawer below. */
+  inNav?: true
+  /** Only below `lg`, where the menu is a drawer that has to be opened first. */
   mobileOnly?: true
   /** Leading glyph. Carries the step at a glance so the body can stay one line. */
   icon: string
@@ -56,7 +57,7 @@ const STEPS: TourStep[] = [
   {
     to: "/",
     element: '[data-tour="nav-home"]',
-    desktopOnly: true,
+    inNav: true,
     icon: "🏠",
     title: "Inicio",
     body: "Todas tus cámaras de un vistazo: online u offline, y hace cuánto es la foto.",
@@ -72,7 +73,7 @@ const STEPS: TourStep[] = [
   {
     to: "/cameras/monitor",
     element: '[data-tour="nav-monitor"]',
-    desktopOnly: true,
+    inNav: true,
     icon: "🎯",
     title: "Monitoreo",
     body: "Qué vigila cada cámara: toda la imagen, o zonas que dibujás vos.",
@@ -87,7 +88,7 @@ const STEPS: TourStep[] = [
   {
     to: "/events",
     element: '[data-tour="nav-events"]',
-    desktopOnly: true,
+    inNav: true,
     icon: "📋",
     title: "Eventos",
     body: "El histórico de alertas. Tocá una fila y ves la imagen del momento.",
@@ -102,7 +103,7 @@ const STEPS: TourStep[] = [
   {
     to: "/dvr-config",
     element: '[data-tour="nav-dvr"]',
-    desktopOnly: true,
+    inNav: true,
     icon: "📼",
     title: "DVR",
     body: "La conexión al grabador. Ojo: cambiarla puede borrar la config de las cámaras.",
@@ -110,7 +111,7 @@ const STEPS: TourStep[] = [
   {
     to: "/channels",
     element: '[data-tour="nav-channels"]',
-    desktopOnly: true,
+    inNav: true,
     icon: "📣",
     title: "Canales",
     body: "Por dónde salen las alertas y a quién le llegan. Se guarda solo.",
@@ -132,7 +133,7 @@ const STEPS: TourStep[] = [
   {
     to: "/members",
     element: '[data-tour="nav-members"]',
-    desktopOnly: true,
+    inNav: true,
     icon: "🧑‍🤝‍🧑",
     title: "Miembros",
     body: "Quiénes entran al espacio y cuándo entraron por última vez.",
@@ -140,7 +141,7 @@ const STEPS: TourStep[] = [
   {
     to: "/profile",
     element: '[data-tour="nav-profile"]',
-    desktopOnly: true,
+    inNav: true,
     icon: "⚙️",
     title: "Perfil",
     body: "Tus datos y tu contraseña.",
@@ -155,7 +156,7 @@ const STEPS: TourStep[] = [
   {
     to: "/",
     element: '[data-tour="nav-help"]',
-    desktopOnly: true,
+    inNav: true,
     icon: "🎉",
     title: "Listo",
     body: "Repetilo desde acá, o desde el menú de tu perfil.",
@@ -186,6 +187,22 @@ export function waitFor(check: () => boolean, timeout = 2000): Promise<boolean> 
   })
 }
 
+const navPanel = () => document.querySelector('[data-nav="mobile"]')
+
+/**
+ * Slid fully in. Radix animates the panel from `translateX(-100%)` to 0 over
+ * 500ms, and a rect read mid-slide cuts the spotlight where the drawer was,
+ * not where it lands. Geometry, not `transitionend`: one poll covers both the
+ * open and the already-open case without binding a listener per step.
+ */
+const navSettled = () => {
+  const el = navPanel()
+  return el !== null && el.getBoundingClientRect().left >= 0
+}
+
+/** Radix keeps the panel mounted through its exit animation. */
+const navGone = () => navPanel() === null
+
 /** One tour at a time, and it outlives the AppShell that started it. */
 let current: Driver | null = null
 
@@ -211,10 +228,17 @@ export function startTour(navigate: NavigateFunction) {
    * branch. jsdom's window is 1024 wide, so this reads as desktop there.
    */
   const isDesktop = window.innerWidth >= 1024
-  const steps = STEPS.filter(
-    (s) =>
-      (!s.adminOnly || isAdmin) && (!s.desktopOnly || isDesktop) && (!s.mobileOnly || !isDesktop),
-  )
+  const steps = STEPS.filter((s) => (!s.adminOnly || isAdmin) && (!s.mobileOnly || !isDesktop))
+
+  /*
+   * Both menus are in the DOM below `lg` — the aside is only `display: none`,
+   * and AppShell renders it before MobileNav, so a bare `[data-tour="nav-home"]`
+   * matches the hidden copy first. A hidden node measures all zeros, which is
+   * what parks the popover in the corner. Scoping the anchor to the menu that
+   * is actually on screen is what keeps driver.js off the wrong copy.
+   */
+  const NAV_SCOPE = isDesktop ? '[data-nav="desktop"]' : '[data-nav="mobile"]'
+  const anchorOf = (s: TourStep) => (s.inNav && s.element ? `${NAV_SCOPE} ${s.element}` : s.element)
 
   /*
    * The only place the tour is marked seen. It cannot live in onDestroyed:
@@ -223,6 +247,10 @@ export function startTour(navigate: NavigateFunction) {
    */
   const finish = () => {
     localStorage.setItem(TOUR_FLAG, "1")
+    // One update, not two: flipping `tourActive` while the drawer is still open
+    // swaps DialogContentModal for DialogContentNonModal, and React remounts
+    // the panel mid-exit.
+    useNavStore.setState({ open: false, tourActive: false })
     const tour = current
     current = null
     tour?.destroy()
@@ -246,9 +274,24 @@ export function startTour(navigate: NavigateFunction) {
        * the popover in the corner over the menu. Waiting for it to leave means
        * the selector can only match its replacement.
        */
-      const stale = step.element ? document.querySelector(step.element) : null
+      const anchor = anchorOf(step)
+      const stale = anchor ? document.querySelector(anchor) : null
       navigate(step.to)
       if (stale) await waitFor(() => !stale.isConnected)
+    }
+
+    /*
+     * Mobile only. A menu step's anchor lives in the drawer, so the drawer has
+     * to be open before driver.js measures it — and shut again before a step
+     * that points at the page underneath, or the spotlight lands on a panel
+     * covering it.
+     */
+    if (!isDesktop) {
+      const wantOpen = Boolean(step.inNav)
+      if (useNavStore.getState().open !== wantOpen) {
+        useNavStore.getState().setOpen(wantOpen)
+        await waitFor(wantOpen ? navSettled : navGone)
+      }
     }
 
     d.drive(index)
@@ -304,7 +347,7 @@ export function startTour(navigate: NavigateFunction) {
     // spotlight moves between steps, which is the whole point — no chasing a
     // panel around the screen.
     steps: steps.map((s) => ({
-      element: s.element,
+      element: anchorOf(s),
       popover: { title: s.title, description: s.body },
     })),
     // Overriding these turns off driver.js's own advance, so every move — the
@@ -321,6 +364,9 @@ export function startTour(navigate: NavigateFunction) {
   })
 
   current = d
+  // Before the first `goTo`, so the drawer's first mount is already non-modal —
+  // switching `modal` on an open Sheet remounts its content.
+  useNavStore.getState().setTourActive(true)
   void goTo(0)
 }
 

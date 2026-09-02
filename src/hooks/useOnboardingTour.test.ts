@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { startTour, waitFor } from "./useOnboardingTour"
+import { useNavStore } from "@/stores/navStore"
 
 /*
  * waitFor is what lets the tour cross a route: it holds until the outgoing
@@ -30,19 +31,27 @@ describe("startTour", () => {
   const title = () => document.querySelector(".driver-popover-title")?.textContent
   const skipBtn = () => document.querySelector<HTMLElement>(".driver-popover-close-btn")
 
-  function anchor(name: string) {
+  function anchor(name: string, scope: "desktop" | "mobile" = "desktop") {
+    let host = document.querySelector(`[data-nav="${scope}"]`)
+    if (!host) {
+      host = document.createElement("div")
+      host.setAttribute("data-nav", scope)
+      document.body.appendChild(host)
+    }
     const el = document.createElement("div")
     el.setAttribute("data-tour", name)
-    document.body.appendChild(el)
+    host.appendChild(el)
   }
 
   beforeEach(() => {
     // src/test/setup.ts seeds the "already seen" flag for every other suite.
     localStorage.removeItem("ts-tour-done")
+    useNavStore.setState({ open: false, tourActive: false })
   })
 
   afterEach(() => {
     skipBtn()?.click()
+    window.innerWidth = 1024
     document.body.innerHTML = ""
   })
 
@@ -96,5 +105,33 @@ describe("startTour", () => {
 
     expect(localStorage.getItem("ts-tour-done")).toBe("1")
     expect(document.querySelector(".driver-popover")).toBeNull()
+  })
+
+  it("keeps the menu steps on a phone, pointed at the drawer copy", async () => {
+    window.innerWidth = 500
+    anchor("nav-toggle")
+    anchor("nav-home", "mobile")
+
+    startTour(vi.fn())
+    await tick()
+    document.querySelector<HTMLElement>(".driver-popover-next-btn")?.click()
+    await tick()
+
+    expect(title()).toContain("El menú")
+  })
+
+  it("opens the drawer for a menu step", async () => {
+    window.innerWidth = 500
+    anchor("nav-toggle")
+    anchor("nav-home", "mobile")
+
+    startTour(vi.fn())
+    await tick()
+    document.querySelector<HTMLElement>(".driver-popover-next-btn")?.click()
+    await tick()
+    document.querySelector<HTMLElement>(".driver-popover-next-btn")?.click()
+    await tick()
+
+    expect(useNavStore.getState().open).toBe(true)
   })
 })

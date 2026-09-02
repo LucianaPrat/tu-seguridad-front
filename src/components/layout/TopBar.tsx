@@ -4,8 +4,10 @@ import { useLogout } from "@/hooks/useAuth"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { startTour } from "@/hooks/useOnboardingTour"
+import { useNavStore } from "@/stores/navStore"
 
-export default function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
+export default function TopBar() {
+  const { setOpen } = useNavStore()
   const { user } = useSessionStore()
   const { mutate: logout } = useLogout()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -23,7 +25,7 @@ export default function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           empty left side without touching the header's justify-end. */}
       <button
         data-tour="nav-toggle"
-        onClick={onMenuClick}
+        onClick={() => setOpen(true)}
         aria-label="Abrir menú"
         className="lg:hidden mr-auto -ml-1 p-3 rounded-lg hover:bg-gray-100 transition-colors text-gray-600"
       >
