@@ -47,11 +47,11 @@ export default function Modal({
         aria-describedby={undefined}
         className={cn("gap-0 rounded-2xl bg-card p-0", WIDTHS[width])}
       >
-        <DialogHeader className="border-b px-6 py-4">
+        <DialogHeader className="border-b px-4 sm:px-6 py-4">
           <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
         </DialogHeader>
-        <div className="px-6 py-5">{children}</div>
-        {footer && <DialogFooter className="border-t px-6 py-4">{footer}</DialogFooter>}
+        <div className="px-4 sm:px-6 py-5">{children}</div>
+        {footer && <DialogFooter className="border-t px-4 sm:px-6 py-4">{footer}</DialogFooter>}
       </DialogContent>
     </Dialog>
   )

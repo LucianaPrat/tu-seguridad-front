@@ -106,6 +106,12 @@
     @apply bg-background text-foreground;
     font-family: "Inter", sans-serif;
     margin: 0;
+    overflow-x: hidden;
+  }
+
+  /* iOS inflates type on rotation unless this is pinned. */
+  html {
+    -webkit-text-size-adjust: 100%;
   }
 }
 
