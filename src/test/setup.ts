@@ -44,3 +44,7 @@ afterEach(() => {
   // Tests stub fetch per case; leaving one armed poisons the next file.
   vi.unstubAllGlobals()
 })
+
+// AppShell starts the onboarding tour when this flag is missing, and its
+// overlay would swallow every click a page test makes. Seed it as already seen.
+localStorage.setItem("ts-tour-done", "1")

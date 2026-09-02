@@ -13,26 +13,29 @@ import {
 } from "lucide-react"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useLogout } from "@/hooks/useAuth"
+import { startTour } from "@/hooks/useOnboardingTour"
 
 interface NavItem {
   label: string
   icon: React.ReactNode
   to: string
   children?: { label: string; to: string }[]
+  tour?: string
 }
 
-const NAV_ITEMS: NavItem[] = [{ label: "Inicio", icon: <LayoutDashboard size={18} />, to: "/" }]
+const NAV_ITEMS: NavItem[] = [
+  { label: "Inicio", icon: <LayoutDashboard size={18} />, to: "/", tour: "nav-home" },
+]
 
 const SERVICE_ITEMS: NavItem[] = [
-  { label: "Monitoreo", icon: <Shield size={18} />, to: "/cameras/monitor" },
-  { label: "Eventos", icon: <Calendar size={18} />, to: "/events" },
+  { label: "Monitoreo", icon: <Shield size={18} />, to: "/cameras/monitor", tour: "nav-monitor" },
+  { label: "Eventos", icon: <Calendar size={18} />, to: "/events", tour: "nav-events" },
   { label: "Grabaciones", icon: <PlayCircle size={18} />, to: "#" },
 ]
 
 const ACCOUNT_ITEMS: NavItem[] = [
-  { label: "Perfil", icon: <User size={18} />, to: "/profile" },
+  { label: "Perfil", icon: <User size={18} />, to: "/profile", tour: "nav-profile" },
   { label: "Notificaciones", icon: <Bell size={18} />, to: "#" },
-  { label: "Ayuda", icon: <HelpCircle size={18} />, to: "#" },
 ]
 
 function NavItemLink({ item }: { item: NavItem }) {
@@ -40,6 +43,7 @@ function NavItemLink({ item }: { item: NavItem }) {
     <NavLink
       to={item.to}
       end={item.to === "/"}
+      data-tour={item.tour}
       className={({ isActive }) =>
         `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors group ${
           isActive && item.to !== "#"
@@ -99,6 +103,7 @@ export default function Sidebar() {
         {/* DVR Config under services */}
         <NavLink
           to="/dvr-config"
+          data-tour="nav-dvr"
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               isActive
@@ -116,6 +121,7 @@ export default function Sidebar() {
         {/* Canales */}
         <NavLink
           to="/channels"
+          data-tour="nav-channels"
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               isActive
@@ -133,6 +139,7 @@ export default function Sidebar() {
         {/* Miembros */}
         <NavLink
           to="/members"
+          data-tour="nav-members"
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               isActive
@@ -155,6 +162,15 @@ export default function Sidebar() {
         {ACCOUNT_ITEMS.map((item) => (
           <NavItemLink key={item.label} item={item} />
         ))}
+
+        <button
+          data-tour="nav-help"
+          onClick={() => startTour(navigate)}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-white/75 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <HelpCircle size={18} className="shrink-0" />
+          Ayuda
+        </button>
 
         <button
           onClick={handleLogout}

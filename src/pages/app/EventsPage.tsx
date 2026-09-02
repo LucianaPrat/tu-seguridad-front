@@ -69,7 +69,7 @@ export default function EventsPage() {
       <PageHeader title="Eventos de seguridad" subtitle={subtitle} />
 
       {/* Filters */}
-      <div className="flex items-center gap-3 mb-5 flex-wrap">
+      <div data-tour="events-filters" className="flex items-center gap-3 mb-5 flex-wrap">
         <div className="flex items-center gap-1.5 text-sm text-gray-500">
           <Filter size={14} />
           <span>Filtrar:</span>
