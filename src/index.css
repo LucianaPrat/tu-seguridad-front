@@ -133,23 +133,26 @@
  * spotlight moving. Every position rule needs !important — driver.js writes
  * left/top/right/bottom as inline styles on every step.
  */
+/*
+ * Two pieces, on purpose: the bubble follows the spotlight so the words sit
+ * next to the thing they describe, and the footer below is pinned to one
+ * corner so Siguiente never moves. driver.js keeps its own inline `top`/`left`
+ * here — it positions with those and never with `transform`, which is what
+ * lets the footer's `position: fixed` escape to the viewport instead of being
+ * trapped by this box.
+ */
 .driver-popover.ts-tour {
-  position: fixed !important;
-  right: 1.5rem !important;
-  bottom: 1.5rem !important;
-  left: auto !important;
-  top: auto !important;
-  width: 20rem;
-  max-width: calc(100vw - 3rem);
+  width: 18rem;
+  max-width: calc(100vw - 2rem);
   border-radius: 1rem;
-  padding: 1rem 1.125rem;
+  padding: 0.875rem 1rem;
   font-family: "Inter", sans-serif;
   box-shadow: 0 16px 40px rgb(13 79 71 / 0.28);
 }
 
-/* Nothing to point at from a fixed corner. */
+/* Back in use: the bubble has a side to point from again. */
 .driver-popover.ts-tour .driver-popover-arrow {
-  display: none !important;
+  border-width: 6px;
 }
 
 .driver-popover.ts-tour .driver-popover-title {
@@ -169,9 +172,32 @@
   line-height: 1.5;
   color: var(--muted-foreground);
 }
+/*
+ * Pinned, and its own surface — once it leaves the bubble's flow it has no
+ * background of its own to inherit. `position: fixed` on a child of the
+ * popover resolves against the viewport because no ancestor establishes a
+ * containing block: driver.css gives .driver-popover `position: fixed` and no
+ * transform, filter or will-change.
+ *
+ * ponytail: driver.js clamps the bubble to the viewport without knowing this
+ * bar exists, so a spotlight low on a short screen can put the two on top of
+ * each other. Give the bar its own `driver-popover` sibling via a portal in
+ * onPopoverRender if that shows up in practice.
+ */
 .driver-popover.ts-tour .driver-popover-footer {
-  margin-top: 0.875rem;
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  left: auto;
+  width: 18rem;
+  max-width: calc(100vw - 3rem);
+  box-sizing: border-box;
+  margin-top: 0;
   gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 16px 40px rgb(13 79 71 / 0.28);
 }
 .driver-popover.ts-tour .driver-popover-progress-text {
   font-size: 0.6875rem;
