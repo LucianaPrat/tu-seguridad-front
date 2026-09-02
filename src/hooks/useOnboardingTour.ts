@@ -196,13 +196,28 @@ const navPanel = () => document.querySelector('[data-nav="mobile"]')
  */
 const navSettled = () => {
   const el = navPanel()
-  return el !== null && el.getBoundingClientRect().left >= 0
+  if (el === null) return false
+  const { left, width } = el.getBoundingClientRect()
+  return width > 0 && left >= 0
 }
 
 /** Radix keeps the panel mounted through its exit animation. */
 const navGone = () => navPanel() === null
 
-const userMenuShown = () => document.querySelector('[data-tour="topbar-menu"]') !== null
+const userMenuPanel = () => document.querySelector('[data-tour="topbar-menu"]')
+
+/**
+ * Measured, not merely mounted. driver.js reads the anchor's rect once, when it
+ * drives the step, and never reads it again — a zero rect at that moment parks
+ * the popover in the top-left corner permanently, `refresh()` included. Mounted
+ * is not the same as laid out, so this waits for a box with size.
+ */
+const userMenuSettled = () => {
+  const el = userMenuPanel()
+  if (!el) return false
+  const { width, height } = el.getBoundingClientRect()
+  return width > 0 && height > 0
+}
 
 /** One tour at a time, and it outlives the AppShell that started it. */
 let current: Driver | null = null
@@ -303,7 +318,7 @@ export function startTour(navigate: NavigateFunction) {
     const wantMenu = Boolean(step.withUserMenu)
     if (useNavStore.getState().userMenuOpen !== wantMenu) {
       useNavStore.getState().setUserMenuOpen(wantMenu)
-      await waitFor(() => userMenuShown() === wantMenu)
+      await waitFor(wantMenu ? userMenuSettled : () => userMenuPanel() === null)
     }
 
     d.drive(index)
