@@ -6,7 +6,12 @@ import { startTour } from "@/hooks/useOnboardingTour"
 import { useNavStore } from "@/stores/navStore"
 
 export default function TopBar() {
-  const { setOpen, userMenuOpen: menuOpen, setUserMenuOpen: setMenuOpen } = useNavStore()
+  const {
+    setOpen,
+    userMenuOpen: menuOpen,
+    setUserMenuOpen: setMenuOpen,
+    tourActive,
+  } = useNavStore()
   const { user } = useSessionStore()
   const { mutate: logout } = useLogout()
   const navigate = useNavigate()
@@ -62,7 +67,9 @@ export default function TopBar() {
 
         {menuOpen && (
           <>
-            <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+            {!tourActive && (
+              <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+            )}
             <div
               data-tour="topbar-menu"
               className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg py-1 w-48 max-w-[calc(100vw-2rem)]"
