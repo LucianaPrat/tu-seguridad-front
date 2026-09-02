@@ -38,7 +38,7 @@ export default function PasswordChangePage() {
           </p>
           <Link
             to="/login"
-            className="inline-block mt-5 text-sm text-primary font-medium hover:underline"
+            className="inline-flex items-center mt-5 text-sm text-primary font-medium hover:underline py-2"
           >
             Ir al inicio de sesión
           </Link>

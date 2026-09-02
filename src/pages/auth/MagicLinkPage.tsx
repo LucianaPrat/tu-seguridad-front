@@ -53,7 +53,7 @@ export default function MagicLinkPage() {
           <button
             type="button"
             onClick={handleRetry}
-            className="text-sm text-primary hover:underline mt-1"
+            className="text-sm text-primary hover:underline mt-1 inline-flex items-center py-2"
           >
             Intentar con otro email
           </button>
@@ -79,7 +79,7 @@ export default function MagicLinkPage() {
       <div className="mt-5 pt-4 border-t border-border">
         <Link
           to="/login"
-          className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-secondary-foreground transition-colors"
+          className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-secondary-foreground transition-colors py-2"
         >
           <ArrowLeft size={14} />
           Volver al inicio de sesión

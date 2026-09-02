@@ -66,7 +66,7 @@ export default function ConfirmModal({
         <div>
           <p className="text-sm text-secondary-foreground">{message}</p>
           {requireAcknowledge && (
-            <div className="mt-3 flex items-start gap-2">
+            <div className="mt-3 flex items-start gap-2 py-2">
               <Checkbox
                 id="acknowledge"
                 checked={acknowledged}

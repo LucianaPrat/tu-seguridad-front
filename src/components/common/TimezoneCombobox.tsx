@@ -41,7 +41,12 @@ export default function TimezoneCombobox({ value, onChange, error }: TimezoneCom
             aria-invalid={Boolean(error)}
             className="flex w-full items-center justify-between rounded-lg border border-input bg-card px-3 py-2.5 text-sm transition-colors hover:border-ring/40 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30 aria-invalid:border-destructive aria-invalid:ring-destructive/20"
           >
-            <span className={selected ? "text-foreground" : "text-muted-foreground"}>
+            <span
+              className={cn(
+                "truncate min-w-0",
+                selected ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
               {selected ? `${selected.iana} — ${selected.offset}` : "Seleccioná una zona horaria"}
             </span>
             <ChevronsUpDown size={14} className="shrink-0 text-muted-foreground" />
