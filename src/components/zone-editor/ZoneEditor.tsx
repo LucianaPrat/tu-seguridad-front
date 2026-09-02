@@ -8,6 +8,8 @@ interface ZoneEditorProps {
   zones: MonitorZone[]
   onChange: (zones: MonitorZone[]) => void
   defaultAlertType: AlertType
+  /** The frame's own resolution — the page sizes the box from it. */
+  onFrameLoad?: (natural: { width: number; height: number }) => void
 }
 
 const ALERT_FILL: Record<AlertType, string> = {
@@ -45,6 +47,7 @@ export default function ZoneEditor({
   zones,
   onChange,
   defaultAlertType,
+  onFrameLoad,
 }: ZoneEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [tool, setTool] = useState<Tool>("freehand")
@@ -113,7 +116,23 @@ export default function ZoneEditor({
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
-      <img src={imageUrl} alt="Captura de la cámara" className="w-full block pointer-events-none" />
+      {/*
+        The picture fills the box and the box is what the page sized, so the
+        two are the same rectangle — `getRelative` reads its rect and the
+        overlay is `inset-0`, and anything wider than the picture would shift
+        every zone.
+      */}
+      <img
+        src={imageUrl}
+        alt="Captura de la cámara"
+        className="block w-full h-auto pointer-events-none"
+        onLoad={(e) =>
+          onFrameLoad?.({
+            width: e.currentTarget.naturalWidth,
+            height: e.currentTarget.naturalHeight,
+          })
+        }
+      />
 
       {/*
         One overlay for every shape. The viewBox is the percent grid the zones
