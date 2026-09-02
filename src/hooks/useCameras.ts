@@ -122,6 +122,13 @@ export function useSnapshotImage(path: string | null, capturedAt: string | null)
     queryFn: () => requestBlob(path!),
     enabled: path !== null,
     staleTime: Infinity,
+    // A fresh capture is the same camera with newer bytes, so `capturedAt`
+    // changes the key and the query starts empty: the frame would unmount, the
+    // page would shrink and the scroll position would collapse with it. Hold
+    // the last frame — but only for the same URL, or a camera switch would
+    // paint the previous camera under the new camera's zones.
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[1] === (path ?? "") ? previous : undefined,
   })
 
   const [objectUrl, setObjectUrl] = useState<string | null>(null)

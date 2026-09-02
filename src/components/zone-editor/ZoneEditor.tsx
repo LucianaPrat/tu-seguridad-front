@@ -107,13 +107,23 @@ export default function ZoneEditor({
   return (
     <div
       ref={containerRef}
-      className="relative select-none cursor-crosshair rounded-xl overflow-hidden bg-gray-900 touch-none"
+      className="relative w-fit max-w-full select-none cursor-crosshair rounded-xl overflow-hidden bg-gray-900 touch-none"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
-      <img src={imageUrl} alt="Captura de la cámara" className="w-full block pointer-events-none" />
+      {/*
+        The box shrink-wraps the frame — `getRelative` reads its rect and the
+        overlay is `inset-0`, so anything wider than the picture would shift
+        every zone. Both caps on an `auto`-sized image is the contain rule, so
+        the aspect ratio holds whichever one binds and percent stays percent.
+      */}
+      <img
+        src={imageUrl}
+        alt="Captura de la cámara"
+        className="block h-auto w-auto max-w-full max-h-[var(--frame-max-h,80vh)] pointer-events-none"
+      />
 
       {/*
         One overlay for every shape. The viewBox is the percent grid the zones
