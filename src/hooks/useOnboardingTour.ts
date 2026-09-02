@@ -38,6 +38,14 @@ interface TourStep {
    * `disableActiveInteraction` means the user cannot open it mid-tour.
    */
   withUserMenu?: true
+  /**
+   * Placement, when driver.js's own pick is wrong. It chooses a side from the
+   * anchor's rect and the popover's size, and for the account dropdown — wide,
+   * tall, hard against the top-right corner — it lands the bubble in the
+   * opposite corner of the screen instead of beside the menu.
+   */
+  side?: "top" | "right" | "bottom" | "left"
+  align?: "start" | "center" | "end"
   /** Leading glyph. Carries the step at a glance so the body can stay one line. */
   icon: string
   title: string
@@ -163,6 +171,8 @@ const STEPS: TourStep[] = [
     to: "/",
     element: '[data-tour="topbar-menu"]',
     withUserMenu: true,
+    side: "bottom",
+    align: "end",
     icon: "🎉",
     title: "Listo",
     body: "Acá está tu perfil, cerrar sesión, y «Ver el tutorial» para repetir esto.",
@@ -375,7 +385,7 @@ export function startTour(navigate: NavigateFunction) {
     // footer is what stays put, pinned in CSS.
     steps: steps.map((s) => ({
       element: anchorOf(s),
-      popover: { title: s.title, description: s.body },
+      popover: { title: s.title, description: s.body, side: s.side, align: s.align },
     })),
     // Overriding these turns off driver.js's own advance, so every move — the
     // done button included — routes through goTo and its navigation.
