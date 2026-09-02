@@ -8,6 +8,8 @@ interface ZoneEditorProps {
   zones: MonitorZone[]
   onChange: (zones: MonitorZone[]) => void
   defaultAlertType: AlertType
+  /** The frame's own resolution — the page sizes the box from it. */
+  onFrameLoad?: (natural: { width: number; height: number }) => void
 }
 
 const ALERT_FILL: Record<AlertType, string> = {
@@ -45,6 +47,7 @@ export default function ZoneEditor({
   zones,
   onChange,
   defaultAlertType,
+  onFrameLoad,
 }: ZoneEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [tool, setTool] = useState<Tool>("freehand")
@@ -107,22 +110,28 @@ export default function ZoneEditor({
   return (
     <div
       ref={containerRef}
-      className="relative w-fit max-w-full select-none cursor-crosshair rounded-xl overflow-hidden bg-gray-900 touch-none"
+      className="relative select-none cursor-crosshair rounded-xl overflow-hidden bg-gray-900 touch-none"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
       {/*
-        The box shrink-wraps the frame — `getRelative` reads its rect and the
-        overlay is `inset-0`, so anything wider than the picture would shift
-        every zone. Both caps on an `auto`-sized image is the contain rule, so
-        the aspect ratio holds whichever one binds and percent stays percent.
+        The picture fills the box and the box is what the page sized, so the
+        two are the same rectangle — `getRelative` reads its rect and the
+        overlay is `inset-0`, and anything wider than the picture would shift
+        every zone.
       */}
       <img
         src={imageUrl}
         alt="Captura de la cámara"
-        className="block h-auto w-auto max-w-full max-h-[var(--frame-max-h,80vh)] pointer-events-none"
+        className="block w-full h-auto pointer-events-none"
+        onLoad={(e) =>
+          onFrameLoad?.({
+            width: e.currentTarget.naturalWidth,
+            height: e.currentTarget.naturalHeight,
+          })
+        }
       />
 
       {/*

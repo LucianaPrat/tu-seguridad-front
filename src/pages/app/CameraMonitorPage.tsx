@@ -55,6 +55,26 @@ const MODES = [
  */
 const FRAME_HEIGHT = { "--frame-max-h": "calc(100dvh - 15rem)" } as CSSProperties
 
+/**
+ * A recorder frame is small — 704x576, 1280x720 — and a wide monitor offers far
+ * more room than that. Blowing it up fills the column with mush and buys
+ * nothing: zones are percent of frame, so a bigger picture is not a more
+ * precise one. Past this much of its own resolution the frame stops growing.
+ */
+const MAX_UPSCALE = 1.25
+
+/**
+ * The one rule that sizes the frame: as wide as the column allows, but never
+ * past the height that keeps it on screen, and never past what the picture has
+ * the pixels for. Width is what carries it — the box is `w-full` inside, so the
+ * zone overlay lands on the picture and not beside it.
+ */
+function frameWidth(natural: { width: number; height: number } | null): CSSProperties {
+  const { width, height } = natural ?? { width: 16, height: 9 }
+  const ceiling = natural ? `${Math.round(natural.width * MAX_UPSCALE)}px` : "100%"
+  return { width: `min(100%, ${ceiling}, calc(var(--frame-max-h) * ${width / height}))` }
+}
+
 /** Long enough that typing a name is one save, short enough to feel immediate. */
 const AUTOSAVE_DELAY = 700
 
@@ -106,6 +126,8 @@ export default function CameraMonitorPage() {
   const draftedCameraId = useRef<string | null>(null)
   /** The last shape handed to the API — what "no pending change" compares against. */
   const savedSignature = useRef<string | null>(null)
+  /** Read off the frame itself: cameras do not all answer the same resolution. */
+  const [natural, setNatural] = useState<{ width: number; height: number } | null>(null)
 
   // Reload the draft when the operator picks another camera — and only then, so
   // a refetch landing mid-edit cannot wipe what they drew.
@@ -120,6 +142,7 @@ export default function CameraMonitorPage() {
       zones: storedZones,
     }
     savedSignature.current = signature(loaded)
+    setNatural(null)
     setDraft(loaded)
   }, [selected, storedZones])
 
@@ -257,14 +280,13 @@ export default function CameraMonitorPage() {
 
             {selected && draft && (
               <>
-                {/* Canvas: the frame, and the two controls that act on it. */}
-                <section
-                  className="flex-1 min-w-0 min-h-0 flex flex-col gap-3"
-                  style={FRAME_HEIGHT}
-                >
-                  <div className="min-h-0 flex items-start justify-center">
+                {/* Canvas: the frame, and the two controls that act on it. The
+                    width rule sits on the column, so the toolbar keeps the
+                    frame's width instead of stretching across the screen. */}
+                <section className="flex-1 min-w-0 min-h-0 flex flex-col" style={FRAME_HEIGHT}>
+                  <div className="min-h-0 flex flex-col gap-3" style={frameWidth(natural)}>
                     {!snapshotUrl && (
-                      <p className="w-full text-sm text-gray-500 bg-card border border-gray-100 rounded-2xl p-10 text-center">
+                      <p className="text-sm text-gray-500 bg-card border border-gray-100 rounded-2xl p-10 text-center">
                         {capture.isPending
                           ? "Pidiéndole una captura a la cámara…"
                           : "Todavía no hay una captura de esta cámara. Tomá una para ver qué mira."}
@@ -277,15 +299,22 @@ export default function CameraMonitorPage() {
                         zones={draft.zones}
                         onChange={(zones) => updateDraft({ zones })}
                         defaultAlertType={draft.alertType}
+                        onFrameLoad={setNatural}
                       />
                     )}
 
                     {snapshotUrl && draft.monitorMode === "full" && (
-                      <div className="relative w-fit max-w-full rounded-xl overflow-hidden">
+                      <div className="relative rounded-xl overflow-hidden">
                         <img
                           src={snapshotUrl}
                           alt="Captura de la cámara"
-                          className="block h-auto w-auto max-w-full max-h-[var(--frame-max-h,80vh)]"
+                          className="block w-full h-auto"
+                          onLoad={(e) =>
+                            setNatural({
+                              width: e.currentTarget.naturalWidth,
+                              height: e.currentTarget.naturalHeight,
+                            })
+                          }
                         />
                         <div
                           className={cn(
@@ -306,37 +335,37 @@ export default function CameraMonitorPage() {
                         </span>
                       </div>
                     )}
-                  </div>
 
-                  <div className="shrink-0 flex items-center justify-between gap-3 flex-wrap">
-                    {draft.monitorMode === "partial" ? (
-                      <div className="flex gap-2 items-center">
-                        <span className="text-xs text-gray-500">Dibujar como:</span>
-                        <AlertTypeToggle
-                          value={draft.alertType}
-                          onChange={(alertType) => updateDraft({ alertType })}
-                          size="sm"
-                        />
-                      </div>
-                    ) : (
-                      <span className="text-xs text-gray-500">
-                        Todo lo que entre en la imagen genera una alerta.
-                      </span>
+                    <div className="shrink-0 flex items-center justify-between gap-3 flex-wrap">
+                      {draft.monitorMode === "partial" ? (
+                        <div className="flex gap-2 items-center">
+                          <span className="text-xs text-gray-500">Dibujar como:</span>
+                          <AlertTypeToggle
+                            value={draft.alertType}
+                            onChange={(alertType) => updateDraft({ alertType })}
+                            size="sm"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-500">
+                          Todo lo que entre en la imagen genera una alerta.
+                        </span>
+                      )}
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        icon={<CameraIcon size={14} />}
+                        onClick={() => capture.mutate(selected.id)}
+                        loading={capture.isPending}
+                      >
+                        Actualizar imagen
+                      </Button>
+                    </div>
+
+                    {capture.error && (
+                      <p className="shrink-0 text-sm text-red-600">{errorMessage(capture.error)}</p>
                     )}
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      icon={<CameraIcon size={14} />}
-                      onClick={() => capture.mutate(selected.id)}
-                      loading={capture.isPending}
-                    >
-                      Actualizar imagen
-                    </Button>
                   </div>
-
-                  {capture.error && (
-                    <p className="shrink-0 text-sm text-red-600">{errorMessage(capture.error)}</p>
-                  )}
                 </section>
 
                 {/* Inspector: everything that is not the frame. */}
