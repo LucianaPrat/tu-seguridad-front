@@ -33,6 +33,11 @@ interface TourStep {
   inNav?: true
   /** Only below `lg`, where the menu is a drawer that has to be opened first. */
   mobileOnly?: true
+  /**
+   * Anchored inside the account dropdown, which the tour opens itself —
+   * `disableActiveInteraction` means the user cannot open it mid-tour.
+   */
+  withUserMenu?: true
   /** Leading glyph. Carries the step at a glance so the body can stay one line. */
   icon: string
   title: string
@@ -81,9 +86,9 @@ const STEPS: TourStep[] = [
   {
     to: "/cameras/monitor",
     element: '[data-tour="page-action"]',
-    icon: "💾",
-    title: "Guardar",
-    body: "Las zonas no se aplican hasta apretar acá.",
+    icon: "✅",
+    title: "Se guarda solo",
+    body: "No hay botón: las zonas se guardan al soltar el dibujo. Acá ves si ya salió.",
   },
   {
     to: "/events",
@@ -147,26 +152,20 @@ const STEPS: TourStep[] = [
     body: "Tus datos y tu contraseña.",
   },
   {
-    to: "/profile",
-    element: '[data-tour="topbar-user"]',
-    icon: "🔑",
-    title: "Tu cuenta",
-    body: "Tu perfil, cerrar sesión, y «Ver el tutorial» para repetir esto.",
-  },
-  {
-    to: "/",
+    to: "/help",
     element: '[data-tour="nav-help"]',
     inNav: true,
-    icon: "🎉",
-    title: "Listo",
-    body: "Repetilo desde acá, o desde el menú de tu perfil.",
+    icon: "💬",
+    title: "Ayuda",
+    body: "Un asistente en chat para tus dudas sobre el sistema.",
   },
   {
     to: "/",
-    mobileOnly: true,
+    element: '[data-tour="topbar-menu"]',
+    withUserMenu: true,
     icon: "🎉",
     title: "Listo",
-    body: "Repetilo cuando quieras desde «Ver el tutorial», en el menú de tu perfil.",
+    body: "Acá está tu perfil, cerrar sesión, y «Ver el tutorial» para repetir esto.",
   },
 ]
 
@@ -202,6 +201,8 @@ const navSettled = () => {
 
 /** Radix keeps the panel mounted through its exit animation. */
 const navGone = () => navPanel() === null
+
+const userMenuShown = () => document.querySelector('[data-tour="topbar-menu"]') !== null
 
 /** One tour at a time, and it outlives the AppShell that started it. */
 let current: Driver | null = null
@@ -250,7 +251,7 @@ export function startTour(navigate: NavigateFunction) {
     // One update, not two: flipping `tourActive` while the drawer is still open
     // swaps DialogContentModal for DialogContentNonModal, and React remounts
     // the panel mid-exit.
-    useNavStore.setState({ open: false, tourActive: false })
+    useNavStore.setState({ open: false, tourActive: false, userMenuOpen: false })
     const tour = current
     current = null
     tour?.destroy()
@@ -292,6 +293,17 @@ export function startTour(navigate: NavigateFunction) {
         useNavStore.getState().setOpen(wantOpen)
         await waitFor(wantOpen ? navSettled : navGone)
       }
+    }
+
+    /*
+     * The account step describes the items in the dropdown, not the avatar that
+     * opens it, so the panel has to be mounted before driver.js measures it.
+     * Shut again for every other step, or it hangs over the page underneath.
+     */
+    const wantMenu = Boolean(step.withUserMenu)
+    if (useNavStore.getState().userMenuOpen !== wantMenu) {
+      useNavStore.getState().setUserMenuOpen(wantMenu)
+      await waitFor(() => userMenuShown() === wantMenu)
     }
 
     d.drive(index)
@@ -343,9 +355,9 @@ export function startTour(navigate: NavigateFunction) {
     smoothScroll: true,
     popoverClass: "ts-tour",
     onPopoverRender: dressPopover,
-    // The popover is pinned by CSS, so `side` would be dead config: only the
-    // spotlight moves between steps, which is the whole point — no chasing a
-    // panel around the screen.
+    // No `side`/`align`: driver.js picks whichever side of the spotlight has
+    // room, which is the point of letting it place the bubble at all. The
+    // footer is what stays put, pinned in CSS.
     steps: steps.map((s) => ({
       element: anchorOf(s),
       popover: { title: s.title, description: s.body },
