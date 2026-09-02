@@ -106,12 +106,6 @@
     @apply bg-background text-foreground;
     font-family: "Inter", sans-serif;
     margin: 0;
-    overflow-x: hidden;
-  }
-
-  /* iOS inflates type on rotation unless this is pinned. */
-  html {
-    -webkit-text-size-adjust: 100%;
   }
 }
 
@@ -223,4 +217,17 @@
 }
 .driver-popover.ts-tour .driver-popover-close-btn:hover {
   color: var(--foreground);
+}
+
+/*
+ * The overlay is brand teal and so is the drawer, so an open drawer dims into
+ * the overlay behind it. The ring is what keeps the highlighted row legible as
+ * the thing the step is pointing at. `stagePadding: 6` is what makes it show:
+ * the cut-out is 6px bigger than the element, so a 2px ring at 2px offset
+ * still falls inside the hole.
+ */
+.driver-active-element {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  border-radius: 8px;
 }
