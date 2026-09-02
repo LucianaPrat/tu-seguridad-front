@@ -46,7 +46,7 @@ export default function DVRInitPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f7f6] flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-[#f4f7f6] flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-8">
@@ -59,7 +59,7 @@ export default function DVRInitPage() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
           {/* The backend tests the recorder before storing it, so a failure here
               means nothing was saved and the operator can retry as is. */}
           {configure.isError && (

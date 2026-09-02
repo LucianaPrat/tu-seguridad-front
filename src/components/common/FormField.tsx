@@ -39,7 +39,9 @@ export default function FormField({
           {...props}
         />
         {rightElement && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">{rightElement}</div>
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 [&>button]:p-2">
+            {rightElement}
+          </div>
         )}
       </div>
       {hint && !error && (

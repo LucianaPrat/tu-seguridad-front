@@ -32,7 +32,7 @@ export default function CameraCardUnconfigured({
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
           <button
             onClick={() => navigate(`/cameras/monitor?camera=${camera.id}`)}
-            className="flex flex-col items-center gap-1.5 group"
+            className="flex flex-col items-center gap-1.5 group min-h-11"
           >
             <div className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center group-hover:bg-white/30 transition-colors">
               <Settings size={18} className="text-white" />

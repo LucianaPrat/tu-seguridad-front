@@ -174,7 +174,7 @@ export default function ZoneEditor({
         return (
           <div
             key={zone.id}
-            className="absolute flex items-center gap-1 px-1.5 py-0.5 text-xs font-semibold text-white rounded"
+            className="absolute flex items-center gap-1 px-1.5 py-0.5 text-sm font-semibold text-white rounded"
             style={{
               left: `${box.x}%`,
               top: `${box.y}%`,
@@ -186,6 +186,7 @@ export default function ZoneEditor({
           >
             <button
               title="Cambiar nivel de alerta"
+              className="px-2 py-1.5 min-h-8 flex items-center"
               onPointerDown={(e) => {
                 e.stopPropagation()
                 updateZone(zone.id, {
@@ -197,7 +198,7 @@ export default function ZoneEditor({
             </button>
             <button
               aria-label="Borrar zona"
-              className="hover:opacity-70"
+              className="hover:opacity-70 px-2 py-1.5 min-h-8 flex items-center"
               onPointerDown={(e) => {
                 e.stopPropagation()
                 onChange(zones.filter((z) => z.id !== zone.id))
@@ -221,18 +222,18 @@ export default function ZoneEditor({
             aria-label={label}
             aria-pressed={tool === option}
             onClick={() => setTool(option)}
-            className={`p-1.5 rounded-md transition-colors ${
+            className={`p-2.5 rounded-md transition-colors ${
               tool === option ? "bg-white text-gray-900" : "text-white hover:bg-white/20"
             }`}
           >
-            <Icon size={15} />
+            <Icon size={18} />
           </button>
         ))}
       </div>
 
       {zones.length === 0 && !path && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <p className="bg-black/50 text-white text-xs px-3 py-1.5 rounded-full">
+          <p className="bg-black/50 text-white text-sm px-3 py-1.5 rounded-full">
             {tool === "freehand"
               ? "Dibujá a mano alzada la zona a monitorear"
               : "Arrastrá para definir una zona rectangular"}

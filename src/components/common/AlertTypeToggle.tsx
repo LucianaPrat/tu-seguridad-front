@@ -36,7 +36,7 @@ export default function AlertTypeToggle({
   className,
 }: AlertTypeToggleProps) {
   return (
-    <div role="radiogroup" className={cn("flex gap-2", className)}>
+    <div role="radiogroup" className={cn("flex flex-wrap gap-2", className)}>
       {OPTIONS.map(({ type, label, Icon, selected }) => (
         <button
           key={type}
@@ -46,11 +46,11 @@ export default function AlertTypeToggle({
           onClick={() => onChange(type)}
           className={cn(
             "flex items-center gap-1.5 rounded-lg border font-medium transition-colors",
-            size === "sm" ? "px-2.5 py-1 text-xs" : "px-4 py-2 text-sm",
+            size === "sm" ? "px-3 py-2 text-sm" : "px-4 py-2.5 text-sm",
             value === type ? selected : "border-gray-200 text-gray-600 hover:border-gray-300",
           )}
         >
-          <Icon size={size === "sm" ? 13 : 15} />
+          <Icon size={size === "sm" ? 15 : 16} />
           {label}
         </button>
       ))}

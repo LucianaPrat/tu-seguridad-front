@@ -29,7 +29,10 @@ export default function InvitationAcceptPage() {
         <p className="text-sm text-secondary-foreground">
           Abrí el enlace tal como llegó al correo, o pedí una invitación nueva.
         </p>
-        <Link to="/login" className="mt-4 inline-block text-sm text-primary hover:underline">
+        <Link
+          to="/login"
+          className="mt-4 inline-flex items-center text-sm text-primary hover:underline py-2"
+        >
           Ir al inicio de sesión
         </Link>
       </AuthCard>
@@ -47,7 +50,10 @@ export default function InvitationAcceptPage() {
           <p role="alert" className="text-sm text-destructive">
             {acceptErrorMessage(accept.error)}
           </p>
-          <Link to="/login" className="mt-4 inline-block text-sm text-primary hover:underline">
+          <Link
+            to="/login"
+            className="mt-4 inline-flex items-center text-sm text-primary hover:underline py-2"
+          >
             Ir al inicio de sesión
           </Link>
         </>

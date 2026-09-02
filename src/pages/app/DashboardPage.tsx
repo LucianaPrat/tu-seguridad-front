@@ -12,7 +12,7 @@ import { useSessionStore } from "@/stores/sessionStore"
 import { ApiError } from "@/lib/http"
 import { cn } from "@/lib/utils"
 
-const NOTICE = "bg-white rounded-xl border border-gray-100 p-8 text-center text-sm"
+const NOTICE = "bg-white rounded-xl border border-gray-100 p-5 sm:p-8 text-center text-sm"
 
 function errorMessage(error: unknown) {
   return error instanceof ApiError ? error.message : "No pudimos cargar las cámaras"
@@ -76,7 +76,7 @@ export default function DashboardPage() {
         <>
           {/* Configured cameras */}
           <section className="mb-8">
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               <CameraIcon size={16} className="text-[#1a6b61]" />
               <h2 className="text-sm font-semibold text-gray-700">Cámaras configuradas</h2>
               <span className="text-xs text-gray-400">
@@ -97,7 +97,7 @@ export default function DashboardPage() {
           {/* Unconfigured cameras */}
           {unconfigured.length > 0 && (
             <section className="mb-8">
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
                 <CameraIcon size={16} className="text-gray-400" />
                 <h2 className="text-sm font-semibold text-gray-700">Cámaras sin configurar</h2>
                 <span className="text-xs text-gray-400">
@@ -120,7 +120,7 @@ export default function DashboardPage() {
           {disabled.length > 0 && (
             <section>
               <button
-                className="flex items-center gap-2 mb-3 text-sm font-semibold text-gray-500 hover:text-gray-700"
+                className="flex items-center gap-2 mb-3 flex-wrap py-2 text-sm font-semibold text-gray-500 hover:text-gray-700"
                 onClick={() => setDisabledOpen((o) => !o)}
               >
                 {disabledOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}

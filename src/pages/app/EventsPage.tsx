@@ -25,6 +25,24 @@ const CHANNEL_LABELS: Record<ChannelType, string> = {
 
 const HEAD_CELL = "text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider"
 
+/*
+ * Below `xl` the table collapses into cards: header hidden, row per card, cell
+ * per line labelled by its own `data-label`. One copy of the DOM either way —
+ * a card list beside the table would render every camera name twice.
+ *
+ * `xl`, not `md`: five columns need ~800px and the row never gets it below
+ * 1280 — at 768 the sidebar is gone but the viewport is small, and at 1024 the
+ * sidebar is back and takes the 240px that would have paid for it.
+ */
+const TABLE = "w-full text-sm max-xl:block"
+const ROW = "hover:bg-gray-50 transition-colors cursor-pointer max-xl:block max-xl:px-4 max-xl:py-3"
+const CELL = "px-4 py-3 max-xl:block max-xl:px-0 max-xl:py-1"
+const LABELLED =
+  `${CELL} max-xl:flex max-xl:items-center max-xl:justify-between max-xl:gap-3 ` +
+  "max-xl:before:content-[attr(data-label)] max-xl:before:shrink-0 max-xl:before:text-xs " +
+  "max-xl:before:font-semibold max-xl:before:uppercase max-xl:before:tracking-wider " +
+  "max-xl:before:text-gray-400"
+
 function formatTimestamp(iso: string) {
   return new Date(iso).toLocaleString("es-AR", {
     day: "2-digit",
@@ -74,12 +92,12 @@ export default function EventsPage() {
           <Filter size={14} />
           <span>Filtrar:</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {(["all", "intruso", "sospechoso"] as const).map((type) => (
             <button
               key={type}
               onClick={() => setFilterAlert(type)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+              className={`px-3 py-2 min-h-9 rounded-lg text-sm font-medium transition-colors border ${
                 filterAlert === type
                   ? "bg-primary text-white border-primary"
                   : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
@@ -94,12 +112,12 @@ export default function EventsPage() {
           aria-label="Desde"
           value={filterDate}
           onChange={(e) => setFilterDate(e.target.value)}
-          className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 text-gray-600"
+          className="px-3 py-2 min-h-9 text-base sm:text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 text-gray-600"
         />
         {filterDate && (
           <button
             onClick={() => setFilterDate("")}
-            className="text-xs text-gray-400 hover:text-gray-600"
+            className="px-2 py-2 text-sm text-gray-400 hover:text-gray-600"
           >
             Limpiar fecha
           </button>
@@ -118,31 +136,46 @@ export default function EventsPage() {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th className={HEAD_CELL}>Cámara</th>
-                  <th className={HEAD_CELL}>Tipo</th>
-                  <th className={HEAD_CELL}>Canal</th>
-                  <th className={HEAD_CELL}>Fecha y hora</th>
-                  <th className={HEAD_CELL}>Reconocimiento</th>
+            <table role="table" className={TABLE}>
+              <thead role="rowgroup" className="max-xl:hidden">
+                <tr role="row" className="border-b border-gray-100">
+                  <th role="columnheader" className={HEAD_CELL}>
+                    Cámara
+                  </th>
+                  <th role="columnheader" className={HEAD_CELL}>
+                    Tipo
+                  </th>
+                  <th role="columnheader" className={HEAD_CELL}>
+                    Canal
+                  </th>
+                  <th role="columnheader" className={HEAD_CELL}>
+                    Fecha y hora
+                  </th>
+                  <th role="columnheader" className={HEAD_CELL}>
+                    Reconocimiento
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody role="rowgroup" className="divide-y divide-gray-50 max-xl:block">
                 {rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">
+                  <tr role="row">
+                    <td
+                      role="cell"
+                      colSpan={5}
+                      className="px-4 py-8 text-center text-gray-400 text-sm max-xl:block"
+                    >
                       No hay eventos con los filtros seleccionados.
                     </td>
                   </tr>
                 ) : (
                   rows.map((ev) => (
                     <tr
+                      role="row"
                       key={ev.id}
                       onClick={() => navigate(`/events/${ev.id}`)}
-                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      className={ROW}
                     >
-                      <td className="px-4 py-3">
+                      <td role="cell" className={CELL}>
                         <Link
                           to={`/events/${ev.id}`}
                           className="text-gray-800 font-medium hover:text-primary hover:underline"
@@ -150,10 +183,10 @@ export default function EventsPage() {
                           {ev.cameraName}
                         </Link>
                       </td>
-                      <td className="px-4 py-3">
+                      <td role="cell" data-label="Tipo" className={LABELLED}>
                         <Badge variant={ev.alertType} />
                       </td>
-                      <td className="px-4 py-3">
+                      <td role="cell" data-label="Canal" className={LABELLED}>
                         {ev.channels.length === 0 ? (
                           <span className="text-gray-400 text-xs">Sin envío</span>
                         ) : (
@@ -167,8 +200,10 @@ export default function EventsPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">{formatTimestamp(ev.timestamp)}</td>
-                      <td className="px-4 py-3">
+                      <td role="cell" data-label="Fecha" className={`${LABELLED} text-gray-600`}>
+                        {formatTimestamp(ev.timestamp)}
+                      </td>
+                      <td role="cell" data-label="Reconocimiento" className={LABELLED}>
                         {ev.acknowledgedAt ? (
                           <div className="flex items-start gap-1.5">
                             <CheckCircle size={14} className="text-green-500 mt-0.5 shrink-0" />

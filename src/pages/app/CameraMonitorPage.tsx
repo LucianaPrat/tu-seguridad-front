@@ -46,14 +46,18 @@ const MODES = [
 
 /*
  * The frame is the workspace, so it gets the height and the settings get a
- * rail: rail | frame | inspector, each scrolling on its own above `xl`, so
+ * rail: rail | frame | inspector, each scrolling on its own above `lg`, so
  * drawing a zone never starts with a scroll and a refreshed capture cannot
  * move the page under the cursor.
  *
- * ponytail: 15rem is the chrome around the frame — TopBar h-14, the p-6 of
- * `main`, the page header and the toolbar row. Remeasure if that chrome moves.
+ * Two numbers because the chrome around the frame is not the same at both
+ * layouts: above `lg` it is TopBar h-14, the padding of `main`, the page header
+ * and the toolbar row; below it the camera strip and the settings stack above
+ * and below the frame too, so more of the viewport is spoken for.
+ *
+ * ponytail: measured, not derived. Remeasure if that chrome moves.
  */
-const FRAME_HEIGHT = { "--frame-max-h": "calc(100dvh - 15rem)" } as CSSProperties
+const FRAME_HEIGHT = "[--frame-max-h:calc(100dvh-22rem)] lg:[--frame-max-h:calc(100dvh-15rem)]"
 
 /**
  * A recorder frame is small — 704x576, 1280x720 — and a wide monitor offers far
@@ -204,7 +208,7 @@ export default function CameraMonitorPage() {
 
   return (
     <AppShell>
-      <div className="flex flex-col min-h-0 xl:h-full">
+      <div className="flex flex-col min-h-0 lg:h-full">
         <PageHeader
           title="Comportamiento de monitoreo"
           subtitle="Configurá cómo cada cámara detecta y alerta eventos de seguridad."
@@ -235,20 +239,20 @@ export default function CameraMonitorPage() {
         )}
 
         {cameras && cameras.length > 0 && (
-          <div className="flex-1 min-h-0 flex flex-col gap-4 xl:flex-row">
+          <div className="flex-1 min-h-0 flex flex-col gap-4 lg:flex-row">
             {/* Camera rail — a column beside the frame, a strip above it when
                 the viewport is too narrow to afford the column. */}
-            <div className="shrink-0 xl:w-44 xl:min-h-0 xl:flex xl:flex-col">
+            <div className="shrink-0 lg:w-44 lg:min-h-0 lg:flex lg:flex-col">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                 Cámaras
               </p>
-              <ul className="flex gap-1 overflow-x-auto pb-1 xl:flex-col xl:overflow-x-visible xl:overflow-y-auto xl:pb-0">
+              <ul className="flex gap-1 overflow-x-auto snap-x pb-1 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:pb-0">
                 {cameras.map((camera) => (
-                  <li key={camera.id} className="shrink-0 xl:shrink xl:w-full">
+                  <li key={camera.id} className="shrink-0 snap-start lg:shrink lg:w-full">
                     <button
                       onClick={() => setSelectedId(camera.id)}
                       className={cn(
-                        "w-40 xl:w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors",
+                        "w-36 sm:w-40 lg:w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors",
                         camera.id === selected?.id
                           ? "bg-primary text-primary-foreground font-medium"
                           : "bg-card border border-gray-100 text-gray-700 hover:border-gray-200",
@@ -283,7 +287,7 @@ export default function CameraMonitorPage() {
                 {/* Canvas: the frame, and the two controls that act on it. The
                     width rule sits on the column, so the toolbar keeps the
                     frame's width instead of stretching across the screen. */}
-                <section className="flex-1 min-w-0 min-h-0 flex flex-col" style={FRAME_HEIGHT}>
+                <section className={cn("flex-1 min-w-0 min-h-0 flex flex-col", FRAME_HEIGHT)}>
                   <div className="min-h-0 flex flex-col gap-3" style={frameWidth(natural)}>
                     {!snapshotUrl && (
                       <p className="text-sm text-gray-500 bg-card border border-gray-100 rounded-2xl p-10 text-center">
@@ -369,7 +373,7 @@ export default function CameraMonitorPage() {
                 </section>
 
                 {/* Inspector: everything that is not the frame. */}
-                <aside className="shrink-0 flex flex-col gap-4 xl:w-80 xl:min-h-0 xl:overflow-y-auto">
+                <aside className="shrink-0 flex flex-col gap-4 lg:w-80 lg:min-h-0 lg:overflow-y-auto">
                   {save.error && <p className="text-sm text-red-600">{errorMessage(save.error)}</p>}
 
                   <div className={cn(CARD, "flex flex-col gap-3")}>

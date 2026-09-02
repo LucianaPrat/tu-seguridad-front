@@ -26,7 +26,7 @@ export default function AcknowledgeAlertPage() {
   const eventLink = (
     <Link
       to={`/events/${id}`}
-      className="flex items-center justify-center gap-1.5 text-sm text-primary hover:underline"
+      className="flex items-center justify-center gap-1.5 text-sm text-primary hover:underline py-2"
     >
       Ver la alerta
       <ArrowRight size={14} />

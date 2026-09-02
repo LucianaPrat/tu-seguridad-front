@@ -1,14 +1,14 @@
-import { Bell, ChevronDown } from "lucide-react"
+import { Bell, ChevronDown, Menu } from "lucide-react"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useLogout } from "@/hooks/useAuth"
-import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { startTour } from "@/hooks/useOnboardingTour"
+import { useNavStore } from "@/stores/navStore"
 
 export default function TopBar() {
+  const { setOpen, userMenuOpen: menuOpen, setUserMenuOpen: setMenuOpen } = useNavStore()
   const { user } = useSessionStore()
   const { mutate: logout } = useLogout()
-  const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
 
   function handleLogout() {
@@ -18,19 +18,29 @@ export default function TopBar() {
   }
 
   return (
-    <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-end px-6 gap-4 shrink-0">
+    <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-end px-4 lg:px-6 gap-2 sm:gap-4 shrink-0">
+      {/* Menu — the only way to the sidebar below `lg`. `mr-auto` claims the
+          empty left side without touching the header's justify-end. */}
+      <button
+        data-tour="nav-toggle"
+        onClick={() => setOpen(true)}
+        aria-label="Abrir menú"
+        className="lg:hidden mr-auto -ml-1 p-3 rounded-lg hover:bg-gray-100 transition-colors text-gray-600"
+      >
+        <Menu size={22} />
+      </button>
+
       {/* Bell */}
-      <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500">
+      <button className="relative min-h-11 min-w-11 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-500">
         <Bell size={18} />
-        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#1a6b61] border border-white" />
+        <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#1a6b61] border border-white" />
       </button>
 
       {/* User menu */}
       <div className="relative">
         <button
-          data-tour="topbar-user"
-          onClick={() => setMenuOpen((o) => !o)}
-          className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-gray-100 transition-colors"
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="flex items-center gap-2 min-h-11 px-1.5 rounded-xl hover:bg-gray-100 transition-colors"
         >
           {user?.avatarUrl ? (
             <img
@@ -44,20 +54,25 @@ export default function TopBar() {
               {user?.lastName?.[0]}
             </div>
           )}
-          <span className="text-sm font-medium text-gray-800">{user?.firstName}</span>
+          <span className="hidden sm:inline text-sm font-medium text-gray-800">
+            {user?.firstName}
+          </span>
           <ChevronDown size={14} className="text-gray-400" />
         </button>
 
         {menuOpen && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-            <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg py-1 w-44">
+            <div
+              data-tour="topbar-menu"
+              className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg py-1 w-48 max-w-[calc(100vw-2rem)]"
+            >
               <button
                 onClick={() => {
                   navigate("/profile")
                   setMenuOpen(false)
                 }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
               >
                 Mi perfil
               </button>
@@ -66,14 +81,14 @@ export default function TopBar() {
                   setMenuOpen(false)
                   startTour(navigate)
                 }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
               >
                 Ver el tutorial
               </button>
               <hr className="my-1 border-gray-100" />
               <button
                 onClick={handleLogout}
-                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
               >
                 Cerrar sesión
               </button>

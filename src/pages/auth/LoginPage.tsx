@@ -93,7 +93,10 @@ export default function LoginPage() {
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Contraseña</Label>
-            <Link to="/auth/recover" className="text-xs text-primary hover:underline">
+            <Link
+              to="/auth/recover"
+              className="text-xs text-primary hover:underline inline-flex items-center py-2"
+            >
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
@@ -151,7 +154,10 @@ export default function LoginPage() {
       {/* ── Register link ── */}
       <p className="text-center text-sm text-muted-foreground mt-5">
         ¿No tenés cuenta?{" "}
-        <Link to="/register" className="text-primary font-medium hover:underline">
+        <Link
+          to="/register"
+          className="text-primary font-medium hover:underline inline-flex items-center py-2"
+        >
           Registrarse
         </Link>
       </p>

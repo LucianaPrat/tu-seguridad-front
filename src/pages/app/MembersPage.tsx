@@ -23,6 +23,22 @@ function formatDate(iso: string) {
 
 const HEAD_CELL = "text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider"
 
+/*
+ * Below `md` the table collapses into cards: the header hides, every row is a
+ * block and every cell a line labelled by its own `data-label`. It stays one
+ * copy of the DOM — a separate card list beside the table would render every
+ * name and email twice, and both the screen readers and the tests read them one
+ * at a time.
+ */
+const TABLE = "w-full text-sm max-md:block"
+const ROW = "hover:bg-gray-50 transition-colors max-md:block max-md:px-4 max-md:py-3"
+const CELL = "px-4 py-3 max-md:block max-md:px-0 max-md:py-1"
+const LABELLED =
+  `${CELL} max-md:flex max-md:items-center max-md:justify-between max-md:gap-3 ` +
+  "max-md:before:content-[attr(data-label)] max-md:before:shrink-0 max-md:before:text-xs " +
+  "max-md:before:font-semibold max-md:before:uppercase max-md:before:tracking-wider " +
+  "max-md:before:text-gray-400"
+
 export default function MembersPage() {
   const [inviteOpen, setInviteOpen] = useState(false)
   // Inviting is admin-only on the backend, so a member gets no button rather
@@ -62,28 +78,40 @@ export default function MembersPage() {
               : "No pudimos cargar los miembros del espacio."}
           </p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className={HEAD_CELL}>Miembro</th>
-                <th className={HEAD_CELL}>Email</th>
-                <th className={HEAD_CELL}>Estado</th>
-                <th className={HEAD_CELL}>Último acceso</th>
+          <table role="table" className={TABLE}>
+            <thead role="rowgroup" className="max-md:hidden">
+              <tr role="row" className="border-b border-gray-100">
+                <th role="columnheader" className={HEAD_CELL}>
+                  Miembro
+                </th>
+                <th role="columnheader" className={HEAD_CELL}>
+                  Email
+                </th>
+                <th role="columnheader" className={HEAD_CELL}>
+                  Estado
+                </th>
+                <th role="columnheader" className={HEAD_CELL}>
+                  Último acceso
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody role="rowgroup" className="divide-y divide-gray-50 max-md:block">
               {rows.length === 0 && pending.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-4 py-6 text-muted-foreground">
+                <tr role="row">
+                  <td
+                    role="cell"
+                    colSpan={4}
+                    className="px-4 py-6 text-muted-foreground max-md:block"
+                  >
                     Todavía no hay miembros en este espacio.
                   </td>
                 </tr>
               )}
 
               {rows.map((member) => (
-                <tr key={`member-${member.id}`} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
+                <tr role="row" key={`member-${member.id}`} className={ROW}>
+                  <td role="cell" className={CELL}>
+                    <div className="flex items-center gap-3 min-w-0">
                       {member.avatarUrl ? (
                         <img
                           src={member.avatarUrl}
@@ -95,7 +123,7 @@ export default function MembersPage() {
                           {initials(member)}
                         </div>
                       )}
-                      <div>
+                      <div className="min-w-0">
                         <p
                           className={
                             member.profileCompleted
@@ -106,18 +134,28 @@ export default function MembersPage() {
                           {displayName(member)}
                         </p>
                         {member.profileCompleted ? (
-                          <p className="text-xs text-gray-400">{member.phone}</p>
+                          <p className="text-xs text-gray-400 truncate">{member.phone}</p>
                         ) : (
                           <Badge variant="unconfigured" label="Perfil incompleto" />
                         )}
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{member.email}</td>
-                  <td className="px-4 py-3">
+                  <td
+                    role="cell"
+                    data-label="Email"
+                    className={`${LABELLED} text-gray-600 max-md:break-all`}
+                  >
+                    {member.email}
+                  </td>
+                  <td role="cell" data-label="Estado" className={LABELLED}>
                     <Badge variant={member.isActive ? "active" : "inactive"} />
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">
+                  <td
+                    role="cell"
+                    data-label="Último acceso"
+                    className={`${LABELLED} text-gray-500 text-xs`}
+                  >
                     {member.lastLoginAt ? formatDate(member.lastLoginAt) : "Nunca"}
                   </td>
                 </tr>
@@ -126,20 +164,30 @@ export default function MembersPage() {
               {/* Invited and not joined yet: they are not members, so they carry
                   no state of their own beyond the pending badge. */}
               {pending.map((invitation) => (
-                <tr key={`invite-${invitation.id}`} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
+                <tr role="row" key={`invite-${invitation.id}`} className={ROW}>
+                  <td role="cell" className={CELL}>
+                    <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 shrink-0">
                         <Mail size={14} />
                       </div>
                       <p className="text-gray-500">Invitación pendiente</p>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{invitation.email}</td>
-                  <td className="px-4 py-3">
+                  <td
+                    role="cell"
+                    data-label="Email"
+                    className={`${LABELLED} text-gray-600 max-md:break-all`}
+                  >
+                    {invitation.email}
+                  </td>
+                  <td role="cell" data-label="Estado" className={LABELLED}>
                     <Badge variant="unconfigured" label="Pendiente" />
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">
+                  <td
+                    role="cell"
+                    data-label="Último acceso"
+                    className={`${LABELLED} text-gray-500 text-xs`}
+                  >
                     Expira {formatDate(invitation.expiresAt)}
                   </td>
                 </tr>

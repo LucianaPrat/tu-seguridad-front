@@ -85,7 +85,7 @@ export default function DVRForm({
         error={errors.dvrUrl?.message}
         {...register("dvrUrl", { onChange: resetProbe })}
       />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <FormField
           label="Usuario DVR"
           placeholder="admin"
@@ -124,7 +124,7 @@ export default function DVRForm({
       />
 
       {showTestConnection && (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Button
             type="button"
             variant="secondary"
