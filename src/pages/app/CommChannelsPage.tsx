@@ -61,21 +61,21 @@ export default function CommChannelsPage() {
           data-tour="channels-routing"
           className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
         >
-          <div className="px-5 py-4 border-b border-gray-100">
+          <div className="px-3 sm:px-5 py-4 border-b border-gray-100">
             <h2 className="text-sm font-semibold text-gray-900">Enrutamiento de alertas</h2>
             <p className="text-xs text-gray-500 mt-0.5">
               Seleccioná los canales que se usan para cada tipo de alerta.
             </p>
           </div>
           {setRouting.isError && (
-            <p role="alert" className="px-5 py-2 text-xs text-destructive">
+            <p role="alert" className="px-3 sm:px-5 py-2 text-xs text-destructive">
               No pudimos guardar el cambio.
             </p>
           )}
           {routings.isPending ? (
-            <p className="px-5 py-6 text-sm text-muted-foreground">Cargando…</p>
+            <p className="px-3 sm:px-5 py-6 text-sm text-muted-foreground">Cargando…</p>
           ) : routings.isError ? (
-            <p role="alert" className="px-5 py-6 text-sm text-destructive">
+            <p role="alert" className="px-3 sm:px-5 py-6 text-sm text-destructive">
               {routings.error instanceof ApiError
                 ? routings.error.message
                 : "No pudimos cargar el enrutamiento de alertas."}
@@ -84,13 +84,13 @@ export default function CommChannelsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-50">
-                  <th className="text-left px-5 py-2.5 text-xs font-semibold text-gray-500">
+                  <th className="text-left px-3 sm:px-5 py-2.5 text-xs font-semibold text-gray-500">
                     Tipo de alerta
                   </th>
                   {ALL_CHANNELS.map((ch) => (
                     <th
                       key={ch}
-                      className="text-center px-4 py-2.5 text-xs font-semibold text-gray-500"
+                      className="text-center px-2 sm:px-4 py-2.5 text-xs font-semibold text-gray-500"
                     >
                       <span className="flex flex-col items-center gap-1">
                         {CHANNEL_ICONS[ch]}
@@ -103,26 +103,30 @@ export default function CommChannelsPage() {
               <tbody>
                 {(["intruso", "sospechoso"] as AlertType[]).map((alert) => (
                   <tr key={alert} className="border-b border-gray-50 last:border-0">
-                    <td className="px-5 py-3 font-medium text-gray-800">{ALERT_LABELS[alert]}</td>
+                    <td className="px-3 sm:px-5 py-3 font-medium text-gray-800">
+                      {ALERT_LABELS[alert]}
+                    </td>
                     {ALL_CHANNELS.map((ch) => (
-                      <td key={ch} className="text-center px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={cellOf(alert, ch)?.enabled ?? false}
-                          // Disabling the whole matrix while one write is in flight is
-                          // deliberate — the route answers with the full matrix, so two
-                          // overlapping writes could clobber each other.
-                          disabled={!isAdmin || setRouting.isPending}
-                          onChange={() =>
-                            setRouting.mutate({
-                              alertType: alert,
-                              channel: ch,
-                              enabled: !(cellOf(alert, ch)?.enabled ?? false),
-                            })
-                          }
-                          aria-label={`${ALERT_NAMES[alert]} por ${CHANNEL_LABELS[ch]}`}
-                          className="w-4 h-4 accent-primary cursor-pointer disabled:cursor-not-allowed"
-                        />
+                      <td key={ch} className="text-center px-2 sm:px-4 py-3">
+                        <label className="flex items-center justify-center p-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={cellOf(alert, ch)?.enabled ?? false}
+                            // Disabling the whole matrix while one write is in flight is
+                            // deliberate — the route answers with the full matrix, so two
+                            // overlapping writes could clobber each other.
+                            disabled={!isAdmin || setRouting.isPending}
+                            onChange={() =>
+                              setRouting.mutate({
+                                alertType: alert,
+                                channel: ch,
+                                enabled: !(cellOf(alert, ch)?.enabled ?? false),
+                              })
+                            }
+                            aria-label={`${ALERT_NAMES[alert]} por ${CHANNEL_LABELS[ch]}`}
+                            className="size-5 accent-primary cursor-pointer disabled:cursor-not-allowed"
+                          />
+                        </label>
                       </td>
                     ))}
                   </tr>
@@ -137,34 +141,37 @@ export default function CommChannelsPage() {
           data-tour="channels-recipients"
           className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
         >
-          <div className="px-5 py-4 border-b border-gray-100">
+          <div className="px-3 sm:px-5 py-4 border-b border-gray-100">
             <h2 className="text-sm font-semibold text-gray-900">Destinatarios de alertas</h2>
             <p className="text-xs text-gray-500 mt-0.5">
               Activá o desactivá quiénes reciben las alertas del espacio.
             </p>
           </div>
           {setMemberAlerts.isError && (
-            <p role="alert" className="px-5 py-2 text-xs text-destructive">
+            <p role="alert" className="px-3 sm:px-5 py-2 text-xs text-destructive">
               No pudimos guardar el cambio.
             </p>
           )}
           {members.isPending ? (
-            <p className="px-5 py-6 text-sm text-muted-foreground">Cargando…</p>
+            <p className="px-3 sm:px-5 py-6 text-sm text-muted-foreground">Cargando…</p>
           ) : members.isError ? (
-            <p role="alert" className="px-5 py-6 text-sm text-destructive">
+            <p role="alert" className="px-3 sm:px-5 py-6 text-sm text-destructive">
               {members.error instanceof ApiError
                 ? members.error.message
                 : "No pudimos cargar los miembros del espacio."}
             </p>
           ) : rows.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-muted-foreground">
+            <p className="px-3 sm:px-5 py-6 text-sm text-muted-foreground">
               Todavía no hay miembros en el espacio.
             </p>
           ) : (
             <ul className="divide-y divide-gray-50">
               {rows.map((member) => (
-                <li key={member.id} className="flex items-center justify-between px-5 py-3">
-                  <div className="flex items-center gap-3">
+                <li
+                  key={member.id}
+                  className="flex items-center justify-between gap-3 flex-wrap px-3 sm:px-5 py-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
                     {member.avatarUrl ? (
                       <img
                         src={member.avatarUrl}
@@ -176,15 +183,15 @@ export default function CommChannelsPage() {
                         {initials(member)}
                       </div>
                     )}
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900">{displayName(member)}</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-400 truncate">
                         {member.email}
                         {member.phone ? ` · ${member.phone}` : ""}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <span className="text-xs text-gray-500">
                       {member.receiveAlerts ? "Activo" : "Inactivo"}
                     </span>
@@ -205,13 +212,13 @@ export default function CommChannelsPage() {
                           receiveAlerts: !member.receiveAlerts,
                         })
                       }
-                      className={`w-9 h-5 rounded-full transition-colors relative disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`w-11 h-6 rounded-full transition-colors relative disabled:opacity-50 disabled:cursor-not-allowed ${
                         member.receiveAlerts ? "bg-primary" : "bg-gray-200"
                       }`}
                     >
                       <div
-                        className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${
-                          member.receiveAlerts ? "left-4" : "left-0.5"
+                        className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${
+                          member.receiveAlerts ? "left-5" : "left-0.5"
                         }`}
                       />
                     </button>
