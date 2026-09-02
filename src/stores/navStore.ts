@@ -13,13 +13,22 @@ interface NavState {
    * outside the panel `aria-hidden`, and driver.js's popover is outside it.
    */
   tourActive: boolean
+  /**
+   * The account dropdown in TopBar. Here for the same reason as `open`: TopBar
+   * remounts with the AppShell on every navigation, and the tour has to hold
+   * this menu open across the hop to /profile.
+   */
+  userMenuOpen: boolean
   setOpen: (open: boolean) => void
   setTourActive: (active: boolean) => void
+  setUserMenuOpen: (open: boolean) => void
 }
 
 export const useNavStore = create<NavState>((set) => ({
   open: false,
   tourActive: false,
+  userMenuOpen: false,
   setOpen: (open) => set({ open }),
   setTourActive: (tourActive) => set({ tourActive }),
+  setUserMenuOpen: (userMenuOpen) => set({ userMenuOpen }),
 }))

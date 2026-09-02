@@ -1,16 +1,14 @@
 import { Bell, ChevronDown, Menu } from "lucide-react"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useLogout } from "@/hooks/useAuth"
-import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { startTour } from "@/hooks/useOnboardingTour"
 import { useNavStore } from "@/stores/navStore"
 
 export default function TopBar() {
-  const { setOpen } = useNavStore()
+  const { setOpen, userMenuOpen: menuOpen, setUserMenuOpen: setMenuOpen } = useNavStore()
   const { user } = useSessionStore()
   const { mutate: logout } = useLogout()
-  const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
 
   function handleLogout() {
@@ -41,8 +39,7 @@ export default function TopBar() {
       {/* User menu */}
       <div className="relative">
         <button
-          data-tour="topbar-user"
-          onClick={() => setMenuOpen((o) => !o)}
+          onClick={() => setMenuOpen(!menuOpen)}
           className="flex items-center gap-2 min-h-11 px-1.5 rounded-xl hover:bg-gray-100 transition-colors"
         >
           {user?.avatarUrl ? (
@@ -66,7 +63,10 @@ export default function TopBar() {
         {menuOpen && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-            <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg py-1 w-48 max-w-[calc(100vw-2rem)]">
+            <div
+              data-tour="topbar-menu"
+              className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg py-1 w-48 max-w-[calc(100vw-2rem)]"
+            >
               <button
                 onClick={() => {
                   navigate("/profile")

@@ -46,7 +46,7 @@ describe("startTour", () => {
   beforeEach(() => {
     // src/test/setup.ts seeds the "already seen" flag for every other suite.
     localStorage.removeItem("ts-tour-done")
-    useNavStore.setState({ open: false, tourActive: false })
+    useNavStore.setState({ open: false, tourActive: false, userMenuOpen: false })
   })
 
   afterEach(() => {
