@@ -294,14 +294,19 @@ export function startTour(navigate: NavigateFunction) {
     if (window.location.pathname !== step.to) {
       /*
        * Every app page renders its own AppShell, so navigating throws the whole
-       * sidebar away and builds a new one. The node matching this step's
-       * selector right now is the doomed one, and driver.js would happily
-       * highlight it: a detached node measures all zeros, which is what parked
-       * the popover in the corner over the menu. Waiting for it to leave means
-       * the selector can only match its replacement.
+       * shell away and builds a new one. driver.js resolves a step's selector
+       * once and then holds the node: anything resolved before that swap is
+       * detached by the time it is measured, and a detached node measures all
+       * zeros — which is what parks the popover in the top-left corner.
+       *
+       * The hamburger stands in for the shell here. Waiting on the step's own
+       * anchor is not enough: the account step's anchor is the dropdown, which
+       * is closed while the navigation runs, so there was nothing to wait for
+       * and the step opened the menu on the outgoing shell. The hamburger is in
+       * every shell at every breakpoint, so its departure marks the swap for
+       * every step alike.
        */
-      const anchor = anchorOf(step)
-      const stale = anchor ? document.querySelector(anchor) : null
+      const stale = document.querySelector('[data-tour="nav-toggle"]')
       navigate(step.to)
       if (stale) await waitFor(() => !stale.isConnected)
     }
