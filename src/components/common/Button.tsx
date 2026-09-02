@@ -24,7 +24,11 @@ const SIZE_MAP = {
   lg: "lg",
 } as const
 
-/** shadcn sizes top out at 40px; 44px is the phone-tap floor. */
+/**
+ * shadcn sizes top out at 40px; 44px is the phone-tap floor. Applies to this
+ * component only — icon controls elsewhere size themselves and clear the 24px
+ * of WCAG 2.5.8 on their own.
+ */
 const SIZE_CLASS = {
   sm: "min-h-9",
   md: "min-h-11",
