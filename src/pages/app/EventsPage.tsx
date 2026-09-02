@@ -26,18 +26,22 @@ const CHANNEL_LABELS: Record<ChannelType, string> = {
 const HEAD_CELL = "text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider"
 
 /*
- * Below `md` the table collapses into cards: header hidden, row per card, cell
+ * Below `xl` the table collapses into cards: header hidden, row per card, cell
  * per line labelled by its own `data-label`. One copy of the DOM either way —
  * a card list beside the table would render every camera name twice.
+ *
+ * `xl`, not `md`: five columns need ~800px and the row never gets it below
+ * 1280 — at 768 the sidebar is gone but the viewport is small, and at 1024 the
+ * sidebar is back and takes the 240px that would have paid for it.
  */
-const TABLE = "w-full text-sm max-md:block"
-const ROW = "hover:bg-gray-50 transition-colors cursor-pointer max-md:block max-md:px-4 max-md:py-3"
-const CELL = "px-4 py-3 max-md:px-0 max-md:py-1"
+const TABLE = "w-full text-sm max-xl:block"
+const ROW = "hover:bg-gray-50 transition-colors cursor-pointer max-xl:block max-xl:px-4 max-xl:py-3"
+const CELL = "px-4 py-3 max-xl:px-0 max-xl:py-1"
 const LABELLED =
-  `${CELL} max-md:flex max-md:items-center max-md:justify-between max-md:gap-3 ` +
-  "max-md:before:content-[attr(data-label)] max-md:before:shrink-0 max-md:before:text-xs " +
-  "max-md:before:font-semibold max-md:before:uppercase max-md:before:tracking-wider " +
-  "max-md:before:text-gray-400"
+  `${CELL} max-xl:flex max-xl:items-center max-xl:justify-between max-xl:gap-3 ` +
+  "max-xl:before:content-[attr(data-label)] max-xl:before:shrink-0 max-xl:before:text-xs " +
+  "max-xl:before:font-semibold max-xl:before:uppercase max-xl:before:tracking-wider " +
+  "max-xl:before:text-gray-400"
 
 function formatTimestamp(iso: string) {
   return new Date(iso).toLocaleString("es-AR", {
@@ -133,7 +137,7 @@ export default function EventsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className={TABLE}>
-              <thead className="max-md:hidden">
+              <thead className="max-xl:hidden">
                 <tr className="border-b border-gray-100">
                   <th className={HEAD_CELL}>Cámara</th>
                   <th className={HEAD_CELL}>Tipo</th>
@@ -142,12 +146,12 @@ export default function EventsPage() {
                   <th className={HEAD_CELL}>Reconocimiento</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50 max-md:block">
+              <tbody className="divide-y divide-gray-50 max-xl:block">
                 {rows.length === 0 ? (
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-4 py-8 text-center text-gray-400 text-sm max-md:block"
+                      className="px-4 py-8 text-center text-gray-400 text-sm max-xl:block"
                     >
                       No hay eventos con los filtros seleccionados.
                     </td>
