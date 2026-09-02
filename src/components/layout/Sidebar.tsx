@@ -13,7 +13,6 @@ import {
 } from "lucide-react"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useLogout } from "@/hooks/useAuth"
-import { startTour } from "@/hooks/useOnboardingTour"
 
 interface NavItem {
   label: string
@@ -36,6 +35,7 @@ const SERVICE_ITEMS: NavItem[] = [
 const ACCOUNT_ITEMS: NavItem[] = [
   { label: "Perfil", icon: <User size={18} />, to: "/profile", tour: "nav-profile" },
   { label: "Notificaciones", icon: <Bell size={18} />, to: "#" },
+  { label: "Ayuda", icon: <HelpCircle size={18} />, to: "/help", tour: "nav-help" },
 ]
 
 /** A row is a tap target before it is a link: 44px is the phone floor. */
@@ -155,15 +155,6 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         {ACCOUNT_ITEMS.map((item) => (
           <NavItemLink key={item.label} item={item} onNavigate={onNavigate} />
         ))}
-
-        <button
-          data-tour="nav-help"
-          onClick={() => startTour(navigate)}
-          className={`w-full ${ROW} ${ROW_IDLE}`}
-        >
-          <HelpCircle size={18} className="shrink-0" />
-          Ayuda
-        </button>
 
         <button onClick={handleLogout} className={`w-full ${ROW} ${ROW_IDLE}`}>
           <LogOut size={18} className="shrink-0" />

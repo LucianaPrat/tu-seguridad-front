@@ -31,6 +31,7 @@ import EventDetailPage from "@/pages/app/EventDetailPage"
 import MembersPage from "@/pages/app/MembersPage"
 import CommChannelsPage from "@/pages/app/CommChannelsPage"
 import ProfilePage from "@/pages/app/ProfilePage"
+import HelpChatPage from "@/pages/app/HelpChatPage"
 
 /*
  * Holds the routes back until the boot-time session restore settles. Without
@@ -196,6 +197,14 @@ export function AppRoutes() {
         element={
           <RequireDVR>
             <ProfilePage />
+          </RequireDVR>
+        }
+      />
+      <Route
+        path="/help"
+        element={
+          <RequireDVR>
+            <HelpChatPage />
           </RequireDVR>
         }
       />
