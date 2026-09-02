@@ -28,6 +28,10 @@ interface TourStep {
   element?: string
   /** Dropped for a plain member, whose screen has no such control to point at. */
   adminOnly?: true
+  /** Anchored in the sidebar, which below `lg` lives in a closed drawer. */
+  desktopOnly?: true
+  /** The drawer's stand-in for those steps. */
+  mobileOnly?: true
   /** Leading glyph. Carries the step at a glance so the body can stay one line. */
   icon: string
   title: string
@@ -43,7 +47,16 @@ const STEPS: TourStep[] = [
   },
   {
     to: "/",
+    element: '[data-tour="nav-toggle"]',
+    mobileOnly: true,
+    icon: "☰",
+    title: "El menú",
+    body: "Desde acá abrís el menú: monitoreo, eventos, DVR, canales y miembros.",
+  },
+  {
+    to: "/",
     element: '[data-tour="nav-home"]',
+    desktopOnly: true,
     icon: "🏠",
     title: "Inicio",
     body: "Todas tus cámaras de un vistazo: online u offline, y hace cuánto es la foto.",
@@ -59,6 +72,7 @@ const STEPS: TourStep[] = [
   {
     to: "/cameras/monitor",
     element: '[data-tour="nav-monitor"]',
+    desktopOnly: true,
     icon: "🎯",
     title: "Monitoreo",
     body: "Qué vigila cada cámara: toda la imagen, o zonas que dibujás vos.",
@@ -73,6 +87,7 @@ const STEPS: TourStep[] = [
   {
     to: "/events",
     element: '[data-tour="nav-events"]',
+    desktopOnly: true,
     icon: "📋",
     title: "Eventos",
     body: "El histórico de alertas. Tocá una fila y ves la imagen del momento.",
@@ -87,6 +102,7 @@ const STEPS: TourStep[] = [
   {
     to: "/dvr-config",
     element: '[data-tour="nav-dvr"]',
+    desktopOnly: true,
     icon: "📼",
     title: "DVR",
     body: "La conexión al grabador. Ojo: cambiarla puede borrar la config de las cámaras.",
@@ -94,6 +110,7 @@ const STEPS: TourStep[] = [
   {
     to: "/channels",
     element: '[data-tour="nav-channels"]',
+    desktopOnly: true,
     icon: "📣",
     title: "Canales",
     body: "Por dónde salen las alertas y a quién le llegan. Se guarda solo.",
@@ -115,6 +132,7 @@ const STEPS: TourStep[] = [
   {
     to: "/members",
     element: '[data-tour="nav-members"]',
+    desktopOnly: true,
     icon: "🧑‍🤝‍🧑",
     title: "Miembros",
     body: "Quiénes entran al espacio y cuándo entraron por última vez.",
@@ -122,6 +140,7 @@ const STEPS: TourStep[] = [
   {
     to: "/profile",
     element: '[data-tour="nav-profile"]',
+    desktopOnly: true,
     icon: "⚙️",
     title: "Perfil",
     body: "Tus datos y tu contraseña.",
@@ -136,9 +155,17 @@ const STEPS: TourStep[] = [
   {
     to: "/",
     element: '[data-tour="nav-help"]',
+    desktopOnly: true,
     icon: "🎉",
     title: "Listo",
     body: "Repetilo desde acá, o desde el menú de tu perfil.",
+  },
+  {
+    to: "/",
+    mobileOnly: true,
+    icon: "🎉",
+    title: "Listo",
+    body: "Repetilo cuando quieras desde «Ver el tutorial», en el menú de tu perfil.",
   },
 ]
 
@@ -174,7 +201,20 @@ export function startTour(navigate: NavigateFunction) {
    * honest for a member who is never shown that step.
    */
   const isAdmin = useSessionStore.getState().user?.role === "admin"
-  const steps = STEPS.filter((s) => !s.adminOnly || isAdmin)
+  /*
+   * Below `lg` the sidebar lives in a closed drawer, so the eight steps anchored
+   * to it would each stall for `waitForElement` and then vanish. A step pointing
+   * at the hamburger stands in for all of them.
+   *
+   * `innerWidth`, not `matchMedia`: the jsdom stub in `src/test/setup.ts` answers
+   * `matches: false` to every query, which would run the tests through the mobile
+   * branch. jsdom's window is 1024 wide, so this reads as desktop there.
+   */
+  const isDesktop = window.innerWidth >= 1024
+  const steps = STEPS.filter(
+    (s) =>
+      (!s.adminOnly || isAdmin) && (!s.desktopOnly || isDesktop) && (!s.mobileOnly || !isDesktop),
+  )
 
   /*
    * The only place the tour is marked seen. It cannot live in onDestroyed:
