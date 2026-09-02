@@ -36,7 +36,7 @@ const HEAD_CELL = "text-left px-4 py-3 text-xs font-semibold text-gray-500 upper
  */
 const TABLE = "w-full text-sm max-xl:block"
 const ROW = "hover:bg-gray-50 transition-colors cursor-pointer max-xl:block max-xl:px-4 max-xl:py-3"
-const CELL = "px-4 py-3 max-xl:px-0 max-xl:py-1"
+const CELL = "px-4 py-3 max-xl:block max-xl:px-0 max-xl:py-1"
 const LABELLED =
   `${CELL} max-xl:flex max-xl:items-center max-xl:justify-between max-xl:gap-3 ` +
   "max-xl:before:content-[attr(data-label)] max-xl:before:shrink-0 max-xl:before:text-xs " +
@@ -136,20 +136,31 @@ export default function EventsPage() {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className={TABLE}>
-              <thead className="max-xl:hidden">
-                <tr className="border-b border-gray-100">
-                  <th className={HEAD_CELL}>Cámara</th>
-                  <th className={HEAD_CELL}>Tipo</th>
-                  <th className={HEAD_CELL}>Canal</th>
-                  <th className={HEAD_CELL}>Fecha y hora</th>
-                  <th className={HEAD_CELL}>Reconocimiento</th>
+            <table role="table" className={TABLE}>
+              <thead role="rowgroup" className="max-xl:hidden">
+                <tr role="row" className="border-b border-gray-100">
+                  <th role="columnheader" className={HEAD_CELL}>
+                    Cámara
+                  </th>
+                  <th role="columnheader" className={HEAD_CELL}>
+                    Tipo
+                  </th>
+                  <th role="columnheader" className={HEAD_CELL}>
+                    Canal
+                  </th>
+                  <th role="columnheader" className={HEAD_CELL}>
+                    Fecha y hora
+                  </th>
+                  <th role="columnheader" className={HEAD_CELL}>
+                    Reconocimiento
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50 max-xl:block">
+              <tbody role="rowgroup" className="divide-y divide-gray-50 max-xl:block">
                 {rows.length === 0 ? (
-                  <tr>
+                  <tr role="row">
                     <td
+                      role="cell"
                       colSpan={5}
                       className="px-4 py-8 text-center text-gray-400 text-sm max-xl:block"
                     >
@@ -158,8 +169,13 @@ export default function EventsPage() {
                   </tr>
                 ) : (
                   rows.map((ev) => (
-                    <tr key={ev.id} onClick={() => navigate(`/events/${ev.id}`)} className={ROW}>
-                      <td className={CELL}>
+                    <tr
+                      role="row"
+                      key={ev.id}
+                      onClick={() => navigate(`/events/${ev.id}`)}
+                      className={ROW}
+                    >
+                      <td role="cell" className={CELL}>
                         <Link
                           to={`/events/${ev.id}`}
                           className="text-gray-800 font-medium hover:text-primary hover:underline"
@@ -167,10 +183,10 @@ export default function EventsPage() {
                           {ev.cameraName}
                         </Link>
                       </td>
-                      <td data-label="Tipo" className={LABELLED}>
+                      <td role="cell" data-label="Tipo" className={LABELLED}>
                         <Badge variant={ev.alertType} />
                       </td>
-                      <td data-label="Canal" className={LABELLED}>
+                      <td role="cell" data-label="Canal" className={LABELLED}>
                         {ev.channels.length === 0 ? (
                           <span className="text-gray-400 text-xs">Sin envío</span>
                         ) : (
@@ -184,10 +200,10 @@ export default function EventsPage() {
                           </span>
                         )}
                       </td>
-                      <td data-label="Fecha" className={`${LABELLED} text-gray-600`}>
+                      <td role="cell" data-label="Fecha" className={`${LABELLED} text-gray-600`}>
                         {formatTimestamp(ev.timestamp)}
                       </td>
-                      <td data-label="Reconocimiento" className={LABELLED}>
+                      <td role="cell" data-label="Reconocimiento" className={LABELLED}>
                         {ev.acknowledgedAt ? (
                           <div className="flex items-start gap-1.5">
                             <CheckCircle size={14} className="text-green-500 mt-0.5 shrink-0" />

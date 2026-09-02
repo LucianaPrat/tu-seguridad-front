@@ -32,7 +32,7 @@ const HEAD_CELL = "text-left px-4 py-3 text-xs font-semibold text-gray-500 upper
  */
 const TABLE = "w-full text-sm max-md:block"
 const ROW = "hover:bg-gray-50 transition-colors max-md:block max-md:px-4 max-md:py-3"
-const CELL = "px-4 py-3 max-md:px-0 max-md:py-1"
+const CELL = "px-4 py-3 max-md:block max-md:px-0 max-md:py-1"
 const LABELLED =
   `${CELL} max-md:flex max-md:items-center max-md:justify-between max-md:gap-3 ` +
   "max-md:before:content-[attr(data-label)] max-md:before:shrink-0 max-md:before:text-xs " +
@@ -78,27 +78,39 @@ export default function MembersPage() {
               : "No pudimos cargar los miembros del espacio."}
           </p>
         ) : (
-          <table className={TABLE}>
-            <thead className="max-md:hidden">
-              <tr className="border-b border-gray-100">
-                <th className={HEAD_CELL}>Miembro</th>
-                <th className={HEAD_CELL}>Email</th>
-                <th className={HEAD_CELL}>Estado</th>
-                <th className={HEAD_CELL}>Último acceso</th>
+          <table role="table" className={TABLE}>
+            <thead role="rowgroup" className="max-md:hidden">
+              <tr role="row" className="border-b border-gray-100">
+                <th role="columnheader" className={HEAD_CELL}>
+                  Miembro
+                </th>
+                <th role="columnheader" className={HEAD_CELL}>
+                  Email
+                </th>
+                <th role="columnheader" className={HEAD_CELL}>
+                  Estado
+                </th>
+                <th role="columnheader" className={HEAD_CELL}>
+                  Último acceso
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50 max-md:block">
+            <tbody role="rowgroup" className="divide-y divide-gray-50 max-md:block">
               {rows.length === 0 && pending.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-4 py-6 text-muted-foreground max-md:block">
+                <tr role="row">
+                  <td
+                    role="cell"
+                    colSpan={4}
+                    className="px-4 py-6 text-muted-foreground max-md:block"
+                  >
                     Todavía no hay miembros en este espacio.
                   </td>
                 </tr>
               )}
 
               {rows.map((member) => (
-                <tr key={`member-${member.id}`} className={ROW}>
-                  <td className={CELL}>
+                <tr role="row" key={`member-${member.id}`} className={ROW}>
+                  <td role="cell" className={CELL}>
                     <div className="flex items-center gap-3 min-w-0">
                       {member.avatarUrl ? (
                         <img
@@ -129,13 +141,21 @@ export default function MembersPage() {
                       </div>
                     </div>
                   </td>
-                  <td data-label="Email" className={`${LABELLED} text-gray-600 max-md:break-all`}>
+                  <td
+                    role="cell"
+                    data-label="Email"
+                    className={`${LABELLED} text-gray-600 max-md:break-all`}
+                  >
                     {member.email}
                   </td>
-                  <td data-label="Estado" className={LABELLED}>
+                  <td role="cell" data-label="Estado" className={LABELLED}>
                     <Badge variant={member.isActive ? "active" : "inactive"} />
                   </td>
-                  <td data-label="Último acceso" className={`${LABELLED} text-gray-500 text-xs`}>
+                  <td
+                    role="cell"
+                    data-label="Último acceso"
+                    className={`${LABELLED} text-gray-500 text-xs`}
+                  >
                     {member.lastLoginAt ? formatDate(member.lastLoginAt) : "Nunca"}
                   </td>
                 </tr>
@@ -144,8 +164,8 @@ export default function MembersPage() {
               {/* Invited and not joined yet: they are not members, so they carry
                   no state of their own beyond the pending badge. */}
               {pending.map((invitation) => (
-                <tr key={`invite-${invitation.id}`} className={ROW}>
-                  <td className={CELL}>
+                <tr role="row" key={`invite-${invitation.id}`} className={ROW}>
+                  <td role="cell" className={CELL}>
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 shrink-0">
                         <Mail size={14} />
@@ -153,13 +173,21 @@ export default function MembersPage() {
                       <p className="text-gray-500">Invitación pendiente</p>
                     </div>
                   </td>
-                  <td data-label="Email" className={`${LABELLED} text-gray-600 max-md:break-all`}>
+                  <td
+                    role="cell"
+                    data-label="Email"
+                    className={`${LABELLED} text-gray-600 max-md:break-all`}
+                  >
                     {invitation.email}
                   </td>
-                  <td data-label="Estado" className={LABELLED}>
+                  <td role="cell" data-label="Estado" className={LABELLED}>
                     <Badge variant="unconfigured" label="Pendiente" />
                   </td>
-                  <td data-label="Último acceso" className={`${LABELLED} text-gray-500 text-xs`}>
+                  <td
+                    role="cell"
+                    data-label="Último acceso"
+                    className={`${LABELLED} text-gray-500 text-xs`}
+                  >
                     Expira {formatDate(invitation.expiresAt)}
                   </td>
                 </tr>
