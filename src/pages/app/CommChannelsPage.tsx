@@ -57,7 +57,10 @@ export default function CommChannelsPage() {
 
       <div className="flex flex-col gap-6 max-w-2xl">
         {/* Section 1: Alert routing */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div
+          data-tour="channels-routing"
+          className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+        >
           <div className="px-5 py-4 border-b border-gray-100">
             <h2 className="text-sm font-semibold text-gray-900">Enrutamiento de alertas</h2>
             <p className="text-xs text-gray-500 mt-0.5">
@@ -130,7 +133,10 @@ export default function CommChannelsPage() {
         </div>
 
         {/* Section 2: Recipients */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div
+          data-tour="channels-recipients"
+          className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+        >
           <div className="px-5 py-4 border-b border-gray-100">
             <h2 className="text-sm font-semibold text-gray-900">Destinatarios de alertas</h2>
             <p className="text-xs text-gray-500 mt-0.5">

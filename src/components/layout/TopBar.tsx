@@ -3,6 +3,7 @@ import { useSessionStore } from "@/stores/sessionStore"
 import { useLogout } from "@/hooks/useAuth"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { startTour } from "@/hooks/useOnboardingTour"
 
 export default function TopBar() {
   const { user } = useSessionStore()
@@ -27,6 +28,7 @@ export default function TopBar() {
       {/* User menu */}
       <div className="relative">
         <button
+          data-tour="topbar-user"
           onClick={() => setMenuOpen((o) => !o)}
           className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-gray-100 transition-colors"
         >
@@ -58,6 +60,15 @@ export default function TopBar() {
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
               >
                 Mi perfil
+              </button>
+              <button
+                onClick={() => {
+                  setMenuOpen(false)
+                  startTour(navigate)
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Ver el tutorial
               </button>
               <hr className="my-1 border-gray-100" />
               <button
