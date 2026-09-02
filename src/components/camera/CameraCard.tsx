@@ -180,7 +180,7 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
       </div>
 
       {/* Card footer */}
-      <div className="px-3 py-2.5 flex items-center justify-between gap-2">
+      <div className="px-3 py-3 flex items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900 truncate">{camera.name}</p>
           <p className="text-xs text-gray-400 truncate">{subtitle}</p>

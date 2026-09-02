@@ -64,7 +64,7 @@ export default function ProfilePage() {
 
       <div className="flex flex-col gap-6 max-w-lg">
         {/* Profile section */}
-        <div className="bg-card rounded-2xl border shadow-sm p-6">
+        <div className="bg-card rounded-2xl border shadow-sm p-4 sm:p-6">
           <h2 className="text-sm font-semibold text-foreground mb-4">Información personal</h2>
 
           {/* Avatar */}
@@ -80,7 +80,7 @@ export default function ProfilePage() {
                   </span>
                 )}
               </div>
-              <label className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border shadow flex items-center justify-center cursor-pointer hover:bg-accent">
+              <label className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-card border shadow flex items-center justify-center cursor-pointer hover:bg-accent">
                 <Camera size={12} className="text-muted-foreground" />
                 <span className="sr-only">Cambiar foto de perfil</span>
                 <input
@@ -95,7 +95,7 @@ export default function ProfilePage() {
               <p className="font-medium text-foreground">
                 {firstName} {lastName}
               </p>
-              <p className="text-sm text-muted-foreground">{email}</p>
+              <p className="text-sm text-muted-foreground truncate">{email}</p>
             </div>
           </div>
 
@@ -104,7 +104,7 @@ export default function ProfilePage() {
             className="flex flex-col gap-4"
             noValidate
           >
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormField
                 label="Nombre"
                 error={profileForm.formState.errors.firstName?.message}
@@ -129,7 +129,7 @@ export default function ProfilePage() {
               {...profileForm.register("phone")}
             />
 
-            <div className="flex items-center gap-3 pt-1">
+            <div className="flex flex-wrap items-center gap-3 pt-1">
               <Button type="submit" icon={<Save size={14} />}>
                 Guardar cambios
               </Button>
@@ -143,7 +143,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Password section */}
-        <div className="bg-card rounded-2xl border shadow-sm p-6">
+        <div className="bg-card rounded-2xl border shadow-sm p-4 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <Lock size={15} className="text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground">Cambiar contraseña</h2>
@@ -174,7 +174,7 @@ export default function ProfilePage() {
               error={passwordForm.formState.errors.repeat?.message}
               {...passwordForm.register("repeat")}
             />
-            <div className="flex items-center gap-3 pt-1">
+            <div className="flex flex-wrap items-center gap-3 pt-1">
               <Button type="submit" variant="secondary">
                 Cambiar contraseña
               </Button>

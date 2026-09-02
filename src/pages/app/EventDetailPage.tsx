@@ -60,7 +60,7 @@ export default function EventDetailPage() {
   const backLink = (
     <Link
       to="/events"
-      className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mb-4"
+      className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mb-4 py-2"
     >
       <ArrowLeft size={14} />
       Volver a eventos
@@ -103,13 +103,13 @@ export default function EventDetailPage() {
         action={<Badge variant={event.alertType} />}
       />
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] items-start">
+      <div className="grid gap-5 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] items-start">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           {snapshot ? (
             <img
               src={snapshot}
               alt={`Captura de ${event.cameraName} al momento de la alerta`}
-              className="w-full object-contain bg-gray-900"
+              className="w-full max-h-[60dvh] object-contain bg-gray-900"
             />
           ) : (
             <div className="aspect-video flex flex-col items-center justify-center gap-2 text-gray-400">
@@ -121,7 +121,7 @@ export default function EventDetailPage() {
           )}
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 grid gap-4">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 grid gap-4">
           <Fact label="Reconocimiento">
             {event.acknowledgedAt ? (
               <span className="flex items-start gap-1.5">

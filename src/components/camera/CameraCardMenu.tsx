@@ -20,20 +20,20 @@ export default function CameraCardMenu({ camera, onToggleEnabled }: CameraCardMe
       <button
         onClick={() => setMenuOpen((o) => !o)}
         aria-label={`Acciones de ${camera.name}`}
-        className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+        className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
       >
         <MoreHorizontal size={16} />
       </button>
       {menuOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-          <div className="absolute right-0 bottom-full mb-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg py-1 w-44">
+          <div className="absolute right-0 bottom-full mb-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg py-1 w-44 max-w-[calc(100vw-2rem)]">
             <button
               onClick={() => {
                 navigate(configureUrl)
                 setMenuOpen(false)
               }}
-              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+              className="w-full text-left px-3 py-2.5 min-h-11 flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50"
             >
               <Settings size={14} /> Configurar
             </button>
@@ -42,7 +42,7 @@ export default function CameraCardMenu({ camera, onToggleEnabled }: CameraCardMe
                 onToggleEnabled?.(camera.id)
                 setMenuOpen(false)
               }}
-              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className="w-full text-left px-3 py-2.5 min-h-11 flex items-center text-sm text-gray-700 hover:bg-gray-50"
             >
               {camera.isEnabled ? "Desactivar" : "Activar"}
             </button>
@@ -51,7 +51,7 @@ export default function CameraCardMenu({ camera, onToggleEnabled }: CameraCardMe
                 navigate("/events")
                 setMenuOpen(false)
               }}
-              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className="w-full text-left px-3 py-2.5 min-h-11 flex items-center text-sm text-gray-700 hover:bg-gray-50"
             >
               Ver eventos
             </button>
