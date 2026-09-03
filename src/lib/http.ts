@@ -29,8 +29,12 @@ interface RequestOptions {
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, auth = true } = options
 
+  // FormData writes its own Content-Type with the multipart boundary the
+  // server parses; setting the header by hand strips that boundary.
+  const isFormData = body instanceof FormData
+
   const headers: Record<string, string> = {}
-  if (body !== undefined) headers["Content-Type"] = "application/json"
+  if (body !== undefined && !isFormData) headers["Content-Type"] = "application/json"
   if (auth) {
     const { accessToken } = useSessionStore.getState()
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`
@@ -44,7 +48,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       // Carries the HttpOnly refresh cookie. The backend echoes the exact
       // origin rather than "*", which is what makes credentialed CORS legal.
       credentials: "include",
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
     })
   } catch {
     throw new ApiError(0, "NETWORK_ERROR", "No pudimos conectar con el servidor")
@@ -71,22 +75,36 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
  * `<img src>` cannot fetch them — the browser sends no Authorization header.
  * Callers turn the blob into an object URL. `path` already carries the API
  * prefix (`/api/v1/snapshots/...`), so it resolves against the origin only.
+ *
+ * `/assistant/speak` answers bytes to a POST, hence the method and body — the
+ * bearer header and the credentialed fetch are the part that matters, not the
+ * verb.
  */
-export async function requestBlob(path: string): Promise<Blob> {
+export async function requestBlob(
+  path: string,
+  options: { method?: "GET" | "POST"; body?: unknown } = {},
+): Promise<Blob> {
+  const { method = "GET", body } = options
   const { accessToken } = useSessionStore.getState()
+
+  const headers: Record<string, string> = {}
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`
+  if (body !== undefined) headers["Content-Type"] = "application/json"
 
   let response: Response
   try {
     response = await fetch(new URL(path, API_BASE_URL), {
-      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+      method,
+      headers,
       credentials: "include",
+      body: body === undefined ? undefined : JSON.stringify(body),
     })
   } catch {
     throw new ApiError(0, "NETWORK_ERROR", "No pudimos conectar con el servidor")
   }
 
   if (!response.ok) {
-    throw new ApiError(response.status, "UNKNOWN_ERROR", "No pudimos cargar la imagen")
+    throw new ApiError(response.status, "UNKNOWN_ERROR", "No pudimos cargar el archivo")
   }
 
   return response.blob()

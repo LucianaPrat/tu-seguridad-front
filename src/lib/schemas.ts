@@ -301,3 +301,10 @@ export const assistantChatResponseSchema = z.object({
   model: z.string(),
 })
 export type AssistantChatResponse = z.infer<typeof assistantChatResponseSchema>
+
+/*
+ * POST /assistant/transcribe. Whisper answers the clip's text and nothing else;
+ * an empty string is a valid answer (silence), not a failure the route reports.
+ */
+export const assistantTranscriptionResponseSchema = z.object({ text: z.string() })
+export type AssistantTranscriptionResponse = z.infer<typeof assistantTranscriptionResponseSchema>
