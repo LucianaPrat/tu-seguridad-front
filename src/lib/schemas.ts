@@ -289,3 +289,15 @@ export const alertEventPageResponseSchema = z.object({
   nextCursor: z.string().nullable(),
 })
 export type AlertEventPageResponse = z.infer<typeof alertEventPageResponseSchema>
+
+/*
+ * POST /assistant/chat. Nothing is stored server-side — every request carries
+ * the whole conversation, so there is no id here to correlate with. `model` is
+ * the deployment's configured model echoed back, so a swapped deployment is
+ * visible in the answer.
+ */
+export const assistantChatResponseSchema = z.object({
+  reply: z.string(),
+  model: z.string(),
+})
+export type AssistantChatResponse = z.infer<typeof assistantChatResponseSchema>
