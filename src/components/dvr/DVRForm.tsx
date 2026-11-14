@@ -4,9 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import FormField from "@/components/common/FormField"
 import TimezoneCombobox from "@/components/common/TimezoneCombobox"
 import Button from "@/components/common/Button"
+import NotImplemented from "@/components/common/NotImplemented"
 import { useTestDvrConnection } from "@/hooks/useDvr"
 import { dvrSchema, type DVRFormValues } from "@/lib/schemas"
-import { Eye, EyeOff, CheckCircle, XCircle } from "lucide-react"
+import { Eye, EyeOff, CheckCircle, XCircle, Construction } from "lucide-react"
 
 export type { DVRFormValues }
 
@@ -15,6 +16,8 @@ interface DVRFormProps {
   onSubmit: (values: DVRFormValues) => void
   submitLabel?: string
   showTestConnection?: boolean
+  /** Save has no backend path yet: button disabled behind the not-implemented tooltip. */
+  submitNotImplemented?: boolean
   loading?: boolean
 }
 
@@ -23,6 +26,7 @@ export default function DVRForm({
   onSubmit,
   submitLabel = "Guardar",
   showTestConnection = true,
+  submitNotImplemented = false,
   loading = false,
 }: DVRFormProps) {
   const [showPass, setShowPass] = useState(false)
@@ -147,9 +151,18 @@ export default function DVRForm({
       )}
 
       <div className="pt-2">
-        <Button type="submit" loading={loading} className="w-full">
-          {submitLabel}
-        </Button>
+        {submitNotImplemented ? (
+          <NotImplemented className="block">
+            <Button type="submit" disabled className="w-full">
+              {submitLabel}
+              <Construction size={14} />
+            </Button>
+          </NotImplemented>
+        ) : (
+          <Button type="submit" loading={loading} className="w-full">
+            {submitLabel}
+          </Button>
+        )}
       </div>
     </form>
   )

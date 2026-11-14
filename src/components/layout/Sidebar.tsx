@@ -10,14 +10,18 @@ import {
   LogOut,
   ChevronRight,
   MessageCircle,
+  Construction,
 } from "lucide-react"
+import { NOT_IMPLEMENTED } from "@/components/common/NotImplemented"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useLogout } from "@/hooks/useAuth"
 
 interface NavItem {
   label: string
   icon: React.ReactNode
-  to: string
+  to?: string
+  /** No screen behind it yet: rendered greyed out, not clickable. */
+  disabled?: true
   children?: { label: string; to: string }[]
   tour?: string
 }
@@ -29,12 +33,12 @@ const NAV_ITEMS: NavItem[] = [
 const SERVICE_ITEMS: NavItem[] = [
   { label: "Monitoreo", icon: <Shield size={18} />, to: "/cameras/monitor", tour: "nav-monitor" },
   { label: "Eventos", icon: <Calendar size={18} />, to: "/events", tour: "nav-events" },
-  { label: "Grabaciones", icon: <PlayCircle size={18} />, to: "#" },
+  { label: "Grabaciones", icon: <PlayCircle size={18} />, disabled: true },
 ]
 
 const ACCOUNT_ITEMS: NavItem[] = [
   { label: "Perfil", icon: <User size={18} />, to: "/profile", tour: "nav-profile" },
-  { label: "Notificaciones", icon: <Bell size={18} />, to: "#" },
+  { label: "Notificaciones", icon: <Bell size={18} />, disabled: true },
   { label: "Ayuda", icon: <HelpCircle size={18} />, to: "/help", tour: "nav-help" },
 ]
 
@@ -47,13 +51,27 @@ function rowClass(isActive: boolean) {
 }
 
 function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
+  if (item.disabled || !item.to) {
+    return (
+      <span
+        aria-disabled="true"
+        title={NOT_IMPLEMENTED}
+        className={`${ROW} text-white/40 cursor-not-allowed`}
+      >
+        <span className="shrink-0">{item.icon}</span>
+        <span className="flex-1">{item.label}</span>
+        <Construction size={14} />
+      </span>
+    )
+  }
+
   return (
     <NavLink
       to={item.to}
       end={item.to === "/"}
       data-tour={item.tour}
       onClick={onNavigate}
-      className={({ isActive }) => rowClass(isActive && item.to !== "#")}
+      className={({ isActive }) => rowClass(isActive)}
     >
       <span className="shrink-0">{item.icon}</span>
       <span className="flex-1">{item.label}</span>
@@ -166,7 +184,13 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="m-3 mt-4 p-3 rounded-xl bg-white/10 border border-white/10">
         <p className="text-white text-xs font-semibold">¿Necesitás ayuda?</p>
         <p className="text-white/60 text-xs mt-0.5">Contactanos por WhatsApp o teléfono.</p>
-        <button className="mt-2 w-full py-2 rounded-lg bg-white text-[#0d4f47] text-xs font-semibold hover:bg-white/90 transition-colors">
+        {/* No support channel wired yet. */}
+        <button
+          disabled
+          title={NOT_IMPLEMENTED}
+          className="mt-2 w-full py-2 rounded-lg bg-white text-[#0d4f47] text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Construction size={12} />
           Soporte
         </button>
       </div>

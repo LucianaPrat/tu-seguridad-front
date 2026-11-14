@@ -137,12 +137,15 @@ describe("LoginPage", () => {
     expect(useSessionStore.getState().isLoggedIn).toBe(false)
   })
 
-  it("Face-Auth skips validation and logs straight in", async () => {
+  it("disables the flows not wired yet: Magic Link, Face-Auth, password recovery", () => {
     renderPage()
 
-    await userEvent.click(screen.getByRole("button", { name: /Face-Auth/ }))
-
-    // Still fixture-backed: no Face-Auth endpoint exists yet.
-    expect(useSessionStore.getState().isLoggedIn).toBe(true)
+    expect(screen.getByRole("button", { name: /Face-Auth/ })).toBeDisabled()
+    expect(screen.getByRole("button", { name: /Magic Link/ })).toBeDisabled()
+    expect(screen.getByText("¿Olvidaste tu contraseña?")).toHaveAttribute(
+      "title",
+      "Aún no implementado",
+    )
+    expect(screen.queryByRole("link", { name: /Olvidaste/ })).not.toBeInTheDocument()
   })
 })

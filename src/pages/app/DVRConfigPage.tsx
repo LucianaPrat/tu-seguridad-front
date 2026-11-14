@@ -54,6 +54,7 @@ export default function DVRConfigPage() {
             onSubmit={handleSubmit}
             submitLabel="Guardar configuración"
             showTestConnection={false}
+            submitNotImplemented
           />
         </div>
       </div>

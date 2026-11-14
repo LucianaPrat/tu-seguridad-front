@@ -5,6 +5,7 @@ import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/common/PageHeader"
 import FormField from "@/components/common/FormField"
 import Button from "@/components/common/Button"
+import NotImplemented from "@/components/common/NotImplemented"
 import { useSessionStore } from "@/stores/sessionStore"
 import {
   profilePasswordSchema,
@@ -12,14 +13,14 @@ import {
   type ProfilePasswordValues,
   type ProfileValues,
 } from "@/lib/schemas"
-import { Camera, Save, Lock, CheckCircle } from "lucide-react"
+import { Camera, Save, Lock, CheckCircle, Construction } from "lucide-react"
 
 export default function ProfilePage() {
   const { user, updateUser } = useSessionStore()
 
   const [profileSaved, setProfileSaved] = useState(false)
   const [passSaved, setPassSaved] = useState(false)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl ?? null)
+  const avatarPreview = user?.avatarUrl ?? null
 
   const profileForm = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -45,11 +46,6 @@ export default function ProfilePage() {
     updateUser(values)
     setProfileSaved(true)
     setTimeout(() => setProfileSaved(false), 2500)
-  }
-
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) setAvatarPreview(URL.createObjectURL(file))
   }
 
   function handlePasswordSave() {
@@ -80,16 +76,10 @@ export default function ProfilePage() {
                   </span>
                 )}
               </div>
-              <label className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-card border shadow flex items-center justify-center cursor-pointer hover:bg-accent">
+              <NotImplemented className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-card border shadow flex items-center justify-center opacity-50">
                 <Camera size={12} className="text-muted-foreground" />
-                <span className="sr-only">Cambiar foto de perfil</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleAvatarChange}
-                />
-              </label>
+                <span className="sr-only">Cambiar foto de perfil (aún no implementado)</span>
+              </NotImplemented>
             </div>
             <div>
               <p className="font-medium text-foreground">
@@ -130,9 +120,12 @@ export default function ProfilePage() {
             />
 
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              <Button type="submit" icon={<Save size={14} />}>
-                Guardar cambios
-              </Button>
+              <NotImplemented>
+                <Button type="submit" disabled icon={<Save size={14} />}>
+                  Guardar cambios
+                  <Construction size={14} />
+                </Button>
+              </NotImplemented>
               {profileSaved && (
                 <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
                   <CheckCircle size={14} /> Guardado
@@ -175,9 +168,12 @@ export default function ProfilePage() {
               {...passwordForm.register("repeat")}
             />
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              <Button type="submit" variant="secondary">
-                Cambiar contraseña
-              </Button>
+              <NotImplemented>
+                <Button type="submit" variant="secondary" disabled>
+                  Cambiar contraseña
+                  <Construction size={14} />
+                </Button>
+              </NotImplemented>
               {passSaved && (
                 <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
                   <CheckCircle size={14} /> Contraseña actualizada

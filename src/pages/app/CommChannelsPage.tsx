@@ -7,13 +7,20 @@ import { useSessionStore } from "@/stores/sessionStore"
 import { ApiError } from "@/lib/http"
 import { displayName, initials } from "@/lib/members"
 import { type AlertType, type ChannelType } from "@/data/mockData"
-import { Phone, Mail, MessageSquare } from "lucide-react"
+import { Phone, Mail, MessageSquare, Construction } from "lucide-react"
+import { NOT_IMPLEMENTED } from "@/components/common/NotImplemented"
 
 const ALL_CHANNELS: ChannelType[] = ["llamada", "whatsapp", "email"]
 const CHANNEL_ICONS: Record<ChannelType, React.ReactNode> = {
   llamada: <Phone size={14} />,
   whatsapp: <MessageSquare size={14} />,
   email: <Mail size={14} />,
+}
+/** Only email has a sender on the backend; call and WhatsApp alerts are never sent. */
+const CHANNEL_READY: Record<ChannelType, boolean> = {
+  llamada: false,
+  whatsapp: false,
+  email: true,
 }
 const CHANNEL_LABELS: Record<ChannelType, string> = {
   llamada: "Llamada",
@@ -90,11 +97,17 @@ export default function CommChannelsPage() {
                   {ALL_CHANNELS.map((ch) => (
                     <th
                       key={ch}
-                      className="text-center px-2 sm:px-4 py-2.5 text-xs font-semibold text-gray-500"
+                      title={CHANNEL_READY[ch] ? undefined : NOT_IMPLEMENTED}
+                      className={`text-center px-2 sm:px-4 py-2.5 text-xs font-semibold ${
+                        CHANNEL_READY[ch] ? "text-gray-500" : "text-gray-300 cursor-not-allowed"
+                      }`}
                     >
                       <span className="flex flex-col items-center gap-1">
                         {CHANNEL_ICONS[ch]}
-                        {CHANNEL_LABELS[ch]}
+                        <span className="flex items-center gap-1">
+                          {CHANNEL_LABELS[ch]}
+                          {!CHANNEL_READY[ch] && <Construction size={12} />}
+                        </span>
                       </span>
                     </th>
                   ))}
@@ -108,14 +121,17 @@ export default function CommChannelsPage() {
                     </td>
                     {ALL_CHANNELS.map((ch) => (
                       <td key={ch} className="text-center px-2 sm:px-4 py-3">
-                        <label className="flex items-center justify-center p-2 cursor-pointer">
+                        <label
+                          title={CHANNEL_READY[ch] ? undefined : NOT_IMPLEMENTED}
+                          className="flex items-center justify-center p-2 cursor-pointer has-disabled:cursor-not-allowed"
+                        >
                           <input
                             type="checkbox"
                             checked={cellOf(alert, ch)?.enabled ?? false}
                             // Disabling the whole matrix while one write is in flight is
                             // deliberate — the route answers with the full matrix, so two
                             // overlapping writes could clobber each other.
-                            disabled={!isAdmin || setRouting.isPending}
+                            disabled={!isAdmin || setRouting.isPending || !CHANNEL_READY[ch]}
                             onChange={() =>
                               setRouting.mutate({
                                 alertType: alert,

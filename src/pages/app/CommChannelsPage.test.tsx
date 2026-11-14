@@ -80,7 +80,7 @@ describe("CommChannelsPage", () => {
 
     renderWithProviders(<CommChannelsPage />)
 
-    const checkbox = await screen.findByRole("checkbox", { name: "Sospechoso por Llamada" })
+    const checkbox = await screen.findByRole("checkbox", { name: "Intruso por Email" })
     await userEvent.click(checkbox)
 
     await waitFor(() => {
@@ -89,8 +89,21 @@ describe("CommChannelsPage", () => {
     const [, init] = fetchMock.mock.calls.find(([, i]) => i?.method === "PUT")!
     expect(init?.method).toBe("PUT")
     expect(JSON.parse(init?.body as string)).toEqual({
-      items: [{ alertType: "suspicious", channel: "call", enabled: true }],
+      items: [{ alertType: "intruder", channel: "email", enabled: true }],
     })
+  })
+
+  it("disables call and WhatsApp for an admin too — the backend has no sender for them", async () => {
+    mockRoutes({
+      "/alert-routings": { body: { items: ROUTINGS } },
+      "/members": { body: { items: [member()], total: 1 } },
+    })
+
+    renderWithProviders(<CommChannelsPage />)
+
+    expect(await screen.findByRole("checkbox", { name: "Intruso por Llamada" })).toBeDisabled()
+    expect(screen.getByRole("checkbox", { name: "Sospechoso por WhatsApp" })).toBeDisabled()
+    expect(screen.getByRole("checkbox", { name: "Sospechoso por Email" })).not.toBeDisabled()
   })
 
   it("disables every checkbox and switch for a non-admin", async () => {

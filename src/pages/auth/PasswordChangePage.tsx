@@ -5,8 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import AuthCard from "@/components/auth/AuthCard"
 import FormField from "@/components/common/FormField"
 import Button from "@/components/common/Button"
+import NotImplemented from "@/components/common/NotImplemented"
 import { passwordChangeSchema, type PasswordChangeValues } from "@/lib/schemas"
-import { CheckCircle } from "lucide-react"
+import { CheckCircle, Construction } from "lucide-react"
 
 export default function PasswordChangePage() {
   const [done, setDone] = useState(false)
@@ -59,9 +60,12 @@ export default function PasswordChangePage() {
             error={errors.repeat?.message}
             {...register("repeat")}
           />
-          <Button type="submit" loading={isSubmitting} className="w-full">
-            Cambiar contraseña
-          </Button>
+          <NotImplemented className="block">
+            <Button type="submit" disabled loading={isSubmitting} className="w-full">
+              Cambiar contraseña
+              <Construction size={14} />
+            </Button>
+          </NotImplemented>
         </form>
       )}
     </AuthCard>

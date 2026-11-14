@@ -1,14 +1,14 @@
-import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import AuthCard from "@/components/auth/AuthCard"
 import FormField from "@/components/common/FormField"
 import Button from "@/components/common/Button"
+import NotImplemented from "@/components/common/NotImplemented"
 import { useRegister } from "@/hooks/useAuth"
 import { ApiError } from "@/lib/http"
 import { registerSchema, type RegisterValues } from "@/lib/schemas"
-import { Camera } from "lucide-react"
+import { Camera, Construction } from "lucide-react"
 
 function registerErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -21,9 +21,6 @@ function registerErrorMessage(error: unknown): string {
 export default function RegisterPage() {
   const navigate = useNavigate()
   const { mutateAsync: submitRegister } = useRegister()
-
-  // Avatar is not part of the validated payload yet — no upload endpoint.
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
 
   const {
     register,
@@ -52,11 +49,6 @@ export default function RegisterPage() {
     }
   }
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) setAvatarPreview(URL.createObjectURL(file))
-  }
-
   return (
     <AuthCard title="Crear cuenta" subtitle="Completá tus datos para registrarte">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
@@ -70,17 +62,14 @@ export default function RegisterPage() {
         )}
         {/* Avatar upload */}
         <div className="flex justify-center">
-          <label className="cursor-pointer group">
-            <div className="w-16 h-16 rounded-full bg-muted border-2 border-dashed border-input flex items-center justify-center overflow-hidden group-hover:border-primary transition-colors">
-              {avatarPreview ? (
-                <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <Camera size={20} className="text-muted-foreground" />
-              )}
+          <NotImplemented className="flex flex-col items-center opacity-50">
+            <div className="w-16 h-16 rounded-full bg-muted border-2 border-dashed border-input flex items-center justify-center">
+              <Camera size={20} className="text-muted-foreground" />
             </div>
-            <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-            <p className="text-xs text-primary text-center mt-1">Foto de perfil</p>
-          </label>
+            <p className="text-xs text-muted-foreground text-center mt-1 flex items-center gap-1">
+              Foto de perfil <Construction size={12} />
+            </p>
+          </NotImplemented>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
