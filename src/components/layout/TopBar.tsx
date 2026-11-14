@@ -1,4 +1,5 @@
-import { Bell, ChevronDown, Menu } from "lucide-react"
+import { Bell, ChevronDown, Construction, Menu } from "lucide-react"
+import { NOT_IMPLEMENTED } from "@/components/common/NotImplemented"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useLogout } from "@/hooks/useAuth"
 import { useNavigate } from "react-router-dom"
@@ -35,10 +36,14 @@ export default function TopBar() {
         <Menu size={22} />
       </button>
 
-      {/* Bell */}
-      <button className="relative min-h-11 min-w-11 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-500">
+      {/* Bell — no notifications feed yet. The unread dot was fake; the badge says why it is off. */}
+      <button
+        disabled
+        title={NOT_IMPLEMENTED}
+        className="relative min-h-11 min-w-11 flex items-center justify-center rounded-lg text-gray-400 disabled:cursor-not-allowed"
+      >
         <Bell size={18} />
-        <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#1a6b61] border border-white" />
+        <Construction size={10} className="absolute top-2 right-2" />
       </button>
 
       {/* User menu */}

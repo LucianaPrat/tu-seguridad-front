@@ -4,13 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import AuthCard from "@/components/auth/AuthCard"
 import FormField from "@/components/common/FormField"
 import Button from "@/components/common/Button"
+import NotImplemented from "@/components/common/NotImplemented"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useSessionStore } from "@/stores/sessionStore"
 import { useLogin } from "@/hooks/useAuth"
 import { ApiError } from "@/lib/http"
 import { loginSchema, type LoginValues } from "@/lib/schemas"
-import { Mail } from "lucide-react"
+import { Construction, Mail } from "lucide-react"
 
 function loginErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -40,7 +40,6 @@ function FaceAuthIcon() {
 }
 
 export default function LoginPage() {
-  const { login } = useSessionStore()
   const navigate = useNavigate()
   const { mutateAsync: submitLogin } = useLogin()
 
@@ -61,11 +60,6 @@ export default function LoginPage() {
     } catch (error) {
       setError("root", { message: loginErrorMessage(error) })
     }
-  }
-
-  function handleFaceAuth() {
-    login("face@auth.com")
-    navigate("/")
   }
 
   return (
@@ -93,12 +87,10 @@ export default function LoginPage() {
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Contraseña</Label>
-            <Link
-              to="/auth/recover"
-              className="text-xs text-primary hover:underline inline-flex items-center py-2"
-            >
+            <NotImplemented className="text-xs text-muted-foreground inline-flex items-center gap-1 py-2">
+              <Construction size={12} />
               ¿Olvidaste tu contraseña?
-            </Link>
+            </NotImplemented>
           </div>
           <Input
             id="password"
@@ -130,25 +122,31 @@ export default function LoginPage() {
 
       {/* ── Alternative buttons ── */}
       <div className="flex flex-col gap-3">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => navigate("/auth/magic-link")}
-          icon={<Mail size={15} className="text-muted-foreground" />}
-          className="w-full"
-        >
-          Continuar con Magic Link
-        </Button>
+        <NotImplemented className="block">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled
+            icon={<Mail size={15} className="text-muted-foreground" />}
+            className="w-full"
+          >
+            Continuar con Magic Link
+            <Construction size={14} />
+          </Button>
+        </NotImplemented>
 
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={handleFaceAuth}
-          icon={<FaceAuthIcon />}
-          className="w-full"
-        >
-          Continuar con Face-Auth
-        </Button>
+        <NotImplemented className="block">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled
+            icon={<FaceAuthIcon />}
+            className="w-full"
+          >
+            Continuar con Face-Auth
+            <Construction size={14} />
+          </Button>
+        </NotImplemented>
       </div>
 
       {/* ── Register link ── */}

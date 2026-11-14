@@ -5,8 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import AuthCard from "@/components/auth/AuthCard"
 import FormField from "@/components/common/FormField"
 import Button from "@/components/common/Button"
+import NotImplemented from "@/components/common/NotImplemented"
 import { emailOnlySchema, type EmailOnlyValues } from "@/lib/schemas"
-import { Mail, ArrowLeft, CheckCircle } from "lucide-react"
+import { Mail, ArrowLeft, CheckCircle, Construction } from "lucide-react"
 
 export default function MagicLinkPage() {
   // Held separately so the confirmation copy survives the form reset.
@@ -70,9 +71,18 @@ export default function MagicLinkPage() {
             error={errors.email?.message}
             {...register("email")}
           />
-          <Button type="submit" loading={isSubmitting} icon={<Mail size={14} />} className="w-full">
-            Enviar Magic Link
-          </Button>
+          <NotImplemented className="block">
+            <Button
+              type="submit"
+              disabled
+              loading={isSubmitting}
+              icon={<Mail size={14} />}
+              className="w-full"
+            >
+              Enviar Magic Link
+              <Construction size={14} />
+            </Button>
+          </NotImplemented>
         </form>
       )}
 

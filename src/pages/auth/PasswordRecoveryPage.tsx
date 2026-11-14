@@ -5,8 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import AuthCard from "@/components/auth/AuthCard"
 import FormField from "@/components/common/FormField"
 import Button from "@/components/common/Button"
+import NotImplemented from "@/components/common/NotImplemented"
 import { emailOnlySchema, type EmailOnlyValues } from "@/lib/schemas"
-import { Mail } from "lucide-react"
+import { Mail, Construction } from "lucide-react"
 
 export default function PasswordRecoveryPage() {
   const [sent, setSent] = useState(false)
@@ -55,9 +56,12 @@ export default function PasswordRecoveryPage() {
             error={errors.email?.message}
             {...register("email")}
           />
-          <Button type="submit" loading={isSubmitting} className="w-full">
-            Enviar enlace de restablecimiento
-          </Button>
+          <NotImplemented className="block">
+            <Button type="submit" disabled loading={isSubmitting} className="w-full">
+              Enviar enlace de restablecimiento
+              <Construction size={14} />
+            </Button>
+          </NotImplemented>
           <p className="text-center text-sm text-muted-foreground">
             <Link to="/login" className="text-primary hover:underline">
               Volver al inicio
