@@ -23,8 +23,9 @@ export const registerSchema = z
     firstName: required(),
     lastName: required(),
     email: emailField,
-    phone: required(),
-    password: strongPassword,
+    // Backend rules: E.164 phone, 12-char password minimum.
+    phone: z.string().regex(/^\+[1-9]\d{7,14}$/, "Usá formato internacional, ej +5491122334455"),
+    password: z.string().min(12, "Mínimo 12 caracteres"),
     repeatPassword: z.string(),
   })
   .refine((values) => values.password === values.repeatPassword, {

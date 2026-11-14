@@ -44,22 +44,39 @@ export function useSessionBootstrap() {
   })
 }
 
+/*
+ * Loads the profile behind a token already in the store and opens the session.
+ * The token has to land in the store before me() runs — that is where the
+ * request layer reads the Authorization header from.
+ */
+async function openSession(): Promise<MeResponse> {
+  const store = useSessionStore.getState()
+  try {
+    const profile = await authApi.me()
+    store.setSession(profile)
+    return profile
+  } catch (error) {
+    // A token with no profile is a half-open session; drop it.
+    store.logout()
+    throw error
+  }
+}
+
 export function useLogin() {
   return useMutation<MeResponse, unknown, LoginValues>({
     mutationFn: async (values) => {
-      const store = useSessionStore.getState()
-      // The token has to land in the store before me() runs — that is where
-      // the request layer reads the Authorization header from.
-      store.setAccessToken(await authApi.login(values))
-      try {
-        const profile = await authApi.me()
-        store.setSession(profile)
-        return profile
-      } catch (error) {
-        // A token with no profile is a half-open session; drop it.
-        store.logout()
-        throw error
-      }
+      useSessionStore.getState().setAccessToken(await authApi.login(values))
+      return openSession()
+    },
+  })
+}
+
+/** Same as login: the route answers with a token, the profile comes from me(). */
+export function useRegister() {
+  return useMutation<MeResponse, unknown, authApi.RegisterPayload>({
+    mutationFn: async (payload) => {
+      useSessionStore.getState().setAccessToken(await authApi.register(payload))
+      return openSession()
     },
   })
 }
@@ -83,14 +100,7 @@ export function useCompleteProfile() {
         if (!(error instanceof ApiError) || error.status !== 409) throw error
         store.setAccessToken(await authApi.refresh())
       }
-      try {
-        const profile = await authApi.me()
-        store.setSession(profile)
-        return profile
-      } catch (error) {
-        store.logout()
-        throw error
-      }
+      return openSession()
     },
   })
 }

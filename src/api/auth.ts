@@ -1,6 +1,6 @@
 import { request } from "@/lib/http"
 import { accessTokenSchema, meSchema } from "@/lib/schemas"
-import type { LoginValues, MeResponse } from "@/lib/schemas"
+import type { LoginValues, MeResponse, RegisterValues } from "@/lib/schemas"
 
 /*
  * Auth endpoints. Login and refresh answer with the access token only — the
@@ -12,6 +12,19 @@ export async function login(values: LoginValues): Promise<string> {
   const data = await request<unknown>("/auth/login", {
     method: "POST",
     body: values,
+    auth: false,
+  })
+  return accessTokenSchema.parse(data).accessToken
+}
+
+/** What the route takes: the repeated password stays in the browser, the space name is derived. */
+export type RegisterPayload = Omit<RegisterValues, "repeatPassword"> & { spaceName: string }
+
+/** Creates the account, its space and an admin membership, and opens a session in one call. */
+export async function register(payload: RegisterPayload): Promise<string> {
+  const data = await request<unknown>("/auth/register", {
+    method: "POST",
+    body: payload,
     auth: false,
   })
   return accessTokenSchema.parse(data).accessToken
