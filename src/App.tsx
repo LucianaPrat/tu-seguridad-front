@@ -48,8 +48,8 @@ function AuthGate({ children }: { children: ReactNode }) {
 
 /*
  * Logging out is the only exit this screen can offer. A reload prompt was
- * worse than nothing: the fixture login paths (register, Face-Auth) hold no
- * access token, so GET /dvr answers 401 and both land here, and a reload
+ * worse than nothing: the fixture login path (Face-Auth) holds no
+ * access token, so GET /dvr answers 401 and it lands here, and a reload
  * replays the boot refresh, finds no cookie and drops back to /login anyway.
  * Clearing the session first is what keeps the guard from looping.
  */

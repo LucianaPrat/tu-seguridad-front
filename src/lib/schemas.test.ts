@@ -39,7 +39,7 @@ describe("registerSchema", () => {
     firstName: "Luciana",
     lastName: "García",
     email: "a@b.com",
-    phone: "+54 9 11 1234-5678",
+    phone: "+5491112345678",
     password: "hunter2hunter2",
     repeatPassword: "hunter2hunter2",
   }
@@ -48,18 +48,23 @@ describe("registerSchema", () => {
     expect(registerSchema.safeParse(valid).success).toBe(true)
   })
 
+  it("rejects a phone the backend would refuse", () => {
+    const result = registerSchema.safeParse({ ...valid, phone: "+54 9 11 1234-5678" })
+    expect(messageFor(result, "phone")).toBe("Usá formato internacional, ej +5491122334455")
+  })
+
   it("flags mismatched passwords on the repeat field", () => {
     const result = registerSchema.safeParse({ ...valid, repeatPassword: "different" })
     expect(messageFor(result, "repeatPassword")).toBe("Las contraseñas no coinciden")
   })
 
-  it("requires at least 8 password characters", () => {
+  it("requires at least 12 password characters", () => {
     const result = registerSchema.safeParse({
       ...valid,
       password: "short",
       repeatPassword: "short",
     })
-    expect(messageFor(result, "password")).toBe("Mínimo 8 caracteres")
+    expect(messageFor(result, "password")).toBe("Mínimo 12 caracteres")
   })
 
   it("treats whitespace-only names as missing", () => {

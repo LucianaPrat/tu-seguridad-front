@@ -25,9 +25,9 @@ interface SessionState {
  * script can read. It dies with the tab; the HttpOnly refresh cookie is what
  * survives a reload, replayed by useSessionBootstrap.
  *
- * FIXTURE_USER exists for login() alone — register and Face-Auth have no
- * endpoint yet. `profileCompleted: true` is load-bearing: those paths hold no
- * real profile, and a false flag would park them on the profile form.
+ * FIXTURE_USER exists for login() alone — Face-Auth has no endpoint yet.
+ * `profileCompleted: true` is load-bearing: that path holds no real profile,
+ * and a false flag would park it on the profile form.
  */
 const FIXTURE_USER: SessionUser = {
   id: 0,
@@ -51,9 +51,8 @@ export const useSessionStore = create<SessionState>((set) => ({
   user: null,
 
   /*
-   * Fixture path, still used by register, magic link and Face-Auth — none of
-   * those have a backend endpoint yet. Real credentials go through
-   * setAccessToken + setSession instead.
+   * Fixture path, still used by Face-Auth — it has no backend endpoint yet.
+   * Real credentials go through setAccessToken + setSession instead.
    */
   login: (_email) => set({ authStatus: "ready", isLoggedIn: true, user: FIXTURE_USER }),
 
