@@ -1,10 +1,13 @@
+import LogoMark from "@/components/common/LogoMark"
 import { NavLink, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
   Shield,
+  HardDrive,
   Calendar,
   PlayCircle,
   User,
+  Users,
   Bell,
   HelpCircle,
   LogOut,
@@ -101,7 +104,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5">
         <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-          <Shield size={18} className="text-white" />
+          <LogoMark size={22} />
         </div>
         <div className="min-w-0">
           <p className="text-white font-semibold text-sm leading-tight truncate">
@@ -134,7 +137,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           className={({ isActive }) => rowClass(isActive)}
         >
           <span className="shrink-0">
-            <Shield size={18} />
+            <HardDrive size={18} />
           </span>
           DVR
         </NavLink>
@@ -160,7 +163,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           className={({ isActive }) => rowClass(isActive)}
         >
           <span className="shrink-0">
-            <User size={18} />
+            <Users size={18} />
           </span>
           Miembros
         </NavLink>

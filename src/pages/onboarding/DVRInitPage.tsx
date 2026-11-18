@@ -3,7 +3,7 @@ import { useSessionStore } from "@/stores/sessionStore"
 import { useConfigureDvr } from "@/hooks/useDvr"
 import DVRForm, { type DVRFormValues } from "@/components/dvr/DVRForm"
 import { ApiError } from "@/lib/http"
-import { Shield } from "lucide-react"
+import LogoMark from "@/components/common/LogoMark"
 
 /*
  * Three different failures, three different next steps. PUT /dvr is admin-only,
@@ -51,7 +51,7 @@ export default function DVRInitPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-[#0d4f47] flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Shield size={24} className="text-white" />
+            <LogoMark />
           </div>
           <h1 className="text-2xl font-semibold text-gray-900">Configurar DVR</h1>
           <p className="text-gray-500 mt-1 text-sm">
