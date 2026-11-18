@@ -1,0 +1,259 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700&display=swap");
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * shadcn/ui semantic tokens, filled with brand values.
+ * primary/ring carry brand teal #1a6b61, background carries page grey #f4f7f6,
+ * so shadcn primitives look native without per-component overrides.
+ */
+:root {
+  --radius: 0.5rem;
+
+  --background: #f4f7f6;
+  --foreground: #111827;
+  --card: #ffffff;
+  --card-foreground: #111827;
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+  --primary: #1a6b61;
+  --primary-foreground: #ffffff;
+  --secondary: #ffffff;
+  --secondary-foreground: #374151;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #f3f4f6;
+  --accent-foreground: #374151;
+  --destructive: #dc2626;
+  --border: #e8eeed;
+  --input: #e5e7eb;
+  --ring: #1a6b61;
+}
+
+.dark {
+  --background: #0b1211;
+  --foreground: #f4f7f6;
+  --card: #131c1a;
+  --card-foreground: #f4f7f6;
+  --popover: #131c1a;
+  --popover-foreground: #f4f7f6;
+  --primary: #2f9d8f;
+  --primary-foreground: #06110f;
+  --secondary: #1c2725;
+  --secondary-foreground: #e5e7eb;
+  --muted: #1c2725;
+  --muted-foreground: #9ca3af;
+  --accent: #1c2725;
+  --accent-foreground: #e5e7eb;
+  --destructive: #ef4444;
+  --border: #24312e;
+  --input: #2b3835;
+  --ring: #2f9d8f;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Brand-only aliases. No shadcn equivalent, referenced by app chrome. */
+  --color-sidebar: #0d4f47;
+  --color-sidebar-hover: #196058;
+  --color-sidebar-active: #1d7068;
+  --color-primary-dark: #0d4f47;
+  --color-primary-light: #e6f4f2;
+  --color-online: #22c55e;
+  --color-offline: #ef4444;
+  --color-page-bg: #f4f7f6;
+  --color-intruso: #ef4444;
+  --color-sospechoso: #f59e0b;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", sans-serif;
+    margin: 0;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c8d5d3;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9bb3b0;
+}
+
+/*
+ * driver.js popover, pinned and rebranded.
+ *
+ * Pinned is the important part. By default driver.js re-anchors the popover
+ * beside whatever it highlights, so it hops around the screen and the operator
+ * chases the buttons with the mouse. Fixing it to one corner leaves only the
+ * spotlight moving. Every position rule needs !important — driver.js writes
+ * left/top/right/bottom as inline styles on every step.
+ */
+/*
+ * Two pieces, on purpose: the bubble follows the spotlight so the words sit
+ * next to the thing they describe, and the footer below is pinned to one
+ * corner so Siguiente never moves. driver.js keeps its own inline `top`/`left`
+ * here — it positions with those and never with `transform`, which is what
+ * lets the footer's `position: fixed` escape to the viewport instead of being
+ * trapped by this box.
+ */
+.driver-popover.ts-tour {
+  width: 18rem;
+  max-width: calc(100vw - 2rem);
+  border-radius: 1rem;
+  padding: 0.875rem 1rem;
+  font-family: "Inter", sans-serif;
+  box-shadow: 0 16px 40px rgb(13 79 71 / 0.28);
+}
+
+/* Back in use: the bubble has a side to point from again. */
+.driver-popover.ts-tour .driver-popover-arrow {
+  border-width: 6px;
+}
+
+.driver-popover.ts-tour .driver-popover-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.driver-popover.ts-tour .ts-tour-icon {
+  font-size: 1.125rem;
+  line-height: 1;
+}
+.driver-popover.ts-tour .driver-popover-description {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+/*
+ * Pinned, and its own surface — once it leaves the bubble's flow it has no
+ * background of its own to inherit. `position: fixed` on a child of the
+ * popover resolves against the viewport because no ancestor establishes a
+ * containing block: driver.css gives .driver-popover `position: fixed` and no
+ * transform, filter or will-change.
+ *
+ * ponytail: driver.js clamps the bubble to the viewport without knowing this
+ * bar exists, so a spotlight low on a short screen can put the two on top of
+ * each other. Give the bar its own `driver-popover` sibling via a portal in
+ * onPopoverRender if that shows up in practice.
+ */
+.driver-popover.ts-tour .driver-popover-footer {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  left: auto;
+  width: 18rem;
+  max-width: calc(100vw - 3rem);
+  box-sizing: border-box;
+  margin-top: 0;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 16px 40px rgb(13 79 71 / 0.28);
+}
+.driver-popover.ts-tour .driver-popover-progress-text {
+  font-size: 0.6875rem;
+  color: var(--muted-foreground);
+}
+
+.driver-popover.ts-tour .driver-popover-footer-btn {
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-shadow: none;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--foreground);
+}
+.driver-popover.ts-tour .driver-popover-next-btn {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* driver.js disables rather than hides Previous on the first step, and a dead
+   button there just asks to be clicked. */
+.driver-popover.ts-tour .driver-popover-prev-btn.driver-popover-btn-disabled {
+  display: none !important;
+}
+
+/* The × relabelled as Saltar and moved into the footer, so leaving the tour is
+   a visible choice instead of a corner glyph. */
+.driver-popover.ts-tour .driver-popover-close-btn {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0.375rem 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--muted-foreground);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: transparent;
+}
+.driver-popover.ts-tour .driver-popover-close-btn:hover {
+  color: var(--foreground);
+}
+
+/*
+ * The overlay is brand teal and so is the drawer, so an open drawer dims into
+ * the overlay behind it. The ring is what keeps the highlighted row legible as
+ * the thing the step is pointing at. `stagePadding: 6` is what makes it show:
+ * the cut-out is 6px bigger than the element, so a 2px ring at 2px offset
+ * still falls inside the hole.
+ */
+.driver-active-element {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  border-radius: 8px;
+}

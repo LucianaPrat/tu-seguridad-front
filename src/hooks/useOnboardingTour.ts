@@ -1,0 +1,428 @@
+import { useEffect } from "react"
+import { useNavigate, type NavigateFunction } from "react-router-dom"
+import { driver, type Driver, type PopoverDOM } from "driver.js"
+import { useSessionStore } from "@/stores/sessionStore"
+import { useNavStore } from "@/stores/navStore"
+import "driver.js/dist/driver.css"
+
+/*
+ * Guided tour of the menu, run once on the first login. driver.js owns the
+ * overlay and the popover; this module owns the routing, because a step lives
+ * on a page the previous step was not on.
+ *
+ * Deliberately not a component: the driver instance is DOM-level, and every
+ * app page mounts its own AppShell, so a component holding the instance would
+ * be torn down by the very navigation the tour performs.
+ */
+
+/*
+ * Per browser, not per user — a shared browser shows the tour to whoever
+ * clears it first. Good enough for an operator console; src/test/setup.ts
+ * seeds it so page tests never trip over an overlay.
+ */
+const TOUR_FLAG = "ts-tour-done"
+
+interface TourStep {
+  /** Route the step lives on. The tour navigates there before highlighting. */
+  to: string
+  /** Omitted on the intro step, which driver.js then centres as a modal. */
+  element?: string
+  /** Dropped for a plain member, whose screen has no such control to point at. */
+  adminOnly?: true
+  /** Anchor lives inside the menu — the aside from `lg` up, the drawer below. */
+  inNav?: true
+  /** Only below `lg`, where the menu is a drawer that has to be opened first. */
+  mobileOnly?: true
+  /**
+   * Anchored inside the account dropdown, which the tour opens itself —
+   * `disableActiveInteraction` means the user cannot open it mid-tour.
+   */
+  withUserMenu?: true
+  /**
+   * Placement, when driver.js's own pick is wrong. It chooses a side from the
+   * anchor's rect and the popover's size, and for the account dropdown — wide,
+   * tall, hard against the top-right corner — it lands the bubble in the
+   * opposite corner of the screen instead of beside the menu.
+   */
+  side?: "top" | "right" | "bottom" | "left"
+  align?: "start" | "center" | "end"
+  /** Leading glyph. Carries the step at a glance so the body can stay one line. */
+  icon: string
+  title: string
+  body: string
+}
+
+const STEPS: TourStep[] = [
+  {
+    to: "/",
+    icon: "👋",
+    title: "Bienvenido",
+    body: "Un minuto para ver qué hace cada sección. Podés saltarlo cuando quieras.",
+  },
+  {
+    to: "/",
+    element: '[data-tour="nav-toggle"]',
+    mobileOnly: true,
+    icon: "☰",
+    title: "El menú",
+    body: "Desde acá abrís el menú: monitoreo, eventos, DVR, canales y miembros.",
+  },
+  {
+    to: "/",
+    element: '[data-tour="nav-home"]',
+    inNav: true,
+    icon: "🏠",
+    title: "Inicio",
+    body: "Todas tus cámaras de un vistazo: online u offline, y hace cuánto es la foto.",
+  },
+  {
+    to: "/",
+    element: '[data-tour="page-action"]',
+    adminOnly: true,
+    icon: "👥",
+    title: "Invitar",
+    body: "Sumás gente al espacio con su email. Le llega un link para entrar.",
+  },
+  {
+    to: "/cameras/monitor",
+    element: '[data-tour="nav-monitor"]',
+    inNav: true,
+    icon: "🎯",
+    title: "Monitoreo",
+    body: "Qué vigila cada cámara: toda la imagen, o zonas que dibujás vos.",
+  },
+  {
+    to: "/cameras/monitor",
+    element: '[data-tour="page-action"]',
+    icon: "✅",
+    title: "Se guarda solo",
+    body: "No hay botón: las zonas se guardan al soltar el dibujo. Acá ves si ya salió.",
+  },
+  {
+    to: "/events",
+    element: '[data-tour="nav-events"]',
+    inNav: true,
+    icon: "📋",
+    title: "Eventos",
+    body: "El histórico de alertas. Tocá una fila y ves la imagen del momento.",
+  },
+  {
+    to: "/events",
+    element: '[data-tour="events-filters"]',
+    icon: "🔎",
+    title: "Filtros",
+    body: "Por fecha y por nivel: intruso o sospechoso.",
+  },
+  {
+    to: "/dvr-config",
+    element: '[data-tour="nav-dvr"]',
+    inNav: true,
+    icon: "📼",
+    title: "DVR",
+    body: "La conexión al grabador. Ojo: cambiarla puede borrar la config de las cámaras.",
+  },
+  {
+    to: "/channels",
+    element: '[data-tour="nav-channels"]',
+    inNav: true,
+    icon: "📣",
+    title: "Canales",
+    body: "Por dónde salen las alertas y a quién le llegan. Se guarda solo.",
+  },
+  {
+    to: "/channels",
+    element: '[data-tour="channels-routing"]',
+    icon: "🔀",
+    title: "Enrutamiento",
+    body: "Por cada nivel marcás los medios: llamada, WhatsApp o email.",
+  },
+  {
+    to: "/channels",
+    element: '[data-tour="channels-recipients"]',
+    icon: "🔔",
+    title: "Destinatarios",
+    body: "Un interruptor por miembro. Usa el mail y el teléfono de su registro.",
+  },
+  {
+    to: "/members",
+    element: '[data-tour="nav-members"]',
+    inNav: true,
+    icon: "🧑‍🤝‍🧑",
+    title: "Miembros",
+    body: "Quiénes entran al espacio y cuándo entraron por última vez.",
+  },
+  {
+    to: "/profile",
+    element: '[data-tour="nav-profile"]',
+    inNav: true,
+    icon: "⚙️",
+    title: "Perfil",
+    body: "Tus datos y tu contraseña.",
+  },
+  {
+    to: "/help",
+    element: '[data-tour="nav-help"]',
+    inNav: true,
+    icon: "💬",
+    title: "Ayuda",
+    body: "Un asistente en chat para tus dudas sobre el sistema.",
+  },
+  {
+    to: "/",
+    element: '[data-tour="topbar-menu"]',
+    withUserMenu: true,
+    side: "bottom",
+    align: "end",
+    icon: "🎉",
+    title: "Listo",
+    body: "Acá está tu perfil, cerrar sesión, y «Ver el tutorial» para repetir esto.",
+  },
+]
+
+/**
+ * Polls `check` on animation frames until it passes, or gives up at `timeout`.
+ * Only one thing needs this: seeing the outgoing page actually leave the DOM.
+ * Waiting for what arrives is driver.js's own `waitForElement`.
+ */
+export function waitFor(check: () => boolean, timeout = 2000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const deadline = Date.now() + timeout
+    const tick = () => {
+      if (check()) return resolve(true)
+      if (Date.now() > deadline) return resolve(false)
+      requestAnimationFrame(tick)
+    }
+    tick()
+  })
+}
+
+const navPanel = () => document.querySelector('[data-nav="mobile"]')
+
+/**
+ * Slid fully in. Radix animates the panel from `translateX(-100%)` to 0 over
+ * 500ms, and a rect read mid-slide cuts the spotlight where the drawer was,
+ * not where it lands. Geometry, not `transitionend`: one poll covers both the
+ * open and the already-open case without binding a listener per step.
+ */
+const navSettled = () => {
+  const el = navPanel()
+  if (el === null) return false
+  const { left, width } = el.getBoundingClientRect()
+  return width > 0 && left >= 0
+}
+
+/** Radix keeps the panel mounted through its exit animation. */
+const navGone = () => navPanel() === null
+
+const userMenuPanel = () => document.querySelector('[data-tour="topbar-menu"]')
+
+/**
+ * Measured, not merely mounted. driver.js reads the anchor's rect once, when it
+ * drives the step, and never reads it again — a zero rect at that moment parks
+ * the popover in the top-left corner permanently, `refresh()` included. Mounted
+ * is not the same as laid out, so this waits for a box with size.
+ */
+const userMenuSettled = () => {
+  const el = userMenuPanel()
+  if (!el) return false
+  const { width, height } = el.getBoundingClientRect()
+  return width > 0 && height > 0
+}
+
+/** One tour at a time, and it outlives the AppShell that started it. */
+let current: Driver | null = null
+
+export function startTour(navigate: NavigateFunction) {
+  if (current) return
+
+  /*
+   * Built per run, not per module. `skipMissingElement` below would drop an
+   * admin-only step on its own, but it jumps straight to the next index
+   * without going through goTo, so the tour would talk about the next screen
+   * while still standing on this one. Dropping the step up front keeps every
+   * index paired with the route it belongs to — and keeps the progress count
+   * honest for a member who is never shown that step.
+   */
+  const isAdmin = useSessionStore.getState().user?.role === "admin"
+  /*
+   * Below `lg` the sidebar lives in a closed drawer, so the eight steps anchored
+   * to it would each stall for `waitForElement` and then vanish. A step pointing
+   * at the hamburger stands in for all of them.
+   *
+   * `innerWidth`, not `matchMedia`: the jsdom stub in `src/test/setup.ts` answers
+   * `matches: false` to every query, which would run the tests through the mobile
+   * branch. jsdom's window is 1024 wide, so this reads as desktop there.
+   */
+  const isDesktop = window.innerWidth >= 1024
+  const steps = STEPS.filter((s) => (!s.adminOnly || isAdmin) && (!s.mobileOnly || !isDesktop))
+
+  /*
+   * Both menus are in the DOM below `lg` — the aside is only `display: none`,
+   * and AppShell renders it before MobileNav, so a bare `[data-tour="nav-home"]`
+   * matches the hidden copy first. A hidden node measures all zeros, which is
+   * what parks the popover in the corner. Scoping the anchor to the menu that
+   * is actually on screen is what keeps driver.js off the wrong copy.
+   */
+  const NAV_SCOPE = isDesktop ? '[data-nav="desktop"]' : '[data-nav="mobile"]'
+  const anchorOf = (s: TourStep) => (s.inNav && s.element ? `${NAV_SCOPE} ${s.element}` : s.element)
+
+  /*
+   * The only place the tour is marked seen. It cannot live in onDestroyed:
+   * driver.js fires that from inside its animation loop, so closing during the
+   * first 400ms of a step skips it and the tour reopens on the next page.
+   */
+  const finish = () => {
+    localStorage.setItem(TOUR_FLAG, "1")
+    // One update, not two: flipping `tourActive` while the drawer is still open
+    // swaps DialogContentModal for DialogContentNonModal, and React remounts
+    // the panel mid-exit.
+    useNavStore.setState({ open: false, tourActive: false, userMenuOpen: false })
+    const tour = current
+    current = null
+    tour?.destroy()
+  }
+
+  /*
+   * Routing is the only part driver.js cannot do for itself. Everything after
+   * the navigation — waiting for the anchor, skipping one that never shows —
+   * is `waitForElement` and `skipMissingElement` in the config below.
+   */
+  const goTo = async (index: number) => {
+    const step = steps[index]
+    if (!step) return finish()
+
+    if (window.location.pathname !== step.to) {
+      /*
+       * Every app page renders its own AppShell, so navigating throws the whole
+       * shell away and builds a new one. driver.js resolves a step's selector
+       * once and then holds the node: anything resolved before that swap is
+       * detached by the time it is measured, and a detached node measures all
+       * zeros — which is what parks the popover in the top-left corner.
+       *
+       * The hamburger stands in for the shell here. Waiting on the step's own
+       * anchor is not enough: the account step's anchor is the dropdown, which
+       * is closed while the navigation runs, so there was nothing to wait for
+       * and the step opened the menu on the outgoing shell. The hamburger is in
+       * every shell at every breakpoint, so its departure marks the swap for
+       * every step alike.
+       */
+      const stale = document.querySelector('[data-tour="nav-toggle"]')
+      navigate(step.to)
+      if (stale) await waitFor(() => !stale.isConnected)
+    }
+
+    /*
+     * Mobile only. A menu step's anchor lives in the drawer, so the drawer has
+     * to be open before driver.js measures it — and shut again before a step
+     * that points at the page underneath, or the spotlight lands on a panel
+     * covering it.
+     */
+    if (!isDesktop) {
+      const wantOpen = Boolean(step.inNav)
+      if (useNavStore.getState().open !== wantOpen) {
+        useNavStore.getState().setOpen(wantOpen)
+        await waitFor(wantOpen ? navSettled : navGone)
+      }
+    }
+
+    /*
+     * The account step describes the items in the dropdown, not the avatar that
+     * opens it, so the panel has to be mounted before driver.js measures it.
+     * Shut again for every other step, or it hangs over the page underneath.
+     */
+    const wantMenu = Boolean(step.withUserMenu)
+    if (useNavStore.getState().userMenuOpen !== wantMenu) {
+      useNavStore.getState().setUserMenuOpen(wantMenu)
+      await waitFor(wantMenu ? userMenuSettled : () => userMenuPanel() === null)
+    }
+
+    d.drive(index)
+  }
+
+  /* Icon and skip button, re-applied on every step — driver.js rebuilds the
+   * popover DOM each time. The default close control is a bare × in the
+   * corner, which nobody reads as "salir"; relabelled and moved into the
+   * footer it sits where a skip button belongs. */
+  const dressPopover = (popover: PopoverDOM) => {
+    const step = steps[d.getActiveIndex() ?? 0]
+    if (step) {
+      const icon = document.createElement("span")
+      icon.className = "ts-tour-icon"
+      icon.setAttribute("aria-hidden", "true")
+      icon.textContent = step.icon
+      popover.title.prepend(icon)
+    }
+    popover.closeButton.textContent = "Saltar"
+    popover.closeButton.setAttribute("aria-label", "Saltar el tutorial")
+    popover.footer.prepend(popover.closeButton)
+  }
+
+  const d = driver({
+    showProgress: true,
+    progressText: "{{current}} de {{total}}",
+    nextBtnText: "Siguiente",
+    prevBtnText: "Anterior",
+    doneBtnText: "Entendido",
+    showButtons: ["next", "previous", "close"],
+    // Load-bearing: driver.js filters "close" out of showButtons when this is
+    // false, which would leave the tour with no skip button at all.
+    allowClose: true,
+    // A stray click on the dimmed page should do nothing — not advance, not
+    // abort. A no-op function is how driver.js spells that.
+    overlayClickBehavior: () => {},
+    // The point of the overlay: nothing outside the popover is clickable.
+    disableActiveInteraction: true,
+    // Navigation renders the anchor a beat after the route changes, so let
+    // driver.js watch for it instead of racing it.
+    waitForElement: 2000,
+    // Safety net only: the role filter above should mean no step is ever
+    // missing. If one is anyway, move past it instead of stalling the tour.
+    skipMissingElement: true,
+    overlayColor: "#0d4f47",
+    overlayOpacity: 0.62,
+    stagePadding: 6,
+    stageRadius: 12,
+    smoothScroll: true,
+    popoverClass: "ts-tour",
+    onPopoverRender: dressPopover,
+    // No `side`/`align`: driver.js picks whichever side of the spotlight has
+    // room, which is the point of letting it place the bubble at all. The
+    // footer is what stays put, pinned in CSS.
+    steps: steps.map((s) => ({
+      element: anchorOf(s),
+      popover: { title: s.title, description: s.body, side: s.side, align: s.align },
+    })),
+    // Overriding these turns off driver.js's own advance, so every move — the
+    // done button included — routes through goTo and its navigation.
+    onNextClick: () => goTo((d.getActiveIndex() ?? 0) + 1),
+    onPrevClick: () => goTo((d.getActiveIndex() ?? 0) - 1),
+    onCloseClick: finish,
+    /*
+     * Escape is the one exit driver.js drives itself. Claiming this hook stops
+     * its internal teardown and hands the close back to us, so that path marks
+     * the tour seen like every other.
+     */
+    onDestroyStarted: finish,
+  })
+
+  current = d
+  // Before the first `goTo`, so the drawer's first mount is already non-modal —
+  // switching `modal` on an open Sheet remounts its content.
+  useNavStore.getState().setTourActive(true)
+  void goTo(0)
+}
+
+/**
+ * Fires the tour on the first visit. Mounted in AppShell, which remounts on
+ * every navigation — the `current` guard is what keeps the tour from
+ * restarting itself as it walks the menu.
+ */
+export function useOnboardingTour() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (localStorage.getItem(TOUR_FLAG)) return
+    if (window.location.pathname !== "/") return
+    startTour(navigate)
+  }, [navigate])
+}
