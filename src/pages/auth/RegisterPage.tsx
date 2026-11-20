@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import AuthCard from "@/components/auth/AuthCard"
@@ -14,6 +14,8 @@ import { Camera, Construction } from "lucide-react"
 
 function registerErrorKey(error: unknown): TranslationKey {
   if (error instanceof ApiError) {
+    if (error.status === 404) return "invitations.gone"
+    if (error.status === 403) return "auth.register.inviteMismatch"
     if (error.status === 409) return "auth.register.emailTaken"
     if (error.status === 0) return "auth.networkError"
   }
@@ -23,6 +25,9 @@ function registerErrorKey(error: unknown): TranslationKey {
 export default function RegisterPage() {
   const { t } = useT()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const inviteToken = params.get("inviteToken")
+  const lockedEmail = inviteToken ? (params.get("email") ?? "") : ""
   const { mutateAsync: submitRegister } = useRegister()
 
   const {
@@ -35,7 +40,7 @@ export default function RegisterPage() {
     defaultValues: {
       firstName: "",
       lastName: "",
-      email: "",
+      email: lockedEmail,
       phone: "",
       password: "",
       repeatPassword: "",
@@ -44,12 +49,15 @@ export default function RegisterPage() {
 
   async function onSubmit({ repeatPassword: _repeat, ...values }: RegisterValues) {
     try {
-      // The form asks for no space name; the backend requires one.
-      await submitRegister({
-        ...values,
-        spaceName: t("auth.register.spaceName", { name: values.firstName }),
-      })
-      navigate("/")
+      // Without an invitation the form asks for no space name; the backend requires one.
+      await submitRegister(
+        inviteToken
+          ? { ...values, inviteToken }
+          : { ...values, spaceName: t("auth.register.spaceName", { name: values.firstName }) },
+      )
+      navigate(
+        inviteToken ? `/invitations/accept?${new URLSearchParams({ token: inviteToken })}` : "/",
+      )
     } catch (error) {
       setError("root", { message: t(registerErrorKey(error)) })
     }
@@ -97,6 +105,7 @@ export default function RegisterPage() {
           type="email"
           placeholder={t("members.invite.emailPlaceholder")}
           error={errors.email?.message}
+          readOnly={lockedEmail !== ""}
           {...register("email")}
         />
         <FormField

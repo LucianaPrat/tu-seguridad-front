@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom"
 import { QueryClientProvider } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 import { queryClient } from "@/lib/queryClient"
@@ -35,6 +35,7 @@ import MembersPage from "@/pages/app/MembersPage"
 import CommChannelsPage from "@/pages/app/CommChannelsPage"
 import ProfilePage from "@/pages/app/ProfilePage"
 import HelpChatPage from "@/pages/app/HelpChatPage"
+import InvitationsPage from "@/pages/app/InvitationsPage"
 
 /*
  * Holds the routes back until the boot-time session restore settles. Without
@@ -58,7 +59,7 @@ function DVRGate({
   need,
   children,
 }: {
-  need: "configured" | "missing" | "noSpace"
+  need: "configured" | "missing" | "noSpace" | "anySpace"
   children: ReactNode
 }) {
   const { isLoggedIn, user } = useSessionStore()
@@ -67,6 +68,7 @@ function DVRGate({
   if (user && !user.profileCompleted) return <Navigate to="/onboarding/profile" replace />
   const space = user?.currentSpace ?? null
   if (!space) return need === "noSpace" ? <>{children}</> : <Navigate to="/spaces/start" replace />
+  if (need === "anySpace") return <>{children}</>
   if (need === "noSpace") return <Navigate to="/" replace />
   if (space.hasDvr) return need === "configured" ? <>{children}</> : <Navigate to="/" replace />
   // Only an admin can finish setup (the wizard also renames the space, admin-only).
@@ -86,6 +88,11 @@ function SpaceNotConfigured() {
       <p className="text-sm text-muted-foreground">
         {t("spaces.notConfigured.body", { name: user?.currentSpace?.name ?? "" })}
       </p>
+      {(user?.pendingInvitationsCount ?? 0) > 0 && (
+        <Link to="/invitations" className="text-sm text-primary hover:underline py-2">
+          {t("spaces.invitations", { count: user?.pendingInvitationsCount ?? 0 })}
+        </Link>
+      )}
       {others.map((space) => (
         <Button
           key={space.id}
@@ -121,12 +128,10 @@ function RequireNoDVR({ children }: { children: ReactNode }) {
 }
 
 export function AppRoutes() {
-  const { isLoggedIn } = useSessionStore()
-
   return (
     <Routes>
       {/* Public auth routes */}
-      <Route path="/login" element={isLoggedIn ? <Navigate to="/" replace /> : <LoginPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/auth/recover" element={<PasswordRecoveryPage />} />
       <Route path="/auth/change-password" element={<PasswordChangePage />} />
@@ -237,6 +242,14 @@ export function AppRoutes() {
           <RequireDVR>
             <ProfilePage />
           </RequireDVR>
+        }
+      />
+      <Route
+        path="/invitations"
+        element={
+          <DVRGate need="anySpace">
+            <InvitationsPage />
+          </DVRGate>
         }
       />
       <Route

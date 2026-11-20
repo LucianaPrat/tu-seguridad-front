@@ -20,9 +20,14 @@ export async function login(values: LoginValues): Promise<string> {
 }
 
 /** What the route takes: the repeated password stays in the browser, the space name is derived. */
-export type RegisterPayload = Omit<RegisterValues, "repeatPassword"> & { spaceName: string }
+export type RegisterPayload = Omit<RegisterValues, "repeatPassword"> &
+  ({ spaceName: string } | { inviteToken: string })
 
-/** Creates the account, its space and an admin membership, and opens a session in one call. */
+/**
+ * Creates the account and opens a session in one call. Without a token it also
+ * creates a space and an admin membership; with `inviteToken` the account has no
+ * space and the invitation is accepted afterwards.
+ */
 export async function register(payload: RegisterPayload): Promise<string> {
   const data = await request<unknown>("/auth/register", {
     method: "POST",

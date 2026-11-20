@@ -1,12 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import * as authApi from "@/api/auth"
+import { useNavigate } from "react-router-dom"
 import * as invitationsApi from "@/api/invitations"
+import { openSession } from "@/hooks/useAuth"
+import { enterSpace } from "@/hooks/useSpaces"
+import { ApiError } from "@/lib/http"
+import { type TranslationKey } from "@/lib/i18n"
 import { useCan } from "@/lib/permissions"
-import { useSessionStore } from "@/stores/sessionStore"
 import type { InvitationListResponse, MeResponse } from "@/lib/schemas"
 
 export const invitationKeys = {
   pending: ["invitations", "pending"] as const,
+  mine: ["invitations", "mine"] as const,
+  preview: (token: string) => ["invitations", "preview", token] as const,
 }
 
 export function useCreateInvitation() {
@@ -34,41 +39,6 @@ export function usePendingInvitations() {
   })
 }
 
-/*
- * A query rather than a mutation, keyed by the token: the accept page fires this
- * on mount, and React StrictMode mounts twice in dev. Two mutate() calls would
- * spend a single-use token twice — and a mutation started inside the first
- * effect never delivers its result to the observer the second mount leaves
- * behind, so the screen sits on "pending" forever. Query deduplication answers
- * both: one request, one cached result, whichever mount is alive reads it.
- *
- * Body is otherwise useLogin's: the token has to land in the store before me()
- * runs, since that is where the request layer reads the header from.
- */
-export function useAcceptInvitation(token: string | null) {
-  return useQuery<MeResponse>({
-    queryKey: ["invitations", "accept", token],
-    enabled: token !== null,
-    retry: false,
-    // The token is spent: a refetch could only ever answer 401.
-    staleTime: Infinity,
-    gcTime: Infinity,
-    queryFn: async () => {
-      const store = useSessionStore.getState()
-      store.setAccessToken(await invitationsApi.acceptInvitation(token!))
-      try {
-        const profile = await authApi.me()
-        store.setSession(profile)
-        return profile
-      } catch (error) {
-        // A token with no profile is a half-open session; drop it.
-        store.logout()
-        throw error
-      }
-    },
-  })
-}
-
 export function useRevokeInvitation() {
   const queryClient = useQueryClient()
 
@@ -85,4 +55,43 @@ export function useResendInvitation() {
     mutationFn: invitationsApi.resendInvitation,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: invitationKeys.pending }),
   })
+}
+
+export function useInvitationPreview(token: string | null, enabled = true) {
+  return useQuery({
+    queryKey: invitationKeys.preview(token ?? ""),
+    queryFn: () => invitationsApi.previewInvitation(token!),
+    enabled: token !== null && enabled,
+    retry: false, // a 404 is an answer, not a blip
+  })
+}
+
+export function useMyInvitations() {
+  return useQuery({ queryKey: invitationKeys.mine, queryFn: invitationsApi.listMyInvitations })
+}
+
+/** Accept answers a token for the invited space: same entry path as a space switch. */
+export function useAcceptInvitation() {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  return useMutation<MeResponse, unknown, string>({
+    mutationFn: async (id) => enterSpace(queryClient, await invitationsApi.acceptInvitation(id)),
+    onSuccess: () => navigate("/"),
+  })
+}
+
+/** me() first (pendingInvitationsCount), then the list; sequential so the request order is fixed. */
+export function useDeclineInvitation() {
+  const queryClient = useQueryClient()
+  return useMutation<void, unknown, string>({
+    mutationFn: invitationsApi.declineInvitation,
+    onSuccess: async () => {
+      await openSession()
+      await queryClient.invalidateQueries({ queryKey: invitationKeys.mine })
+    },
+  })
+}
+
+export function invitationActionErrorKey(error: unknown): TranslationKey {
+  return error instanceof ApiError && error.status === 409 ? "invitations.gone" : "errors.generic"
 }

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom"
+import { Link, Navigate, useSearchParams } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import AuthCard from "@/components/auth/AuthCard"
@@ -12,6 +12,7 @@ import { ApiError } from "@/lib/http"
 import { isTranslationKey, type TranslationKey } from "@/lib/i18n"
 import { useT } from "@/hooks/useT"
 import { loginSchema, type LoginValues } from "@/lib/schemas"
+import { useSessionStore } from "@/stores/sessionStore"
 import { Construction, Mail } from "lucide-react"
 
 function loginErrorKey(error: unknown): TranslationKey {
@@ -41,9 +42,17 @@ function FaceAuthIcon() {
   )
 }
 
+/** Same-origin paths only: "//host" and "/\host" are protocol-relative to a browser. */
+function safeNext(next: string | null): string {
+  return next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\")
+    ? next
+    : "/"
+}
+
 export default function LoginPage() {
   const { t } = useT()
-  const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const isLoggedIn = useSessionStore((s) => s.isLoggedIn)
   const { mutateAsync: submitLogin } = useLogin()
 
   const {
@@ -53,17 +62,19 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: params.get("email") ?? "", password: "" },
   })
 
   async function onSubmit(values: LoginValues) {
     try {
+      // setSession flips isLoggedIn and the Navigate below takes over.
       await submitLogin(values)
-      navigate("/")
     } catch (error) {
       setError("root", { message: t(loginErrorKey(error)) })
     }
   }
+
+  if (isLoggedIn) return <Navigate to={safeNext(params.get("next"))} replace />
 
   return (
     <AuthCard title={t("auth.login.title")} subtitle={t("auth.login.subtitle")}>

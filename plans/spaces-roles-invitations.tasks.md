@@ -17,16 +17,13 @@
 | F00 i18n | front | ✅ | b26b74e, d92a910 | own dictionaries, profile language select, persisted on account |
 | F01 session, switcher, gates | front | ✅ | c044099 | useCan, SpaceSwitcher, RequireMenu, /spaces/start, not-configured screen, read-only edit gating |
 | F03 invite modal + members tab | front | ✅ | 3880ccc | role/menu/cameras/locale on invite; MemberEditSheet; resend/revoke; /auth/me refetch on focus |
-| F02 invitation landing, my invitations | front | 🟡 in progress | — | blueprint ready; implementation agent was running when this was written |
+| F02 invitation landing, my invitations | front | ✅ | see git log | preview landing, login `next`/`email`, register with inviteToken, /invitations, list on /spaces/start, link on not-configured screen |
 
 Last verification: back unit 833, int 54, e2e 147/148 (only known failure: `assistant.e2e-spec`
 "CONFLICT while disabled", caused by local `.env` `ASSISTANT_ENABLED=true`). Front `pnpm verify`
-232 tests green at 3880ccc.
+241 tests green after F02.
 
-## F02 (pending work)
-
-Blueprint (temporary, may be lost on reboot): scratchpad `f02-blueprint.md` of session
-53199a11. Summary, enough to redo it:
+## F02 (done) — what it does
 
 - `InvitationAcceptPage` rewrite: `GET /invitations/preview?token=` (public; any bad state = 404).
   Logged out: button to `/login?email&next=/invitations/accept?token=…` if `userExists`, else
@@ -67,7 +64,7 @@ structurally (admin can't change own role or remove self → 409); no authentica
 exists (only public mailed link); socket rooms fixed at connect (camera/role change applies on
 reconnect); GET /dvr gated by `dvr` section.
 
-## Open items after F02
+## Open items
 
 - Manual end-to-end with mailpit (`MAIL_ENABLED=true`, mailpit on :8025): A invites B (new) as
   guest with camera 1 → B registers from mail → accepts → sees only camera 1; A invites C

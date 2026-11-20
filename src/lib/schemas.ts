@@ -148,6 +148,23 @@ export const meSchema = z.object({
 export type MeResponse = z.infer<typeof meSchema>
 export type CurrentSpace = NonNullable<MeResponse["currentSpace"]>
 
+/** GET /invitations/mine, one row. */
+export const myInvitationSchema = z.object({
+  id: z.string(),
+  spaceId: z.string(),
+  spaceName: z.string(),
+  invitedByName: z.string(),
+  role: spaceRoleSchema,
+  expiresAt: z.string(),
+})
+export type MyInvitation = z.infer<typeof myInvitationSchema>
+
+/** GET /invitations/preview. Public; 404 for any invitation no longer pending. */
+export const invitationPreviewSchema = myInvitationSchema
+  .omit({ spaceId: true })
+  .extend({ email: z.string(), userExists: z.boolean() })
+export type InvitationPreview = z.infer<typeof invitationPreviewSchema>
+
 /*
  * GET /dvr and PUT /dvr answer with this. Only the fields the UI reads are
  * listed — zod strips the rest (lastTestAt, timestamps).

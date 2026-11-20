@@ -2,11 +2,19 @@ import { request } from "@/lib/http"
 import {
   accessTokenSchema,
   invitationListResponseSchema,
+  invitationPreviewSchema,
   invitationResponseSchema,
+  myInvitationSchema,
 } from "@/lib/schemas"
 import type { Locale } from "@/lib/i18n"
 import type { MenuKey } from "@/lib/permissions"
-import type { InvitationListResponse, InvitationResponse, SpaceRole } from "@/lib/schemas"
+import type {
+  InvitationListResponse,
+  InvitationPreview,
+  InvitationResponse,
+  MyInvitation,
+  SpaceRole,
+} from "@/lib/schemas"
 
 export interface CreateInvitationPayload {
   email: string
@@ -47,16 +55,25 @@ export async function resendInvitation(id: string): Promise<InvitationResponse> 
   )
 }
 
-/*
- * Public on purpose: the invitee has no session yet, so the token from the
- * emailed link is the whole credential. Answers the access token and sets the
- * refresh cookie, exactly like a login. Single-use — a replay is a 401.
- */
-export async function acceptInvitation(token: string): Promise<string> {
-  const data = await request<unknown>("/invitations/accept", {
-    method: "POST",
-    body: { token },
-    auth: false,
-  })
+/** Public: the invitee may have no session, so the link token is the credential. */
+export async function previewInvitation(token: string): Promise<InvitationPreview> {
+  return invitationPreviewSchema.parse(
+    await request<unknown>(`/invitations/preview?${new URLSearchParams({ token })}`, {
+      auth: false,
+    }),
+  )
+}
+
+export async function listMyInvitations(): Promise<MyInvitation[]> {
+  return myInvitationSchema.array().parse(await request<unknown>("/invitations/mine"))
+}
+
+/** Joins the space and moves the session there: the answer is the new access token. */
+export async function acceptInvitation(id: string): Promise<string> {
+  const data = await request<unknown>(`/invitations/${id}/accept`, { method: "POST" })
   return accessTokenSchema.parse(data).accessToken
+}
+
+export async function declineInvitation(id: string): Promise<void> {
+  await request<void>(`/invitations/${id}/decline`, { method: "POST" })
 }

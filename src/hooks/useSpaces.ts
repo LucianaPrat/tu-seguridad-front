@@ -12,7 +12,10 @@ import type { MeResponse } from "@/lib/schemas"
  * new space. Wiping after would delete the requests that render just started.
  * removeQueries, not clear(): clear() would also drop this very mutation.
  */
-async function enterSpace(queryClient: QueryClient, accessToken: string): Promise<MeResponse> {
+export async function enterSpace(
+  queryClient: QueryClient,
+  accessToken: string,
+): Promise<MeResponse> {
   queryClient.removeQueries()
   useSessionStore.getState().setAccessToken(accessToken)
   return openSession()
