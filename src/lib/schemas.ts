@@ -126,7 +126,7 @@ export const meSchema = z.object({
   profileCompleted: z.boolean(),
   spaceId: z.string(),
   spaceName: z.string(),
-  role: z.enum(["admin", "member"]),
+  role: z.enum(["admin", "collaborator", "guest"]),
   receiveAlerts: z.boolean(),
 })
 export type MeResponse = z.infer<typeof meSchema>

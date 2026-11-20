@@ -88,7 +88,7 @@ describe("MembersPage", () => {
 
   it("never asks for the invitations as a plain member", async () => {
     const fetchMock = mockRoutes({ "/members": { body: { items: [member()], total: 1 } } })
-    useSessionStore.setState({ user: meResponse({ role: "member" }) })
+    useSessionStore.setState({ user: meResponse({ role: "collaborator" }) })
 
     renderWithProviders(<MembersPage />)
 
@@ -99,7 +99,7 @@ describe("MembersPage", () => {
 
   it("offers no invite button to a plain member", async () => {
     mockRoutes({ "/members": { body: { items: [member()], total: 1 } } })
-    useSessionStore.setState({ user: meResponse({ role: "member" }) })
+    useSessionStore.setState({ user: meResponse({ role: "collaborator" }) })
 
     renderWithProviders(<MembersPage />)
 

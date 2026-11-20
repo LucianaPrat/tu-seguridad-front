@@ -111,7 +111,7 @@ describe("CommChannelsPage", () => {
       "/alert-routings": { body: { items: ROUTINGS } },
       "/members": { body: { items: [member()], total: 1 } },
     })
-    useSessionStore.setState({ user: meResponse({ role: "member" }) })
+    useSessionStore.setState({ user: meResponse({ role: "collaborator" }) })
 
     renderWithProviders(<CommChannelsPage />)
 
