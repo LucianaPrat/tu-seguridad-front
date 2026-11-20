@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import App, { AppRoutes } from "./App"
 import { queryClient } from "@/lib/queryClient"
+import { useLocaleStore } from "@/stores/localeStore"
 import { useSessionStore } from "@/stores/sessionStore"
 import { meResponse } from "@/test/fixtures"
 import { mockFetchSequence } from "@/test/mockFetch"
@@ -127,6 +128,19 @@ describe("App session bootstrap", () => {
     expect(await screen.findByRole("button", { name: "Conectar y continuar" })).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Ingresar" })).not.toBeInTheDocument()
     expect(useSessionStore.getState().accessToken).toBe("atoken")
+  })
+
+  it("applies the account language from /auth/me", async () => {
+    mockFetchSequence([
+      { body: { accessToken: "atoken" } },
+      { body: meResponse({ locale: "en" }) },
+      NO_DVR,
+    ])
+
+    render(<App />)
+
+    expect(await screen.findByRole("button", { name: "Connect and continue" })).toBeInTheDocument()
+    expect(useLocaleStore.getState().locale).toBe("en")
   })
 
   it("falls through to the login screen when there is no cookie", async () => {

@@ -47,6 +47,7 @@ describe("RegisterPage", () => {
       phone: "+5491122334455",
       password: "a-long-password",
       spaceName: "Espacio de Ada",
+      locale: "es",
     })
     expect((fetchMock.mock.calls[1] as [string])[0]).toContain("/auth/me")
   })

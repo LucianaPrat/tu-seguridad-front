@@ -1,5 +1,7 @@
 import { request } from "@/lib/http"
 import { accessTokenSchema, meSchema } from "@/lib/schemas"
+import type { Locale } from "@/lib/i18n"
+import { useLocaleStore } from "@/stores/localeStore"
 import type { LoginValues, MeResponse, RegisterValues } from "@/lib/schemas"
 
 /*
@@ -24,7 +26,7 @@ export type RegisterPayload = Omit<RegisterValues, "repeatPassword"> & { spaceNa
 export async function register(payload: RegisterPayload): Promise<string> {
   const data = await request<unknown>("/auth/register", {
     method: "POST",
-    body: payload,
+    body: { ...payload, locale: useLocaleStore.getState().locale },
     auth: false,
   })
   return accessTokenSchema.parse(data).accessToken
@@ -42,6 +44,10 @@ export async function logout(): Promise<void> {
 
 export async function me(): Promise<MeResponse> {
   return meSchema.parse(await request<unknown>("/auth/me"))
+}
+
+export async function updateMe(body: { locale: Locale }): Promise<MeResponse> {
+  return meSchema.parse(await request<unknown>("/auth/me", { method: "PATCH", body }))
 }
 
 /*

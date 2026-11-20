@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import type { MeResponse } from "@/lib/schemas"
+import { useLocaleStore } from "@/stores/localeStore"
 
 /** GET /auth/me is the whole session identity — no fields added on the client. */
 export type SessionUser = MeResponse
@@ -42,6 +43,7 @@ const FIXTURE_USER: SessionUser = {
   spaceName: "Mi Espacio Seguro",
   role: "admin",
   receiveAlerts: true,
+  locale: "es",
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
@@ -58,7 +60,11 @@ export const useSessionStore = create<SessionState>((set) => ({
 
   setAccessToken: (token) => set({ accessToken: token }),
 
-  setSession: (profile) => set({ authStatus: "ready", isLoggedIn: true, user: profile }),
+  // The account's language wins over the browser's once somebody is logged in.
+  setSession: (profile) => {
+    useLocaleStore.getState().setLocale(profile.locale)
+    set({ authStatus: "ready", isLoggedIn: true, user: profile })
+  },
 
   setAuthReady: () => set({ authStatus: "ready" }),
 

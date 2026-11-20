@@ -323,6 +323,7 @@ export const es = {
   "profile.language": "Idioma / Language",
   "profile.language.es": "Español",
   "profile.language.en": "English",
+  "profile.languageSaveError": "No pudimos guardar el idioma. Intentá de nuevo.",
   "help.greeting":
     "¡Hola! Soy tu asistente de ayuda. Contame qué necesitás — puedo orientarte con cámaras, zonas, alertas o canales de comunicación.",
   "help.disabled":

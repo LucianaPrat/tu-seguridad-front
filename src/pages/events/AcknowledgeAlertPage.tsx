@@ -47,7 +47,7 @@ export default function AcknowledgeAlertPage() {
           </div>
           <p className="text-sm text-muted-foreground">
             {t("events.ack.incompleteBefore")}
-            <span className="font-medium">Mark as handled</span>
+            <span className="font-medium">{t("events.ack.submit")}</span>
             {t("events.ack.incompleteAfter")}
           </p>
         </div>

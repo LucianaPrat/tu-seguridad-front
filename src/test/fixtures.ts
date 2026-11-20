@@ -19,6 +19,7 @@ export function meResponse(overrides: Partial<MeResponse> = {}): MeResponse {
     spaceName: "Mi Espacio Seguro",
     role: "admin",
     receiveAlerts: true,
+    locale: "es",
     ...overrides,
   }
 }

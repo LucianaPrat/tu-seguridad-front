@@ -128,6 +128,7 @@ export const meSchema = z.object({
   spaceName: z.string(),
   role: z.enum(["admin", "collaborator", "guest"]),
   receiveAlerts: z.boolean(),
+  locale: z.enum(["es", "en"]),
 })
 export type MeResponse = z.infer<typeof meSchema>
 

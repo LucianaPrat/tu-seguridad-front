@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as authApi from "@/api/auth"
 import { ApiError } from "@/lib/http"
+import { useLocaleStore } from "@/stores/localeStore"
+import type { Locale } from "@/lib/i18n"
 import { useSessionStore } from "@/stores/sessionStore"
 import type { CompleteProfileValues, LoginValues, MeResponse } from "@/lib/schemas"
 
@@ -101,6 +103,22 @@ export function useCompleteProfile() {
         store.setAccessToken(await authApi.refresh())
       }
       return openSession()
+    },
+  })
+}
+
+/** Optimistic: the UI flips at once, a failed save puts the old language back. */
+export function useUpdateLocale() {
+  return useMutation<MeResponse, unknown, Locale, { previous: Locale }>({
+    mutationFn: (locale) => authApi.updateMe({ locale }),
+    onMutate: (locale) => {
+      const { locale: previous, setLocale } = useLocaleStore.getState()
+      setLocale(locale)
+      return { previous }
+    },
+    onSuccess: (profile) => useSessionStore.getState().updateUser(profile),
+    onError: (_error, _locale, context) => {
+      if (context) useLocaleStore.getState().setLocale(context.previous)
     },
   })
 }

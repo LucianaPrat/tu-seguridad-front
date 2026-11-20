@@ -9,7 +9,7 @@ import NotImplemented from "@/components/common/NotImplemented"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useT } from "@/hooks/useT"
 import { isLocale } from "@/lib/i18n"
-import { useLocaleStore } from "@/stores/localeStore"
+import { useUpdateLocale } from "@/hooks/useAuth"
 import { Label } from "@/components/ui/label"
 import {
   profilePasswordSchema,
@@ -21,7 +21,7 @@ import { Camera, Save, Lock, CheckCircle, Construction } from "lucide-react"
 
 export default function ProfilePage() {
   const { t, locale } = useT()
-  const setLocale = useLocaleStore((state) => state.setLocale)
+  const updateLocale = useUpdateLocale()
   const { user, updateUser } = useSessionStore()
 
   const [profileSaved, setProfileSaved] = useState(false)
@@ -199,18 +199,22 @@ export default function ProfilePage() {
         <div className="bg-card rounded-2xl border shadow-sm p-4 sm:p-6">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="language">{t("profile.language")}</Label>
-            {/* TODO(T06): PATCH /auth/me { locale } */}
             <select
               id="language"
               value={locale}
               onChange={(e) => {
-                if (isLocale(e.target.value)) setLocale(e.target.value)
+                if (isLocale(e.target.value)) updateLocale.mutate(e.target.value)
               }}
               className="h-auto w-full rounded-lg border border-input bg-card px-3 py-2.5 text-base sm:text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30"
             >
               <option value="es">{t("profile.language.es")}</option>
               <option value="en">{t("profile.language.en")}</option>
             </select>
+            {updateLocale.isError && (
+              <p role="alert" className="text-sm text-destructive">
+                {t("profile.languageSaveError")}
+              </p>
+            )}
           </div>
         </div>
       </div>

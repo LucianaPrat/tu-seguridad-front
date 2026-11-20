@@ -324,6 +324,7 @@ export const en: Record<keyof typeof es, string> = {
   "profile.language": "Idioma / Language",
   "profile.language.es": "Español",
   "profile.language.en": "English",
+  "profile.languageSaveError": "We couldn't save your language. Please try again.",
   "help.greeting":
     "Hi! I'm your help assistant. Tell me what you need — I can guide you on cameras, zones, alerts or communication channels.",
   "help.disabled":
