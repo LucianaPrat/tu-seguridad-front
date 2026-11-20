@@ -8,7 +8,8 @@ import { ApiError } from "@/lib/http"
 import { displayName, initials } from "@/lib/members"
 import { type AlertType, type ChannelType } from "@/data/mockData"
 import { Phone, Mail, MessageSquare, Construction } from "lucide-react"
-import { NOT_IMPLEMENTED } from "@/components/common/NotImplemented"
+import { useT } from "@/hooks/useT"
+import type { TranslationKey } from "@/lib/i18n"
 
 const ALL_CHANNELS: ChannelType[] = ["llamada", "whatsapp", "email"]
 const CHANNEL_ICONS: Record<ChannelType, React.ReactNode> = {
@@ -22,22 +23,23 @@ const CHANNEL_READY: Record<ChannelType, boolean> = {
   whatsapp: false,
   email: true,
 }
-const CHANNEL_LABELS: Record<ChannelType, string> = {
-  llamada: "Llamada",
-  whatsapp: "WhatsApp",
-  email: "Email",
-}
-const ALERT_LABELS: Record<AlertType, string> = {
-  intruso: "🔴 Intruso",
-  sospechoso: "🟡 Sospechoso",
+const CHANNEL_LABELS = {
+  llamada: "channel.llamada",
+  whatsapp: "channel.whatsapp",
+  email: "channel.email",
+} as const satisfies Record<ChannelType, TranslationKey>
+const ALERT_EMOJI: Record<AlertType, string> = {
+  intruso: "🔴",
+  sospechoso: "🟡",
 }
 // Plain names, no emoji — used for aria-label, where the emoji reads as noise.
-const ALERT_NAMES: Record<AlertType, string> = {
-  intruso: "Intruso",
-  sospechoso: "Sospechoso",
-}
+const ALERT_NAMES = {
+  intruso: "alert.intruso",
+  sospechoso: "alert.sospechoso",
+} as const satisfies Record<AlertType, TranslationKey>
 
 export default function CommChannelsPage() {
+  const { t } = useT()
   const isAdmin = useSessionStore((state) => state.user?.role === "admin")
   const routings = useAlertRoutings()
   const setRouting = useSetAlertRouting()
@@ -54,12 +56,8 @@ export default function CommChannelsPage() {
   return (
     <AppShell>
       <PageHeader
-        title="Canales de comunicación"
-        subtitle={
-          isAdmin
-            ? "Los cambios se guardan al instante."
-            : "Solo un administrador puede cambiar esta configuración."
-        }
+        title={t("channels.title")}
+        subtitle={isAdmin ? t("channels.subtitleAdmin") : t("channels.subtitleMember")}
       />
 
       <div className="flex flex-col gap-6 max-w-2xl">
@@ -69,35 +67,35 @@ export default function CommChannelsPage() {
           className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
         >
           <div className="px-3 sm:px-5 py-4 border-b border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-900">Enrutamiento de alertas</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Seleccioná los canales que se usan para cada tipo de alerta.
-            </p>
+            <h2 className="text-sm font-semibold text-gray-900">{t("channels.routing")}</h2>
+            <p className="text-xs text-gray-500 mt-0.5">{t("channels.routingHint")}</p>
           </div>
           {setRouting.isError && (
             <p role="alert" className="px-3 sm:px-5 py-2 text-xs text-destructive">
-              No pudimos guardar el cambio.
+              {t("channels.saveFailed")}
             </p>
           )}
           {routings.isPending ? (
-            <p className="px-3 sm:px-5 py-6 text-sm text-muted-foreground">Cargando…</p>
+            <p className="px-3 sm:px-5 py-6 text-sm text-muted-foreground">
+              {t("channels.loading")}
+            </p>
           ) : routings.isError ? (
             <p role="alert" className="px-3 sm:px-5 py-6 text-sm text-destructive">
               {routings.error instanceof ApiError
                 ? routings.error.message
-                : "No pudimos cargar el enrutamiento de alertas."}
+                : t("channels.routingLoadError")}
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-50">
                   <th className="text-left px-3 sm:px-5 py-2.5 text-xs font-semibold text-gray-500">
-                    Tipo de alerta
+                    {t("channels.alertType")}
                   </th>
                   {ALL_CHANNELS.map((ch) => (
                     <th
                       key={ch}
-                      title={CHANNEL_READY[ch] ? undefined : NOT_IMPLEMENTED}
+                      title={CHANNEL_READY[ch] ? undefined : t("common.notImplemented")}
                       className={`text-center px-2 sm:px-4 py-2.5 text-xs font-semibold ${
                         CHANNEL_READY[ch] ? "text-gray-500" : "text-gray-300 cursor-not-allowed"
                       }`}
@@ -105,7 +103,7 @@ export default function CommChannelsPage() {
                       <span className="flex flex-col items-center gap-1">
                         {CHANNEL_ICONS[ch]}
                         <span className="flex items-center gap-1">
-                          {CHANNEL_LABELS[ch]}
+                          {t(CHANNEL_LABELS[ch])}
                           {!CHANNEL_READY[ch] && <Construction size={12} />}
                         </span>
                       </span>
@@ -117,12 +115,12 @@ export default function CommChannelsPage() {
                 {(["intruso", "sospechoso"] as AlertType[]).map((alert) => (
                   <tr key={alert} className="border-b border-gray-50 last:border-0">
                     <td className="px-3 sm:px-5 py-3 font-medium text-gray-800">
-                      {ALERT_LABELS[alert]}
+                      {ALERT_EMOJI[alert]} {t(ALERT_NAMES[alert])}
                     </td>
                     {ALL_CHANNELS.map((ch) => (
                       <td key={ch} className="text-center px-2 sm:px-4 py-3">
                         <label
-                          title={CHANNEL_READY[ch] ? undefined : NOT_IMPLEMENTED}
+                          title={CHANNEL_READY[ch] ? undefined : t("common.notImplemented")}
                           className="flex items-center justify-center p-2 cursor-pointer has-disabled:cursor-not-allowed"
                         >
                           <input
@@ -139,7 +137,10 @@ export default function CommChannelsPage() {
                                 enabled: !(cellOf(alert, ch)?.enabled ?? false),
                               })
                             }
-                            aria-label={`${ALERT_NAMES[alert]} por ${CHANNEL_LABELS[ch]}`}
+                            aria-label={t("channels.alertViaChannel", {
+                              alert: t(ALERT_NAMES[alert]),
+                              channel: t(CHANNEL_LABELS[ch]),
+                            })}
                             className="size-5 accent-primary cursor-pointer disabled:cursor-not-allowed"
                           />
                         </label>
@@ -158,27 +159,25 @@ export default function CommChannelsPage() {
           className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
         >
           <div className="px-3 sm:px-5 py-4 border-b border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-900">Destinatarios de alertas</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Activá o desactivá quiénes reciben las alertas del espacio.
-            </p>
+            <h2 className="text-sm font-semibold text-gray-900">{t("channels.recipients")}</h2>
+            <p className="text-xs text-gray-500 mt-0.5">{t("channels.recipientsHint")}</p>
           </div>
           {setMemberAlerts.isError && (
             <p role="alert" className="px-3 sm:px-5 py-2 text-xs text-destructive">
-              No pudimos guardar el cambio.
+              {t("channels.saveFailed")}
             </p>
           )}
           {members.isPending ? (
-            <p className="px-3 sm:px-5 py-6 text-sm text-muted-foreground">Cargando…</p>
+            <p className="px-3 sm:px-5 py-6 text-sm text-muted-foreground">
+              {t("channels.loading")}
+            </p>
           ) : members.isError ? (
             <p role="alert" className="px-3 sm:px-5 py-6 text-sm text-destructive">
-              {members.error instanceof ApiError
-                ? members.error.message
-                : "No pudimos cargar los miembros del espacio."}
+              {members.error instanceof ApiError ? members.error.message : t("members.loadError")}
             </p>
           ) : rows.length === 0 ? (
             <p className="px-3 sm:px-5 py-6 text-sm text-muted-foreground">
-              Todavía no hay miembros en el espacio.
+              {t("channels.noMembers")}
             </p>
           ) : (
             <ul className="divide-y divide-gray-50">
@@ -209,10 +208,10 @@ export default function CommChannelsPage() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-xs text-gray-500">
-                      {member.receiveAlerts ? "Activo" : "Inactivo"}
+                      {member.receiveAlerts ? t("badge.active") : t("badge.inactive")}
                     </span>
                     {!member.profileCompleted && (
-                      <Badge variant="unconfigured" label="Perfil incompleto" />
+                      <Badge variant="unconfigured" label={t("members.incomplete")} />
                     )}
                     <button
                       type="button"
@@ -220,7 +219,7 @@ export default function CommChannelsPage() {
                       aria-checked={member.receiveAlerts}
                       // Email, not the name: every unfinished invitation shares the
                       // "Sin nombre" fallback, and two of them would label alike.
-                      aria-label={`Alertas para ${member.email}`}
+                      aria-label={t("channels.alertsFor", { email: member.email })}
                       disabled={!isAdmin || !member.profileCompleted}
                       onClick={() =>
                         setMemberAlerts.mutate({

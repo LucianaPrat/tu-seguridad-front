@@ -80,3 +80,17 @@ the space; existing user with another space accepts from `/invitations`.
 
 **DoD:** `pnpm verify` green; manual: admin removes `events` from collaborator → collaborator's
 menu loses Eventos after next `me()` refetch; guest camera change reflected in Monitoreo.
+
+## F00 — i18n (Spanish / English), before F01
+
+Requested after back T03. No new dependency: typed dictionaries + a hook.
+
+1. `src/lib/i18n/es.ts` (source of truth, flat keys `"area.thing"`), `en.ts` typed `Record<keyof typeof es, string>` so a missing key fails `tsc`. `t(key, vars?)` with `{name}` interpolation.
+2. `src/stores/localeStore.ts`: `locale: "es" | "en"`; initial = localStorage (try/catch) → `navigator.language` starts with `en` ? `en` : `es`. Sets `<html lang>`. `useT()` hook.
+3. Zod schema messages in `schemas.ts` become dictionary keys; `FormField` (and any place rendering `errors.x.message`) translates them.
+4. Dates/numbers formatted with the active locale (`es-AR` / `en-US`).
+5. Translate every user-visible string in `src/pages`, `src/components` (not `ui/`), hooks (toasts), `App.tsx`.
+6. Profile page: language select (Español / English) → store. Wired to `PATCH /auth/me {locale}` once back T06 lands; session bootstrap then takes `me.locale` as source of truth. Register sends `locale`.
+7. Invite modal (F03): language select defaulting to current locale, sent as `locale`.
+
+**DoD:** `pnpm verify` green with tests in `es` by default; one test switching to `en` on Login + Profile; `tsc` fails if `en.ts` misses a key.

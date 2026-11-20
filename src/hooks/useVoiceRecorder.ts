@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react"
+import { translate } from "@/lib/i18n"
+import { useLocaleStore } from "@/stores/localeStore"
 
 /** Hard cap. 60s of opus sits far under the backend's 2 MB clip limit. */
 const MAX_DURATION_MS = 60_000
 
-const MIC_DENIED = "No pudimos acceder al micrófono. Revisá los permisos del navegador."
-const MIC_MISSING = "No encontramos un micrófono en este dispositivo."
+const micError = (key: "help.mic.denied" | "help.mic.missing") =>
+  translate(useLocaleStore.getState().locale, key)
 
 /*
  * Chrome and Firefox record opus in webm, Safari answers mp4. The backend hands
@@ -71,7 +73,9 @@ export function useVoiceRecorder(onClip: (blob: Blob) => void) {
     } catch (error) {
       // A missing mic and a denied mic need different answers: retrying the
       // same way fixes neither, and only one of them is about permissions.
-      return (error as DOMException).name === "NotFoundError" ? MIC_MISSING : MIC_DENIED
+      return (error as DOMException).name === "NotFoundError"
+        ? micError("help.mic.missing")
+        : micError("help.mic.denied")
     }
 
     const mimeType = MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type))

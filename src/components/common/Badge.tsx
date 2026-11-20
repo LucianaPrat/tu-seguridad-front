@@ -1,5 +1,7 @@
 import { Badge as ShadcnBadge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { useT } from "@/hooks/useT"
+import type { TranslationKey } from "@/lib/i18n"
 
 interface BadgeProps {
   variant:
@@ -30,15 +32,15 @@ const VARIANTS = {
   inactive: "bg-gray-100 text-gray-500 border-gray-200",
 }
 
-const DEFAULT_LABELS: Record<BadgeProps["variant"], string> = {
-  online: "En línea",
-  offline: "Desconectada",
-  intruso: "Intruso",
-  sospechoso: "Sospechoso",
-  configured: "Configurada",
-  unconfigured: "Sin configurar",
-  active: "Activo",
-  inactive: "Inactivo",
+const DEFAULT_LABELS: Record<BadgeProps["variant"], TranslationKey> = {
+  online: "badge.online",
+  offline: "badge.offline",
+  intruso: "alert.intruso",
+  sospechoso: "alert.sospechoso",
+  configured: "badge.configured",
+  unconfigured: "badge.unconfigured",
+  active: "badge.active",
+  inactive: "badge.inactive",
 }
 
 const DOT = {
@@ -47,6 +49,7 @@ const DOT = {
 }
 
 export default function Badge({ variant, label, className }: BadgeProps) {
+  const { t } = useT()
   const dot = DOT[variant as keyof typeof DOT]
 
   return (
@@ -54,7 +57,7 @@ export default function Badge({ variant, label, className }: BadgeProps) {
       {dot && (
         <span aria-hidden="true" className={cn("w-1.5 h-1.5 rounded-full inline-block", dot)} />
       )}
-      {label ?? DEFAULT_LABELS[variant]}
+      {label ?? t(DEFAULT_LABELS[variant])}
     </ShadcnBadge>
   )
 }

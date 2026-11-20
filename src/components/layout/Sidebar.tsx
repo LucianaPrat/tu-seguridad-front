@@ -15,34 +15,40 @@ import {
   MessageCircle,
   Construction,
 } from "lucide-react"
-import { NOT_IMPLEMENTED } from "@/components/common/NotImplemented"
+import { useT } from "@/hooks/useT"
+import type { TranslationKey } from "@/lib/i18n"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useLogout } from "@/hooks/useAuth"
 
 interface NavItem {
-  label: string
+  label: TranslationKey
   icon: React.ReactNode
   to?: string
   /** No screen behind it yet: rendered greyed out, not clickable. */
   disabled?: true
-  children?: { label: string; to: string }[]
+  children?: { label: TranslationKey; to: string }[]
   tour?: string
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Inicio", icon: <LayoutDashboard size={18} />, to: "/", tour: "nav-home" },
+  { label: "nav.home", icon: <LayoutDashboard size={18} />, to: "/", tour: "nav-home" },
 ]
 
 const SERVICE_ITEMS: NavItem[] = [
-  { label: "Monitoreo", icon: <Shield size={18} />, to: "/cameras/monitor", tour: "nav-monitor" },
-  { label: "Eventos", icon: <Calendar size={18} />, to: "/events", tour: "nav-events" },
-  { label: "Grabaciones", icon: <PlayCircle size={18} />, disabled: true },
+  {
+    label: "nav.monitoring",
+    icon: <Shield size={18} />,
+    to: "/cameras/monitor",
+    tour: "nav-monitor",
+  },
+  { label: "nav.events", icon: <Calendar size={18} />, to: "/events", tour: "nav-events" },
+  { label: "nav.recordings", icon: <PlayCircle size={18} />, disabled: true },
 ]
 
 const ACCOUNT_ITEMS: NavItem[] = [
-  { label: "Perfil", icon: <User size={18} />, to: "/profile", tour: "nav-profile" },
-  { label: "Notificaciones", icon: <Bell size={18} />, disabled: true },
-  { label: "Ayuda", icon: <HelpCircle size={18} />, to: "/help", tour: "nav-help" },
+  { label: "nav.profile", icon: <User size={18} />, to: "/profile", tour: "nav-profile" },
+  { label: "nav.notifications", icon: <Bell size={18} />, disabled: true },
+  { label: "nav.help", icon: <HelpCircle size={18} />, to: "/help", tour: "nav-help" },
 ]
 
 /** A row is a tap target before it is a link: 44px is the phone floor. */
@@ -54,15 +60,16 @@ function rowClass(isActive: boolean) {
 }
 
 function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
+  const { t } = useT()
   if (item.disabled || !item.to) {
     return (
       <span
         aria-disabled="true"
-        title={NOT_IMPLEMENTED}
+        title={t("common.notImplemented")}
         className={`${ROW} text-white/40 cursor-not-allowed`}
       >
         <span className="shrink-0">{item.icon}</span>
-        <span className="flex-1">{item.label}</span>
+        <span className="flex-1">{t(item.label)}</span>
         <Construction size={14} />
       </span>
     )
@@ -77,7 +84,7 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
       className={({ isActive }) => rowClass(isActive)}
     >
       <span className="shrink-0">{item.icon}</span>
-      <span className="flex-1">{item.label}</span>
+      <span className="flex-1">{t(item.label)}</span>
       {item.children && <ChevronRight size={14} className="opacity-50" />}
     </NavLink>
   )
@@ -89,6 +96,7 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
  * in order — and `onNavigate` is how the drawer closes on the way out.
  */
 export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useT()
   const { user } = useSessionStore()
   const { mutate: logout } = useLogout()
   const navigate = useNavigate()
@@ -108,9 +116,9 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         </div>
         <div className="min-w-0">
           <p className="text-white font-semibold text-sm leading-tight truncate">
-            {user?.spaceName ?? "Tu Seguridad"}
+            {user?.spaceName ?? t("nav.defaultSpaceName")}
           </p>
-          <p className="text-white/50 text-xs">Panel de control</p>
+          <p className="text-white/50 text-xs">{t("nav.controlPanel")}</p>
         </div>
       </div>
 
@@ -122,7 +130,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
         <div className="pt-4 pb-1">
           <p className="px-3 text-white/40 text-xs font-semibold uppercase tracking-wider">
-            Servicios
+            {t("nav.services")}
           </p>
         </div>
         {SERVICE_ITEMS.map((item) => (
@@ -139,7 +147,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <span className="shrink-0">
             <HardDrive size={18} />
           </span>
-          DVR
+          {t("nav.dvr")}
         </NavLink>
 
         {/* Canales */}
@@ -152,7 +160,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <span className="shrink-0">
             <MessageCircle size={18} />
           </span>
-          Canales
+          {t("nav.channels")}
         </NavLink>
 
         {/* Miembros */}
@@ -165,12 +173,12 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <span className="shrink-0">
             <Users size={18} />
           </span>
-          Miembros
+          {t("nav.members")}
         </NavLink>
 
         <div className="pt-4 pb-1">
           <p className="px-3 text-white/40 text-xs font-semibold uppercase tracking-wider">
-            Cuenta
+            {t("nav.account")}
           </p>
         </div>
         {ACCOUNT_ITEMS.map((item) => (
@@ -179,22 +187,22 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
         <button onClick={handleLogout} className={`w-full ${ROW} ${ROW_IDLE}`}>
           <LogOut size={18} className="shrink-0" />
-          Cerrar sesión
+          {t("nav.logout")}
         </button>
       </nav>
 
       {/* Support card */}
       <div className="m-3 mt-4 p-3 rounded-xl bg-white/10 border border-white/10">
-        <p className="text-white text-xs font-semibold">¿Necesitás ayuda?</p>
-        <p className="text-white/60 text-xs mt-0.5">Contactanos por WhatsApp o teléfono.</p>
+        <p className="text-white text-xs font-semibold">{t("nav.needHelp")}</p>
+        <p className="text-white/60 text-xs mt-0.5">{t("nav.contactUs")}</p>
         {/* No support channel wired yet. */}
         <button
           disabled
-          title={NOT_IMPLEMENTED}
+          title={t("common.notImplemented")}
           className="mt-2 w-full py-2 rounded-lg bg-white text-[#0d4f47] text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Construction size={12} />
-          Soporte
+          {t("nav.support")}
         </button>
       </div>
     </>

@@ -1,7 +1,6 @@
 import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
-
-export const NOT_IMPLEMENTED = "Aún no implementado"
+import { useT } from "@/hooks/useT"
 
 /*
  * Hover target for a control that has no working backend path yet. The control
@@ -16,8 +15,9 @@ export default function NotImplemented({
   children: ReactNode
   className?: string
 }) {
+  const { t } = useT()
   return (
-    <span title={NOT_IMPLEMENTED} className={cn("cursor-not-allowed", className)}>
+    <span title={t("common.notImplemented")} className={cn("cursor-not-allowed", className)}>
       {children}
     </span>
   )

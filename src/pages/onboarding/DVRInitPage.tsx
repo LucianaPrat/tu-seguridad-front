@@ -4,6 +4,8 @@ import { useConfigureDvr } from "@/hooks/useDvr"
 import DVRForm, { type DVRFormValues } from "@/components/dvr/DVRForm"
 import { ApiError } from "@/lib/http"
 import LogoMark from "@/components/common/LogoMark"
+import { useT } from "@/hooks/useT"
+import type { TranslationKey } from "@/lib/i18n"
 
 /*
  * Three different failures, three different next steps. PUT /dvr is admin-only,
@@ -12,16 +14,17 @@ import LogoMark from "@/components/common/LogoMark"
  * upstream codes mean the opposite of bad data: the fields were fine, the
  * recorder did not answer.
  */
-function configureErrorMessage(error: unknown): string {
+function configureErrorKey(error: unknown): TranslationKey {
   if (error instanceof ApiError) {
-    if (error.status === 403) return "Pedile a un admin del espacio que configure el DVR."
+    if (error.status === 403) return "dvr.init.adminOnly"
     if (error.code === "UPSTREAM_ERROR" || error.code === "UPSTREAM_TIMEOUT")
-      return "El DVR no respondió. Revisá que esté encendido y accesible."
+      return "dvr.init.noResponse"
   }
-  return "No pudimos guardar la configuración. Revisá los datos del DVR e intentá de nuevo."
+  return "dvr.init.saveFailed"
 }
 
 export default function DVRInitPage() {
+  const { t } = useT()
   const { updateUser } = useSessionStore()
   const configure = useConfigureDvr()
   const navigate = useNavigate()
@@ -53,10 +56,8 @@ export default function DVRInitPage() {
           <div className="w-14 h-14 rounded-2xl bg-[#0d4f47] flex items-center justify-center mx-auto mb-4 shadow-lg">
             <LogoMark />
           </div>
-          <h1 className="text-2xl font-semibold text-gray-900">Configurar DVR</h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            Antes de continuar, configurá la conexión con tu grabador de video.
-          </p>
+          <h1 className="text-2xl font-semibold text-gray-900">{t("dvr.init.title")}</h1>
+          <p className="text-gray-500 mt-1 text-sm">{t("dvr.init.subtitle")}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
@@ -67,12 +68,12 @@ export default function DVRInitPage() {
               role="alert"
               className="mb-4 text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2"
             >
-              {configureErrorMessage(configure.error)}
+              {t(configureErrorKey(configure.error))}
             </p>
           )}
           <DVRForm
             onSubmit={handleSubmit}
-            submitLabel="Conectar y continuar"
+            submitLabel={t("dvr.init.submit")}
             showTestConnection
             loading={configure.isPending}
           />

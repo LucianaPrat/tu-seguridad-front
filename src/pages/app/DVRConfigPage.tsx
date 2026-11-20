@@ -3,6 +3,7 @@ import AppShell from "@/components/layout/AppShell"
 import DVRForm, { type DVRFormValues } from "@/components/dvr/DVRForm"
 import PageHeader from "@/components/common/PageHeader"
 import ConfirmModal from "@/components/common/ConfirmModal"
+import { useT } from "@/hooks/useT"
 
 const DEFAULT_VALUES: DVRFormValues = {
   spaceName: "Mi Espacio Seguro",
@@ -13,6 +14,7 @@ const DEFAULT_VALUES: DVRFormValues = {
 }
 
 export default function DVRConfigPage() {
+  const { t } = useT()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingValues, setPendingValues] = useState<DVRFormValues | null>(null)
   const [saved, setSaved] = useState(false)
@@ -31,15 +33,12 @@ export default function DVRConfigPage() {
 
   return (
     <AppShell>
-      <PageHeader
-        title="Configuración de DVR"
-        subtitle="Editá la conexión y los datos de tu grabador de video."
-      />
+      <PageHeader title={t("dvr.config.title")} subtitle={t("dvr.config.subtitle")} />
 
       <div className="max-w-lg">
         {saved && (
           <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 font-medium">
-            Configuración guardada correctamente.
+            {t("dvr.config.saved")}
           </div>
         )}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
@@ -52,7 +51,7 @@ export default function DVRConfigPage() {
           <DVRForm
             defaultValues={DEFAULT_VALUES}
             onSubmit={handleSubmit}
-            submitLabel="Guardar configuración"
+            submitLabel={t("dvr.config.submit")}
             showTestConnection={false}
             submitNotImplemented
           />
@@ -63,11 +62,11 @@ export default function DVRConfigPage() {
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={handleConfirm}
-        title="Cambiar configuración del DVR"
-        message="Modificar la configuración del DVR puede causar que las configuraciones individuales de cámara se pierdan. Esta acción no se puede deshacer fácilmente."
-        confirmLabel="Guardar de todos modos"
+        title={t("dvr.config.confirmTitle")}
+        message={t("dvr.config.confirmMessage")}
+        confirmLabel={t("dvr.config.confirmSave")}
         requireAcknowledge
-        acknowledgeLabel="Entiendo que puede perder las configuraciones de cámara existentes"
+        acknowledgeLabel={t("dvr.config.acknowledge")}
       />
     </AppShell>
   )

@@ -4,6 +4,7 @@ import AuthCard from "@/components/auth/AuthCard"
 import Button from "@/components/common/Button"
 import { useAcknowledgeAlert } from "@/hooks/useEvents"
 import { ApiError } from "@/lib/http"
+import { useT } from "@/hooks/useT"
 
 /*
  * Where the "Marcar como atendida" button of an alert email lands. Public on
@@ -17,6 +18,7 @@ import { ApiError } from "@/lib/http"
  * acknowledgement mean a person saw it.
  */
 export default function AcknowledgeAlertPage() {
+  const { t } = useT()
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
   const token = searchParams.get("token")
@@ -28,21 +30,25 @@ export default function AcknowledgeAlertPage() {
       to={`/events/${id}`}
       className="flex items-center justify-center gap-1.5 text-sm text-primary hover:underline py-2"
     >
-      Ver la alerta
+      {t("events.ack.viewAlert")}
       <ArrowRight size={14} />
     </Link>
   )
 
   if (!token) {
     return (
-      <AuthCard title="Enlace incompleto" subtitle="Falta el código de confirmación">
+      <AuthCard
+        title={t("events.ack.incompleteTitle")}
+        subtitle={t("events.ack.incompleteSubtitle")}
+      >
         <div className="flex flex-col items-center text-center gap-3 py-2">
           <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center">
             <AlertTriangle size={26} className="text-amber-600" />
           </div>
           <p className="text-sm text-muted-foreground">
-            Abrí el botón <span className="font-medium">Mark as handled</span> desde el correo de la
-            alerta. Copiar el enlace a mano suele perder parte de la dirección.
+            {t("events.ack.incompleteBefore")}
+            <span className="font-medium">Mark as handled</span>
+            {t("events.ack.incompleteAfter")}
           </p>
         </div>
         <div className="mt-5 pt-4 border-t border-border">{eventLink}</div>
@@ -52,7 +58,7 @@ export default function AcknowledgeAlertPage() {
 
   if (isSuccess) {
     return (
-      <AuthCard title="Confirmación registrada" subtitle="Gracias por responder">
+      <AuthCard title={t("events.ack.doneTitle")} subtitle={t("events.ack.doneSubtitle")}>
         <div className="flex flex-col items-center text-center gap-3 py-2">
           <div className="w-14 h-14 rounded-full bg-teal-50 border border-teal-100 flex items-center justify-center">
             <CheckCircle size={26} className="text-primary" />
@@ -63,13 +69,10 @@ export default function AcknowledgeAlertPage() {
            * page cannot honestly claim the alert changed state. The events
            * screen shows who actually acknowledged it.
            */}
-          <p className="text-sm text-muted-foreground">
-            Registramos tu confirmación. Si alguien más respondió antes, queda a nombre de esa
-            persona.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("events.ack.doneBody")}</p>
         </div>
         <Button onClick={() => navigate("/")} className="w-full mt-4">
-          Ir al panel
+          {t("events.ack.goToPanel")}
         </Button>
         <div className="mt-5 pt-4 border-t border-border">{eventLink}</div>
       </AuthCard>
@@ -77,20 +80,17 @@ export default function AcknowledgeAlertPage() {
   }
 
   return (
-    <AuthCard title="Alerta de seguridad" subtitle="Confirmá que ya la viste">
+    <AuthCard title={t("events.ack.title")} subtitle={t("events.ack.subtitle")}>
       <div className="flex flex-col items-center text-center gap-3 py-2">
         <div className="w-14 h-14 rounded-full bg-teal-50 border border-teal-100 flex items-center justify-center">
           <ShieldCheck size={26} className="text-primary" />
         </div>
-        <p className="text-sm text-muted-foreground">
-          Al confirmar, la alerta queda marcada como atendida a tu nombre y el resto del equipo deja
-          de tener que revisarla.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("events.ack.body")}</p>
       </div>
 
       {error && (
         <p role="alert" className="text-sm text-destructive text-center mt-3">
-          {error instanceof ApiError ? error.message : "No pudimos registrar tu confirmación"}
+          {error instanceof ApiError ? error.message : t("events.ack.failed")}
         </p>
       )}
 
@@ -100,7 +100,7 @@ export default function AcknowledgeAlertPage() {
         icon={<ShieldCheck size={14} />}
         className="w-full mt-4"
       >
-        Marcar como atendida
+        {t("events.ack.submit")}
       </Button>
 
       <div className="mt-5 pt-4 border-t border-border">{eventLink}</div>

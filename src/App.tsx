@@ -6,6 +6,7 @@ import { useLogout, useSessionBootstrap } from "@/hooks/useAuth"
 import { useDvr } from "@/hooks/useDvr"
 import { useSessionStore } from "@/stores/sessionStore"
 import Button from "@/components/common/Button"
+import { useT } from "@/hooks/useT"
 
 // Auth pages
 import LoginPage from "@/pages/auth/LoginPage"
@@ -54,13 +55,14 @@ function AuthGate({ children }: { children: ReactNode }) {
  * Clearing the session first is what keeps the guard from looping.
  */
 function DVRUnavailable() {
+  const { t } = useT()
   const { mutate: logout } = useLogout()
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
-      <p className="text-sm text-muted-foreground">No pudimos leer la configuración de tu DVR.</p>
+      <p className="text-sm text-muted-foreground">{t("errors.dvrUnavailable")}</p>
       <Button variant="secondary" onClick={() => logout()}>
-        Volver a iniciar sesión
+        {t("errors.signInAgain")}
       </Button>
     </div>
   )

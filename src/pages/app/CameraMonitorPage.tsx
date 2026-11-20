@@ -15,6 +15,8 @@ import {
   useZones,
 } from "@/hooks/useCameras"
 import { ApiError } from "@/lib/http"
+import { useT } from "@/hooks/useT"
+import type { TranslationKey } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 import type { AlertType, MonitorMode, MonitorZone } from "@/data/mockData"
 import { Camera as CameraIcon, Check, Maximize2, PenTool } from "lucide-react"
@@ -32,14 +34,14 @@ const CARD = "bg-card rounded-2xl border border-gray-100 shadow-sm p-4"
 const MODES = [
   {
     mode: "full" as MonitorMode,
-    label: "Monitoreo completo",
-    hint: "Toda la imagen",
+    label: "monitor.mode.full" as TranslationKey,
+    hint: "monitor.mode.fullHint" as TranslationKey,
     Icon: Maximize2,
   },
   {
     mode: "partial" as MonitorMode,
-    label: "Monitoreo parcial",
-    hint: "Zonas específicas",
+    label: "monitor.mode.partial" as TranslationKey,
+    hint: "monitor.mode.partialHint" as TranslationKey,
     Icon: PenTool,
   },
 ]
@@ -97,11 +99,10 @@ function signature(draft: Draft) {
   })
 }
 
-function errorMessage(error: unknown) {
-  return error instanceof ApiError ? error.message : "No pudimos guardar los cambios"
-}
-
 export default function CameraMonitorPage() {
+  const { t } = useT()
+  const errorMessage = (error: unknown) =>
+    error instanceof ApiError ? error.message : t("monitor.saveFailed")
   const { data: cameras, isPending, error } = useCameras()
   // The dashboard deep-links here with the camera it wants configured. Read once
   // — after that the list on the left is what picks.
@@ -210,19 +211,19 @@ export default function CameraMonitorPage() {
     <AppShell>
       <div className="flex flex-col min-h-0 lg:h-full">
         <PageHeader
-          title="Comportamiento de monitoreo"
-          subtitle="Configurá cómo cada cámara detecta y alerta eventos de seguridad."
+          title={t("monitor.title")}
+          subtitle={t("monitor.subtitle")}
           action={
             draft && (
               <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                 {save.isError ? (
-                  <span className="text-destructive">No se pudo guardar</span>
+                  <span className="text-destructive">{t("monitor.couldNotSave")}</span>
                 ) : pending || save.isPending ? (
-                  "Guardando…"
+                  t("monitor.saving")
                 ) : (
                   <>
                     <Check size={13} className="text-primary" />
-                    Guardado
+                    {t("monitor.saved")}
                   </>
                 )}
               </p>
@@ -230,13 +231,9 @@ export default function CameraMonitorPage() {
           }
         />
 
-        {isPending && <p className="text-sm text-gray-500">Cargando cámaras…</p>}
+        {isPending && <p className="text-sm text-gray-500">{t("monitor.loadingCameras")}</p>}
         {error && <p className="text-sm text-red-600">{errorMessage(error)}</p>}
-        {cameras?.length === 0 && (
-          <p className="text-sm text-gray-500">
-            El grabador no reportó cámaras todavía. Revisá la configuración del DVR.
-          </p>
-        )}
+        {cameras?.length === 0 && <p className="text-sm text-gray-500">{t("monitor.noCameras")}</p>}
 
         {cameras && cameras.length > 0 && (
           <div className="flex-1 min-h-0 flex flex-col gap-4 lg:flex-row">
@@ -244,7 +241,7 @@ export default function CameraMonitorPage() {
                 the viewport is too narrow to afford the column. */}
             <div className="shrink-0 lg:w-44 lg:min-h-0 lg:flex lg:flex-col">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                Cámaras
+                {t("monitor.cameras")}
               </p>
               <ul className="flex gap-1 overflow-x-auto snap-x pb-1 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:pb-0">
                 {cameras.map((camera) => (
@@ -267,7 +264,7 @@ export default function CameraMonitorPage() {
                             : "text-gray-400",
                         )}
                       >
-                        {camera.location ?? `Canal ${camera.externalId}`}
+                        {camera.location ?? t("cameras.channelN", { id: camera.externalId })}
                       </p>
                     </button>
                   </li>
@@ -275,12 +272,10 @@ export default function CameraMonitorPage() {
               </ul>
             </div>
 
-            {notFound && (
-              <p className="text-sm text-gray-500">
-                La cámara del enlace ya no está disponible. Elegí otra de la lista.
-              </p>
+            {notFound && <p className="text-sm text-gray-500">{t("monitor.notFound")}</p>}
+            {selected && !draft && (
+              <p className="text-sm text-gray-500">{t("monitor.loadingConfig")}</p>
             )}
-            {selected && !draft && <p className="text-sm text-gray-500">Cargando configuración…</p>}
 
             {selected && draft && (
               <>
@@ -292,8 +287,8 @@ export default function CameraMonitorPage() {
                     {!snapshotUrl && (
                       <p className="text-sm text-gray-500 bg-card border border-gray-100 rounded-2xl p-10 text-center">
                         {capture.isPending
-                          ? "Pidiéndole una captura a la cámara…"
-                          : "Todavía no hay una captura de esta cámara. Tomá una para ver qué mira."}
+                          ? t("monitor.requestingCapture")
+                          : t("monitor.noCapture")}
                       </p>
                     )}
 
@@ -311,7 +306,7 @@ export default function CameraMonitorPage() {
                       <div className="relative rounded-xl overflow-hidden">
                         <img
                           src={snapshotUrl}
-                          alt="Captura de la cámara"
+                          alt={t("zones.cameraCapture")}
                           className="block w-full h-auto"
                           onLoad={(e) =>
                             setNatural({
@@ -334,8 +329,11 @@ export default function CameraMonitorPage() {
                             draft.alertType === "intruso" ? "bg-red-500" : "bg-amber-500",
                           )}
                         >
-                          Toda la imagen ·{" "}
-                          {draft.alertType === "intruso" ? "Intruso" : "Sospechoso"}
+                          {t("monitor.wholeImage", {
+                            alert: t(
+                              draft.alertType === "intruso" ? "alert.intruso" : "alert.sospechoso",
+                            ),
+                          })}
                         </span>
                       </div>
                     )}
@@ -343,7 +341,7 @@ export default function CameraMonitorPage() {
                     <div className="shrink-0 flex items-center justify-between gap-3 flex-wrap">
                       {draft.monitorMode === "partial" ? (
                         <div className="flex gap-2 items-center">
-                          <span className="text-xs text-gray-500">Dibujar como:</span>
+                          <span className="text-xs text-gray-500">{t("monitor.drawAs")}</span>
                           <AlertTypeToggle
                             value={draft.alertType}
                             onChange={(alertType) => updateDraft({ alertType })}
@@ -351,9 +349,7 @@ export default function CameraMonitorPage() {
                           />
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-500">
-                          Todo lo que entre en la imagen genera una alerta.
-                        </span>
+                        <span className="text-xs text-gray-500">{t("monitor.fullHintLong")}</span>
                       )}
                       <Button
                         variant="secondary"
@@ -362,7 +358,7 @@ export default function CameraMonitorPage() {
                         onClick={() => capture.mutate(selected.id)}
                         loading={capture.isPending}
                       >
-                        Actualizar imagen
+                        {t("monitor.refresh")}
                       </Button>
                     </div>
 
@@ -378,20 +374,22 @@ export default function CameraMonitorPage() {
 
                   <div className={cn(CARD, "flex flex-col gap-3")}>
                     <FormField
-                      label="Nombre personalizado"
+                      label={t("monitor.customName")}
                       value={draft.name}
                       onChange={(e) => updateDraft({ name: e.target.value })}
                     />
                     <FormField
-                      label="Ubicación"
+                      label={t("monitor.location")}
                       value={draft.location}
-                      placeholder="Frente de casa"
+                      placeholder={t("monitor.locationPlaceholder")}
                       onChange={(e) => updateDraft({ location: e.target.value })}
                     />
                   </div>
 
                   <div className={CARD}>
-                    <p className="text-sm font-medium text-gray-700 mb-3">Modo de monitoreo</p>
+                    <p className="text-sm font-medium text-gray-700 mb-3">
+                      {t("monitor.modeTitle")}
+                    </p>
                     <div className="flex flex-col gap-2">
                       {MODES.map(({ mode, label, hint, Icon }) => (
                         <button
@@ -406,8 +404,8 @@ export default function CameraMonitorPage() {
                         >
                           <Icon size={16} className="shrink-0" />
                           <span>
-                            <span className="block font-medium">{label}</span>
-                            <span className="block text-xs opacity-70">{hint}</span>
+                            <span className="block font-medium">{t(label)}</span>
+                            <span className="block text-xs opacity-70">{t(hint)}</span>
                           </span>
                         </button>
                       ))}
@@ -416,7 +414,9 @@ export default function CameraMonitorPage() {
 
                   {draft.monitorMode === "full" ? (
                     <div className={CARD}>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Nivel de alerta</p>
+                      <p className="text-sm font-medium text-gray-700 mb-2">
+                        {t("monitor.alertLevel")}
+                      </p>
                       <AlertTypeToggle
                         value={draft.alertType}
                         onChange={(alertType) => updateDraft({ alertType })}
@@ -425,7 +425,7 @@ export default function CameraMonitorPage() {
                   ) : (
                     <div className={CARD}>
                       <p className="text-sm font-medium text-gray-700 mb-3">
-                        Zonas de monitoreo ({draft.zones.length})
+                        {t("monitor.zonesTitle", { count: draft.zones.length })}
                       </p>
                       <ZoneList
                         zones={draft.zones}

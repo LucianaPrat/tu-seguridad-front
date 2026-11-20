@@ -7,6 +7,7 @@ import Button from "@/components/common/Button"
 import { useCompleteProfile } from "@/hooks/useAuth"
 import { useSessionStore } from "@/stores/sessionStore"
 import { ApiError } from "@/lib/http"
+import { useT } from "@/hooks/useT"
 import { completeProfileSchema, type CompleteProfileValues } from "@/lib/schemas"
 
 /*
@@ -15,13 +16,8 @@ import { completeProfileSchema, type CompleteProfileValues } from "@/lib/schemas
  * every other route until this form succeeds — so this is the only screen the
  * invitee can reach.
  */
-function completeErrorMessage(error: unknown) {
-  return error instanceof ApiError
-    ? error.message
-    : "No pudimos guardar tus datos. Intentá de nuevo."
-}
-
 export default function CompleteProfilePage() {
+  const { t } = useT()
   const { isLoggedIn, user } = useSessionStore()
   const complete = useCompleteProfile()
   const navigate = useNavigate()
@@ -55,52 +51,54 @@ export default function CompleteProfilePage() {
   }
 
   return (
-    <AuthCard title="Completá tu perfil" subtitle="Últimos datos antes de entrar al espacio">
+    <AuthCard title={t("onboarding.profile.title")} subtitle={t("onboarding.profile.subtitle")}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
         {complete.isError && (
           <p role="alert" className="text-sm text-destructive">
-            {completeErrorMessage(complete.error)}
+            {complete.error instanceof ApiError
+              ? complete.error.message
+              : t("onboarding.profile.saveFailed")}
           </p>
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <FormField
-            label="Nombre"
-            placeholder="Luciana"
+            label={t("auth.register.firstName")}
+            placeholder={t("auth.register.firstNamePlaceholder")}
             error={errors.firstName?.message}
             {...register("firstName")}
           />
           <FormField
-            label="Apellido"
-            placeholder="García"
+            label={t("auth.register.lastName")}
+            placeholder={t("auth.register.lastNamePlaceholder")}
             error={errors.lastName?.message}
             {...register("lastName")}
           />
         </div>
         <FormField
-          label="Teléfono móvil"
+          label={t("auth.register.phone")}
           type="tel"
           placeholder="+5491112345678"
-          hint="Formato internacional, con código de país"
+          hint={t("onboarding.profile.phoneHint")}
           error={errors.phone?.message}
           {...register("phone")}
         />
         <FormField
-          label="Contraseña"
+          label={t("common.password")}
           type="password"
-          placeholder="Mínimo 12 caracteres"
+          placeholder={t("auth.register.passwordPlaceholder")}
           error={errors.password?.message}
           {...register("password")}
         />
         <FormField
-          label="Repetir contraseña"
+          label={t("common.repeatPassword")}
           type="password"
-          placeholder="••••••••"
+          placeholder={t("common.passwordMask")}
           error={errors.repeatPassword?.message}
           {...register("repeatPassword")}
         />
 
         <Button type="submit" loading={isSubmitting} className="w-full mt-1">
-          Guardar y entrar
+          {t("onboarding.profile.submit")}
         </Button>
       </form>
     </AuthCard>

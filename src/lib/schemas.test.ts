@@ -8,14 +8,16 @@ import {
   profilePasswordSchema,
   registerSchema,
 } from "./schemas"
+import { isTranslationKey, translate } from "@/lib/i18n"
 
-/** First error message recorded for a field path, or undefined. */
+/** First error message for a field path, resolved from its key through the `es` dictionary. */
 function messageFor(
   result: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } },
   field: string,
 ) {
   if (result.success) return undefined
-  return result.error?.issues.find((issue) => issue.path[0] === field)?.message
+  const message = result.error?.issues.find((issue) => issue.path[0] === field)?.message
+  return message && isTranslationKey(message) ? translate("es", message) : message
 }
 
 describe("loginSchema", () => {

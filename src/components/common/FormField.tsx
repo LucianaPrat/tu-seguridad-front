@@ -2,6 +2,8 @@ import { type ComponentProps, type ReactNode } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { useT } from "@/hooks/useT"
+import { isTranslationKey } from "@/lib/i18n"
 
 interface FormFieldProps extends ComponentProps<"input"> {
   label: string
@@ -24,6 +26,8 @@ export default function FormField({
   className,
   ...props
 }: FormFieldProps) {
+  const { t } = useT()
+  const errorText = error && isTranslationKey(error) ? t(error) : error
   const fieldId = id ?? label.toLowerCase().replace(/\s+/g, "-")
   const describedBy = error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined
 
@@ -51,7 +55,7 @@ export default function FormField({
       )}
       {error && (
         <p id={`${fieldId}-error`} className="text-xs text-destructive">
-          {error}
+          {errorText}
         </p>
       )}
     </div>

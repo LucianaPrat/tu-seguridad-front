@@ -1,3 +1,5 @@
+import { translate } from "@/lib/i18n"
+import { useLocaleStore } from "@/stores/localeStore"
 import type { MemberResponse } from "@/lib/schemas"
 
 /*
@@ -8,7 +10,7 @@ import type { MemberResponse } from "@/lib/schemas"
  */
 export function displayName(member: MemberResponse) {
   const name = `${member.firstName} ${member.lastName}`.trim()
-  return name || "Sin nombre"
+  return name || translate(useLocaleStore.getState().locale, "members.noName")
 }
 
 export function initials(member: MemberResponse) {

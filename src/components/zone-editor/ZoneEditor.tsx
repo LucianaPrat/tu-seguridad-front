@@ -1,6 +1,8 @@
 import { useRef, useState } from "react"
 import { PenTool, Square } from "lucide-react"
 import type { AlertType, MonitorZone } from "@/data/mockData"
+import { useT } from "@/hooks/useT"
+import type { TranslationKey } from "@/lib/i18n"
 import { bboxOf, MAX_POINTS, rectPoints, toSvgPoints, type Point } from "@/lib/zones"
 
 interface ZoneEditorProps {
@@ -25,8 +27,8 @@ const ALERT_STROKE: Record<AlertType, string> = {
 type Tool = "freehand" | "rect"
 
 const TOOLS = [
-  { tool: "freehand" as Tool, label: "Mano alzada", Icon: PenTool },
-  { tool: "rect" as Tool, label: "Rectángulo", Icon: Square },
+  { tool: "freehand" as Tool, label: "zones.freehand" as TranslationKey, Icon: PenTool },
+  { tool: "rect" as Tool, label: "zones.rectangle" as TranslationKey, Icon: Square },
 ]
 
 const PREVIEW_STYLE = (alertType: AlertType) => ({
@@ -49,6 +51,7 @@ export default function ZoneEditor({
   defaultAlertType,
   onFrameLoad,
 }: ZoneEditorProps) {
+  const { t } = useT()
   const containerRef = useRef<HTMLDivElement>(null)
   const [tool, setTool] = useState<Tool>("freehand")
   const [path, setPath] = useState<Point[] | null>(null)
@@ -124,7 +127,7 @@ export default function ZoneEditor({
       */}
       <img
         src={imageUrl}
-        alt="Captura de la cámara"
+        alt={t("zones.cameraCapture")}
         className="block w-full h-auto pointer-events-none"
         onLoad={(e) =>
           onFrameLoad?.({
@@ -185,7 +188,7 @@ export default function ZoneEditor({
             }}
           >
             <button
-              title="Cambiar nivel de alerta"
+              title={t("zones.changeLevel")}
               className="px-2 py-1.5 min-h-8 flex items-center"
               onPointerDown={(e) => {
                 e.stopPropagation()
@@ -194,10 +197,10 @@ export default function ZoneEditor({
                 })
               }}
             >
-              {zone.alertType === "intruso" ? "Intruso" : "Sospechoso"}
+              {t(zone.alertType === "intruso" ? "alert.intruso" : "alert.sospechoso")}
             </button>
             <button
-              aria-label="Borrar zona"
+              aria-label={t("zones.delete")}
               className="hover:opacity-70 px-2 py-1.5 min-h-8 flex items-center"
               onPointerDown={(e) => {
                 e.stopPropagation()
@@ -218,8 +221,8 @@ export default function ZoneEditor({
           <button
             key={option}
             type="button"
-            title={label}
-            aria-label={label}
+            title={t(label)}
+            aria-label={t(label)}
             aria-pressed={tool === option}
             onClick={() => setTool(option)}
             className={`p-2.5 rounded-md transition-colors ${
@@ -234,9 +237,7 @@ export default function ZoneEditor({
       {zones.length === 0 && !path && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <p className="bg-black/50 text-white text-sm px-3 py-1.5 rounded-full">
-            {tool === "freehand"
-              ? "Dibujá a mano alzada la zona a monitorear"
-              : "Arrastrá para definir una zona rectangular"}
+            {tool === "freehand" ? t("zones.hintFreehand") : t("zones.hintRect")}
           </p>
         </div>
       )}

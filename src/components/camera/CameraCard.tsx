@@ -6,6 +6,7 @@ import Badge from "@/components/common/Badge"
 import LiveThumbnail from "@/components/camera/LiveThumbnail"
 import CameraCardMenu from "@/components/camera/CameraCardMenu"
 import { useCaptureSnapshot, useSnapshotImage } from "@/hooks/useCameras"
+import { useT } from "@/hooks/useT"
 import { relativeTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
@@ -53,6 +54,7 @@ function grabFrame(video: HTMLVideoElement | null): string | null {
 }
 
 export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps) {
+  const { t } = useT()
   const [hovered, setHovered] = useState(false)
   const [live, setLive] = useState(false)
   const [playing, setPlaying] = useState(false)
@@ -88,7 +90,7 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
   }, [snapshotUrl])
 
   const age = relativeTime(camera.lastSnapshotAt)
-  const subtitle = camera.location ?? `Canal ${camera.externalId}`
+  const subtitle = camera.location ?? t("cameras.channelN", { id: camera.externalId })
   // The monitor page reads this id, so configuring "Cámara 04" edits that one.
   const configureUrl = `/cameras/monitor?camera=${camera.id}`
   const thumbnail = lastFrame ?? snapshotUrl
@@ -126,7 +128,7 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
         {thumbnail ? (
           <img
             src={thumbnail}
-            alt={`Última captura de ${camera.name}`}
+            alt={t("cameras.lastCapture", { name: camera.name })}
             className={cn(
               "w-full h-full object-cover transition-all duration-300",
               hovered && "scale-105",
@@ -134,7 +136,7 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-xs text-white/50">
-            Sin captura
+            {t("cameras.noCapture")}
           </div>
         )}
 
@@ -157,17 +159,17 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
             {liveError ? (
               <>
                 <WifiOff size={12} className="text-amber-300" />
-                Sin señal
+                {t("cameras.noSignal")}
               </>
             ) : playing ? (
               <>
                 <Radio size={12} className="text-red-400 animate-pulse" />
-                EN VIVO
+                {t("cameras.live")}
               </>
             ) : (
               <>
                 <Loader2 size={12} className="animate-spin" />
-                Conectando
+                {t("cameras.connecting")}
               </>
             )}
           </div>

@@ -7,6 +7,8 @@ import Button from "@/components/common/Button"
 import { useEvents } from "@/hooks/useEvents"
 import { useMembers } from "@/hooks/useMembers"
 import { ApiError } from "@/lib/http"
+import { useT } from "@/hooks/useT"
+import { dateLocale, type Locale, type TranslationKey } from "@/lib/i18n"
 import { displayName } from "@/lib/members"
 import type { AlertType, ChannelType } from "@/data/mockData"
 import { Filter, CheckCircle, Clock, Phone, Mail, MessageSquare } from "lucide-react"
@@ -17,11 +19,11 @@ const CHANNEL_ICONS: Record<ChannelType, React.ReactNode> = {
   email: <Mail size={13} />,
 }
 
-const CHANNEL_LABELS: Record<ChannelType, string> = {
-  llamada: "Llamada",
-  whatsapp: "WhatsApp",
-  email: "Email",
-}
+const CHANNEL_LABELS = {
+  llamada: "channel.llamada",
+  whatsapp: "channel.whatsapp",
+  email: "channel.email",
+} as const satisfies Record<ChannelType, TranslationKey>
 
 const HEAD_CELL = "text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider"
 
@@ -43,8 +45,8 @@ const LABELLED =
   "max-xl:before:font-semibold max-xl:before:uppercase max-xl:before:tracking-wider " +
   "max-xl:before:text-gray-400"
 
-function formatTimestamp(iso: string) {
-  return new Date(iso).toLocaleString("es-AR", {
+function formatTimestamp(iso: string, locale: Locale) {
+  return new Date(iso).toLocaleString(dateLocale(locale), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -53,11 +55,15 @@ function formatTimestamp(iso: string) {
   })
 }
 
-function formatAckTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })
+function formatAckTime(iso: string, locale: Locale) {
+  return new Date(iso).toLocaleTimeString(dateLocale(locale), {
+    hour: "2-digit",
+    minute: "2-digit",
+  })
 }
 
 export default function EventsPage() {
+  const { t, locale } = useT()
   const [filterAlert, setFilterAlert] = useState<AlertType | "all">("all")
   const [filterDate, setFilterDate] = useState("")
   const navigate = useNavigate()
@@ -79,18 +85,18 @@ export default function EventsPage() {
   // No total on the page DTO, so this counts what is loaded. The `+` says there
   // is another page rather than claiming a total the backend never sent.
   const subtitle = events.data
-    ? `${rows.length}${events.hasNextPage ? "+" : ""} eventos registrados`
-    : "Cargando eventos…"
+    ? t("events.subtitle", { count: rows.length, more: events.hasNextPage ? "+" : "" })
+    : t("events.loading")
 
   return (
     <AppShell>
-      <PageHeader title="Eventos de seguridad" subtitle={subtitle} />
+      <PageHeader title={t("events.title")} subtitle={subtitle} />
 
       {/* Filters */}
       <div data-tour="events-filters" className="flex items-center gap-3 mb-5 flex-wrap">
         <div className="flex items-center gap-1.5 text-sm text-gray-500">
           <Filter size={14} />
-          <span>Filtrar:</span>
+          <span>{t("events.filter")}</span>
         </div>
         <div className="flex flex-wrap gap-2">
           {(["all", "intruso", "sospechoso"] as const).map((type) => (
@@ -103,13 +109,15 @@ export default function EventsPage() {
                   : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
               }`}
             >
-              {type === "all" ? "Todos" : type === "intruso" ? "Intruso" : "Sospechoso"}
+              {type === "all"
+                ? t("events.all")
+                : t(type === "intruso" ? "alert.intruso" : "alert.sospechoso")}
             </button>
           ))}
         </div>
         <input
           type="date"
-          aria-label="Desde"
+          aria-label={t("events.from")}
           value={filterDate}
           onChange={(e) => setFilterDate(e.target.value)}
           className="px-3 py-2 min-h-9 text-base sm:text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 text-gray-600"
@@ -119,7 +127,7 @@ export default function EventsPage() {
             onClick={() => setFilterDate("")}
             className="px-2 py-2 text-sm text-gray-400 hover:text-gray-600"
           >
-            Limpiar fecha
+            {t("events.clearDate")}
           </button>
         )}
       </div>
@@ -127,12 +135,10 @@ export default function EventsPage() {
       {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {events.isPending ? (
-          <p className="px-4 py-6 text-sm text-muted-foreground">Cargando eventos…</p>
+          <p className="px-4 py-6 text-sm text-muted-foreground">{t("events.loading")}</p>
         ) : events.isError ? (
           <p role="alert" className="px-4 py-6 text-sm text-destructive">
-            {events.error instanceof ApiError
-              ? events.error.message
-              : "No pudimos cargar los eventos."}
+            {events.error instanceof ApiError ? events.error.message : t("events.loadError")}
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -140,19 +146,19 @@ export default function EventsPage() {
               <thead role="rowgroup" className="max-xl:hidden">
                 <tr role="row" className="border-b border-gray-100">
                   <th role="columnheader" className={HEAD_CELL}>
-                    Cámara
+                    {t("events.col.camera")}
                   </th>
                   <th role="columnheader" className={HEAD_CELL}>
-                    Tipo
+                    {t("events.col.type")}
                   </th>
                   <th role="columnheader" className={HEAD_CELL}>
-                    Canal
+                    {t("events.col.channel")}
                   </th>
                   <th role="columnheader" className={HEAD_CELL}>
-                    Fecha y hora
+                    {t("events.col.dateTime")}
                   </th>
                   <th role="columnheader" className={HEAD_CELL}>
-                    Reconocimiento
+                    {t("events.col.acknowledgement")}
                   </th>
                 </tr>
               </thead>
@@ -164,7 +170,7 @@ export default function EventsPage() {
                       colSpan={5}
                       className="px-4 py-8 text-center text-gray-400 text-sm max-xl:block"
                     >
-                      No hay eventos con los filtros seleccionados.
+                      {t("events.empty")}
                     </td>
                   </tr>
                 ) : (
@@ -183,46 +189,56 @@ export default function EventsPage() {
                           {ev.cameraName}
                         </Link>
                       </td>
-                      <td role="cell" data-label="Tipo" className={LABELLED}>
+                      <td role="cell" data-label={t("events.col.type")} className={LABELLED}>
                         <Badge variant={ev.alertType} />
                       </td>
-                      <td role="cell" data-label="Canal" className={LABELLED}>
+                      <td role="cell" data-label={t("events.col.channel")} className={LABELLED}>
                         {ev.channels.length === 0 ? (
-                          <span className="text-gray-400 text-xs">Sin envío</span>
+                          <span className="text-gray-400 text-xs">{t("events.noDelivery")}</span>
                         ) : (
                           <span className="flex items-center gap-3 text-gray-600">
                             {ev.channels.map((channel) => (
                               <span key={channel} className="flex items-center gap-1.5">
                                 {CHANNEL_ICONS[channel]}
-                                {CHANNEL_LABELS[channel]}
+                                {t(CHANNEL_LABELS[channel])}
                               </span>
                             ))}
                           </span>
                         )}
                       </td>
-                      <td role="cell" data-label="Fecha" className={`${LABELLED} text-gray-600`}>
-                        {formatTimestamp(ev.timestamp)}
+                      <td
+                        role="cell"
+                        data-label={t("events.col.date")}
+                        className={`${LABELLED} text-gray-600`}
+                      >
+                        {formatTimestamp(ev.timestamp, locale)}
                       </td>
-                      <td role="cell" data-label="Reconocimiento" className={LABELLED}>
+                      <td
+                        role="cell"
+                        data-label={t("events.col.acknowledgement")}
+                        className={LABELLED}
+                      >
                         {ev.acknowledgedAt ? (
                           <div className="flex items-start gap-1.5">
                             <CheckCircle size={14} className="text-green-500 mt-0.5 shrink-0" />
                             <div>
                               <p className="text-gray-800 text-xs font-medium">
-                                Reconocido por{" "}
-                                {(ev.acknowledgedByUserId !== null &&
-                                  namesByUserId.get(ev.acknowledgedByUserId)) ||
-                                  "un miembro"}
+                                {t("events.acknowledgedBy", {
+                                  name:
+                                    (ev.acknowledgedByUserId !== null &&
+                                      namesByUserId.get(ev.acknowledgedByUserId)) ||
+                                    t("events.detail.aMember"),
+                                })}
                               </p>
                               <p className="text-gray-400 text-xs">
-                                · {formatAckTime(ev.acknowledgedAt)}
+                                · {formatAckTime(ev.acknowledgedAt, locale)}
                               </p>
                             </div>
                           </div>
                         ) : (
                           <div className="flex items-center gap-1.5 text-gray-400">
                             <Clock size={14} />
-                            <span className="text-xs">No reconocido</span>
+                            <span className="text-xs">{t("events.notAcknowledged")}</span>
                           </div>
                         )}
                       </td>
@@ -242,7 +258,7 @@ export default function EventsPage() {
             onClick={() => events.fetchNextPage()}
             disabled={events.isFetchingNextPage}
           >
-            {events.isFetchingNextPage ? "Cargando…" : "Cargar más"}
+            {events.isFetchingNextPage ? t("events.loadingMore") : t("events.loadMore")}
           </Button>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { Eye, ShieldAlert } from "lucide-react"
 import type { AlertType } from "@/data/mockData"
 import { cn } from "@/lib/utils"
+import { useT } from "@/hooks/useT"
 
 interface AlertTypeToggleProps {
   value: AlertType
@@ -17,13 +18,13 @@ interface AlertTypeToggleProps {
 const OPTIONS = [
   {
     type: "intruso" as AlertType,
-    label: "Intruso",
+    label: "alert.intruso" as const,
     Icon: ShieldAlert,
     selected: "border-red-400 bg-red-50 text-red-700",
   },
   {
     type: "sospechoso" as AlertType,
-    label: "Sospechoso",
+    label: "alert.sospechoso" as const,
     Icon: Eye,
     selected: "border-amber-400 bg-amber-50 text-amber-700",
   },
@@ -35,6 +36,7 @@ export default function AlertTypeToggle({
   size = "md",
   className,
 }: AlertTypeToggleProps) {
+  const { t } = useT()
   return (
     <div role="radiogroup" className={cn("flex flex-wrap gap-2", className)}>
       {OPTIONS.map(({ type, label, Icon, selected }) => (
@@ -51,7 +53,7 @@ export default function AlertTypeToggle({
           )}
         >
           <Icon size={size === "sm" ? 15 : 16} />
-          {label}
+          {t(label)}
         </button>
       ))}
     </div>

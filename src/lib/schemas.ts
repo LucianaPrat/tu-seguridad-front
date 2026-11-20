@@ -1,20 +1,20 @@
 import { z } from "zod"
 
 /*
- * Single home for form validation. Messages are user-facing Spanish and are
- * rendered straight from the resolver, so keep them phrased for end users.
+ * Single home for form validation. Messages are translation keys (src/lib/i18n),
+ * resolved at render by FormField, so keep the dictionary phrased for end users.
  */
 
-const emailField = z.email("Ingresá un email válido")
-const strongPassword = z.string().min(8, "Mínimo 8 caracteres")
+const emailField = z.email("validation.emailInvalid")
+const strongPassword = z.string().min(8, "validation.min8")
 
-function required(message = "Requerido") {
+function required(message = "validation.required") {
   return z.string().trim().min(1, message)
 }
 
 export const loginSchema = z.object({
   email: emailField,
-  password: z.string().min(1, "Ingresá tu contraseña"),
+  password: z.string().min(1, "validation.passwordRequired"),
 })
 export type LoginValues = z.infer<typeof loginSchema>
 
@@ -24,12 +24,12 @@ export const registerSchema = z
     lastName: required(),
     email: emailField,
     // Backend rules: E.164 phone, 12-char password minimum.
-    phone: z.string().regex(/^\+[1-9]\d{7,14}$/, "Usá formato internacional, ej +5491122334455"),
-    password: z.string().min(12, "Mínimo 12 caracteres"),
+    phone: z.string().regex(/^\+[1-9]\d{7,14}$/, "validation.phoneFormat"),
+    password: z.string().min(12, "validation.min12"),
     repeatPassword: z.string(),
   })
   .refine((values) => values.password === values.repeatPassword, {
-    message: "Las contraseñas no coinciden",
+    message: "validation.passwordMismatch",
     path: ["repeatPassword"],
   })
 export type RegisterValues = z.infer<typeof registerSchema>
@@ -44,7 +44,7 @@ export const passwordChangeSchema = z
     repeat: z.string(),
   })
   .refine((values) => values.password === values.repeat, {
-    message: "Las contraseñas no coinciden",
+    message: "validation.passwordMismatch",
     path: ["repeat"],
   })
 export type PasswordChangeValues = z.infer<typeof passwordChangeSchema>
@@ -64,7 +64,7 @@ export const profilePasswordSchema = z
     repeat: z.string(),
   })
   .refine((values) => values.next === values.repeat, {
-    message: "No coincide",
+    message: "validation.noMatch",
     path: ["repeat"],
   })
 export type ProfilePasswordValues = z.infer<typeof profilePasswordSchema>
@@ -77,10 +77,10 @@ export type ProfilePasswordValues = z.infer<typeof profilePasswordSchema>
  */
 export const dvrSchema = z.object({
   spaceName: required(),
-  dvrUrl: required().regex(/^https?:\/\/\S+$/, "Debe empezar con http:// o https://"),
+  dvrUrl: required().regex(/^https?:\/\/\S+$/, "validation.urlScheme"),
   dvrUser: required(),
   dvrPassword: required(),
-  timezone: required("Seleccioná una zona horaria"),
+  timezone: required("validation.selectTimezone"),
 })
 export type DVRFormValues = z.infer<typeof dvrSchema>
 
@@ -97,12 +97,12 @@ export const completeProfileSchema = z
   .object({
     firstName: required(),
     lastName: required(),
-    phone: z.string().regex(/^\+[1-9]\d{7,14}$/, "Usá formato internacional, ej +5491122334455"),
-    password: z.string().min(12, "Mínimo 12 caracteres"),
+    phone: z.string().regex(/^\+[1-9]\d{7,14}$/, "validation.phoneFormat"),
+    password: z.string().min(12, "validation.min12"),
     repeatPassword: z.string(),
   })
   .refine((values) => values.password === values.repeatPassword, {
-    message: "Las contraseñas no coinciden",
+    message: "validation.passwordMismatch",
     path: ["repeatPassword"],
   })
 export type CompleteProfileValues = z.infer<typeof completeProfileSchema>

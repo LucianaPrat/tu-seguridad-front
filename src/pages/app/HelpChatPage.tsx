@@ -10,6 +10,8 @@ import { askAssistant, synthesizeSpeech, transcribeAudio } from "@/api/assistant
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder"
 import { ApiError } from "@/lib/http"
 import { useSessionStore } from "@/stores/sessionStore"
+import { useT } from "@/hooks/useT"
+import type { TranslationKey } from "@/lib/i18n"
 
 interface Message {
   id: string
@@ -22,7 +24,8 @@ interface Message {
 const GREETING: Message = {
   id: "greeting",
   role: "assistant",
-  text: "¡Hola! Soy tu asistente de ayuda. Contame qué necesitás — puedo orientarte con cámaras, zonas, alertas o canales de comunicación.",
+  // Rendered from the dictionary, so the greeting follows a language switch.
+  text: "",
 }
 
 /*
@@ -32,25 +35,24 @@ const GREETING: Message = {
 const MAX_TURNS = 20
 const MAX_MESSAGE_LENGTH = 2000
 
-const ASSISTANT_DISABLED_REPLY =
-  "El asistente todavía no está habilitado en esta instalación. Pedile a un administrador que lo active."
+const ASSISTANT_DISABLED_REPLY: TranslationKey = "help.disabled"
 
-const RETRYABLE_REPLY = "No pude responder ahora mismo. Probá de nuevo en unos segundos."
+const RETRYABLE_REPLY: TranslationKey = "help.retryable"
 
-const GENERIC_ERROR_REPLY = "Algo salió mal al procesar tu pregunta. Probá de nuevo."
+const GENERIC_ERROR_REPLY: TranslationKey = "help.genericError"
 
-const VOICE_DISABLED_REPLY = "La respuesta por voz todavía no está disponible en esta instalación."
+const VOICE_DISABLED_REPLY: TranslationKey = "help.voiceDisabled"
 
-const EMPTY_TRANSCRIPT_REPLY = "No se entendió nada en el audio. Probá grabar de nuevo."
+const EMPTY_TRANSCRIPT_REPLY: TranslationKey = "help.emptyTranscript"
 
-const TRANSCRIBE_RETRYABLE_REPLY = "No pudimos procesar el audio. Probá de nuevo en unos segundos."
+const TRANSCRIBE_RETRYABLE_REPLY: TranslationKey = "help.transcribeRetryable"
 
 /*
  * A failure answers in the thread, where the question is — a toast would put
  * the answer somewhere the conversation is not. 409 is the honest "not turned
  * on here"; 502/504/network are worth retrying; anything else is a client bug.
  */
-function errorReply(error: unknown) {
+function errorReply(error: unknown): TranslationKey {
   if (error instanceof ApiError) {
     if (error.status === 409) return ASSISTANT_DISABLED_REPLY
     if (error.status === 502 || error.status === 504 || error.status === 0) return RETRYABLE_REPLY
@@ -66,6 +68,7 @@ function isRetryable(error: unknown) {
 }
 
 export default function HelpChatPage() {
+  const { t } = useT()
   const [messages, setMessages] = useState<Message[]>([GREETING])
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
@@ -141,7 +144,7 @@ export default function HelpChatPage() {
       if (voice) await speak(replyId, reply)
     } catch (error) {
       if (isExpiredSession(error)) return
-      appendAssistant(errorReply(error))
+      appendAssistant(t(errorReply(error)))
     } finally {
       setIsTyping(false)
     }
@@ -163,7 +166,7 @@ export default function HelpChatPage() {
       if (isExpiredSession(error)) return
       if (error instanceof ApiError && error.status === 409) {
         setVoiceDisabled(true)
-        appendAssistant(VOICE_DISABLED_REPLY)
+        appendAssistant(t(VOICE_DISABLED_REPLY))
       }
     }
   }
@@ -174,7 +177,7 @@ export default function HelpChatPage() {
     try {
       const transcript = (await transcribeAudio(blob)).trim()
       if (!transcript) {
-        appendAssistant(EMPTY_TRANSCRIPT_REPLY)
+        appendAssistant(t(EMPTY_TRANSCRIPT_REPLY))
         return
       }
       await ask(transcript, true)
@@ -182,10 +185,10 @@ export default function HelpChatPage() {
       if (isExpiredSession(error)) return
       if (error instanceof ApiError && error.status === 409) {
         setVoiceDisabled(true)
-        appendAssistant(VOICE_DISABLED_REPLY)
+        appendAssistant(t(VOICE_DISABLED_REPLY))
         return
       }
-      appendAssistant(isRetryable(error) ? TRANSCRIBE_RETRYABLE_REPLY : GENERIC_ERROR_REPLY)
+      appendAssistant(t(isRetryable(error) ? TRANSCRIBE_RETRYABLE_REPLY : GENERIC_ERROR_REPLY))
     } finally {
       setIsTyping(false)
     }
@@ -214,10 +217,7 @@ export default function HelpChatPage() {
   return (
     <AppShell>
       <div className="flex flex-col min-h-0 lg:h-full">
-        <PageHeader
-          title="Ayuda"
-          subtitle="Preguntá lo que necesites sobre cámaras, zonas, alertas o canales."
-        />
+        <PageHeader title={t("help.title")} subtitle={t("help.subtitle")} />
 
         <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 py-1">
           {messages.map((message) => (
@@ -230,21 +230,21 @@ export default function HelpChatPage() {
                   : "self-start bg-card border whitespace-pre-wrap",
               )}
             >
-              {message.text}
+              {message.id === GREETING.id ? t("help.greeting") : message.text}
               {message.audioUrl && (
                 <audio
                   controls
                   preload="metadata"
                   src={message.audioUrl}
                   className="mt-2 w-full"
-                  aria-label="Respuesta en audio"
+                  aria-label={t("help.audioReply")}
                 />
               )}
             </div>
           ))}
           {isTyping && (
             <div className="self-start max-w-[85%] min-w-0 rounded-2xl border bg-card px-4 py-2.5 text-sm text-muted-foreground">
-              Escribiendo…
+              {t("help.typing")}
             </div>
           )}
           <div ref={bottomRef} />
@@ -257,8 +257,10 @@ export default function HelpChatPage() {
           <Input
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            placeholder={isRecording ? `Grabando… ${elapsed}s` : "Escribí tu pregunta…"}
-            aria-label="Mensaje"
+            placeholder={
+              isRecording ? t("help.recording", { seconds: elapsed }) : t("help.placeholder")
+            }
+            aria-label={t("help.message")}
             className="flex-1"
             maxLength={MAX_MESSAGE_LENGTH}
             disabled={isTyping || isRecording}
@@ -272,7 +274,9 @@ export default function HelpChatPage() {
               onClick={handleMic}
               disabled={isTyping}
             >
-              <span className="sr-only">{isRecording ? "Detener grabación" : "Grabar audio"}</span>
+              <span className="sr-only">
+                {isRecording ? t("help.stopRecording") : t("help.record")}
+              </span>
             </Button>
           )}
           <Button
@@ -281,7 +285,7 @@ export default function HelpChatPage() {
             className="shrink-0"
             disabled={isTyping || isRecording}
           >
-            <span className="sr-only">Enviar</span>
+            <span className="sr-only">{t("help.send")}</span>
           </Button>
         </form>
       </div>
