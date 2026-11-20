@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { MENU_KEYS, canEdit, canView, type MenuKey } from "./permissions"
+import { DEFAULT_MENU_ACCESS, MENU_KEYS, canEdit, canView, type MenuKey } from "./permissions"
 import type { SpaceRole } from "./schemas"
 import { currentSpace } from "@/test/fixtures"
 
@@ -68,5 +68,12 @@ describe("permissions", () => {
     const space = currentSpace({ role: "guest", menuAccess: ["dvr"] })
     expect(canView(space, "dvr")).toBe(true)
     expect(canEdit(space, "dvr")).toBe(false)
+  })
+})
+
+describe("DEFAULT_MENU_ACCESS", () => {
+  it("keeps members away from collaborators and guests on home and monitor only", () => {
+    expect(DEFAULT_MENU_ACCESS.collaborator).not.toContain("members")
+    expect(DEFAULT_MENU_ACCESS.guest).toEqual(["home", "monitor"])
   })
 })

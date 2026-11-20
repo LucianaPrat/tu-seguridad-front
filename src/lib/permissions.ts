@@ -1,4 +1,5 @@
-import type { MeResponse } from "@/lib/schemas"
+import type { TranslationKey } from "@/lib/i18n"
+import type { MeResponse, SpaceRole } from "@/lib/schemas"
 import { useSessionStore } from "@/stores/sessionStore"
 
 /** Mirrors MENU_KEYS in tu-seguridad-back/src/cross/common/permissions.ts. Profile and help are always visible. */
@@ -13,6 +14,28 @@ export const MENU_ROUTES: Record<MenuKey, string> = {
   dvr: "/dvr-config",
   channels: "/channels",
   members: "/members",
+}
+
+/** Mirrors DEFAULT_MENU_ACCESS in tu-seguridad-back/src/cross/common/permissions.ts. */
+export const DEFAULT_MENU_ACCESS: Record<SpaceRole, MenuKey[]> = {
+  admin: [...MENU_KEYS],
+  collaborator: ["home", "monitor", "events", "dvr", "channels"],
+  guest: ["home", "monitor"],
+}
+
+export const MENU_LABELS: Record<MenuKey, TranslationKey> = {
+  home: "nav.home",
+  monitor: "nav.monitoring",
+  events: "nav.events",
+  dvr: "nav.dvr",
+  channels: "nav.channels",
+  members: "nav.members",
+}
+
+export const ROLE_LABELS: Record<SpaceRole, TranslationKey> = {
+  admin: "role.admin",
+  collaborator: "role.collaborator",
+  guest: "role.guest",
 }
 
 type Space = MeResponse["currentSpace"]

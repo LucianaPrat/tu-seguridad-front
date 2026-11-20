@@ -224,12 +224,15 @@ export type LiveStreamResponse = z.infer<typeof liveStreamResponseSchema>
 export const invitationResponseSchema = z.object({
   id: z.string(),
   email: z.string(),
+  role: spaceRoleSchema,
+  menuAccess: z.array(z.enum(MENU_KEYS)),
+  cameraIds: z.array(z.string()),
   expiresAt: z.string(),
   createdAt: z.string(),
 })
 export type InvitationResponse = z.infer<typeof invitationResponseSchema>
 
-/** GET /invitations. Pending only, admin only. */
+/** GET /invitations: pending only, members section. */
 export const invitationListResponseSchema = z.object({
   items: invitationResponseSchema.array(),
   total: z.number(),
@@ -237,8 +240,8 @@ export const invitationListResponseSchema = z.object({
 export type InvitationListResponse = z.infer<typeof invitationListResponseSchema>
 
 /*
- * GET /members. One row of the roster: no role field — a member's role only
- * comes back for the caller, on /auth/me. `firstName`, `lastName` and `phone`
+ * GET /members. One row of the roster: `role` always comes back, `menuAccess`
+ * and `cameraIds` only when the caller is an admin. `firstName`, `lastName` and `phone`
  * are empty strings for someone who accepted an invitation and never finished,
  * which is what `profileCompleted` flags.
  */
@@ -253,6 +256,10 @@ export const memberResponseSchema = z.object({
   profileCompleted: z.boolean(),
   lastLoginAt: z.string().nullable(),
   receiveAlerts: z.boolean(),
+  role: spaceRoleSchema,
+  /** Only when the caller is an admin. */
+  menuAccess: z.array(z.enum(MENU_KEYS)).optional(),
+  cameraIds: z.array(z.string()).optional(),
 })
 export type MemberResponse = z.infer<typeof memberResponseSchema>
 

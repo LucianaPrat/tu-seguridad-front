@@ -5,16 +5,8 @@ import Modal from "@/components/common/Modal"
 import SpaceNameForm from "./SpaceNameForm"
 import { useSwitchSpace } from "@/hooks/useSpaces"
 import { useT } from "@/hooks/useT"
-import { useCan } from "@/lib/permissions"
-import type { TranslationKey } from "@/lib/i18n"
-import type { SpaceRole } from "@/lib/schemas"
+import { ROLE_LABELS, useCan } from "@/lib/permissions"
 import { useSessionStore } from "@/stores/sessionStore"
-
-const ROLE_LABELS = {
-  admin: "role.admin",
-  collaborator: "role.collaborator",
-  guest: "role.guest",
-} as const satisfies Record<SpaceRole, TranslationKey>
 
 const ITEM =
   "w-full flex items-center gap-2 px-2 py-2 min-h-11 rounded-md text-sm text-white/90 hover:bg-white/10 text-left disabled:opacity-50"

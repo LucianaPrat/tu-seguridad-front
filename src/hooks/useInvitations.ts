@@ -21,16 +21,16 @@ export function useCreateInvitation() {
 }
 
 /**
- * Admin only on the backend, so this stays disabled for a plain member instead
- * of rendering a 403 nobody can act on.
+ * The back gates this on the members section, same as GET /members, so it
+ * stays disabled without that section instead of rendering a 403.
  */
 export function usePendingInvitations() {
-  const { isAdmin } = useCan()
+  const { canView } = useCan()
 
   return useQuery<InvitationListResponse>({
     queryKey: invitationKeys.pending,
     queryFn: invitationsApi.listPendingInvitations,
-    enabled: isAdmin,
+    enabled: canView("members"),
   })
 }
 
@@ -66,5 +66,23 @@ export function useAcceptInvitation(token: string | null) {
         throw error
       }
     },
+  })
+}
+
+export function useRevokeInvitation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: invitationsApi.revokeInvitation,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: invitationKeys.pending }),
+  })
+}
+
+export function useResendInvitation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: invitationsApi.resendInvitation,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: invitationKeys.pending }),
   })
 }
