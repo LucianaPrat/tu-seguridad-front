@@ -6,7 +6,7 @@ import Badge from "@/components/common/Badge"
 import InviteModal from "@/components/common/InviteModal"
 import { useMembers } from "@/hooks/useMembers"
 import { usePendingInvitations } from "@/hooks/useInvitations"
-import { useSessionStore } from "@/stores/sessionStore"
+import { useCan } from "@/lib/permissions"
 import { ApiError } from "@/lib/http"
 import { useT } from "@/hooks/useT"
 import { dateLocale, type Locale } from "@/lib/i18n"
@@ -46,7 +46,7 @@ export default function MembersPage() {
   const [inviteOpen, setInviteOpen] = useState(false)
   // Inviting is admin-only on the backend, so a member gets no button rather
   // than a 403 behind one.
-  const isAdmin = useSessionStore((state) => state.user?.role === "admin")
+  const { isAdmin } = useCan()
   const members = useMembers()
   // Admin only on the backend; disabled for a plain member, so `data` stays
   // undefined there and no pending rows render.

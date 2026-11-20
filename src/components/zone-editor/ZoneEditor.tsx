@@ -12,6 +12,8 @@ interface ZoneEditorProps {
   defaultAlertType: AlertType
   /** The frame's own resolution — the page sizes the box from it. */
   onFrameLoad?: (natural: { width: number; height: number }) => void
+  /** Viewing only: no drawing, no per-zone buttons, no tool picker. */
+  readOnly?: boolean
 }
 
 const ALERT_FILL: Record<AlertType, string> = {
@@ -50,6 +52,7 @@ export default function ZoneEditor({
   onChange,
   defaultAlertType,
   onFrameLoad,
+  readOnly,
 }: ZoneEditorProps) {
   const { t } = useT()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -113,7 +116,7 @@ export default function ZoneEditor({
   return (
     <div
       ref={containerRef}
-      className="relative select-none cursor-crosshair rounded-xl overflow-hidden bg-gray-900 touch-none"
+      className={`relative select-none cursor-crosshair rounded-xl overflow-hidden bg-gray-900 touch-none${readOnly ? " pointer-events-none" : ""}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -213,28 +216,30 @@ export default function ZoneEditor({
         )
       })}
 
-      <div
-        className="absolute top-2 right-2 flex gap-1 bg-black/60 rounded-lg p-1"
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        {TOOLS.map(({ tool: option, label, Icon }) => (
-          <button
-            key={option}
-            type="button"
-            title={t(label)}
-            aria-label={t(label)}
-            aria-pressed={tool === option}
-            onClick={() => setTool(option)}
-            className={`p-2.5 rounded-md transition-colors ${
-              tool === option ? "bg-white text-gray-900" : "text-white hover:bg-white/20"
-            }`}
-          >
-            <Icon size={18} />
-          </button>
-        ))}
-      </div>
+      {!readOnly && (
+        <div
+          className="absolute top-2 right-2 flex gap-1 bg-black/60 rounded-lg p-1"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          {TOOLS.map(({ tool: option, label, Icon }) => (
+            <button
+              key={option}
+              type="button"
+              title={t(label)}
+              aria-label={t(label)}
+              aria-pressed={tool === option}
+              onClick={() => setTool(option)}
+              className={`p-2.5 rounded-md transition-colors ${
+                tool === option ? "bg-white text-gray-900" : "text-white hover:bg-white/20"
+              }`}
+            >
+              <Icon size={18} />
+            </button>
+          ))}
+        </div>
+      )}
 
-      {zones.length === 0 && !path && (
+      {!readOnly && zones.length === 0 && !path && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <p className="bg-black/50 text-white text-sm px-3 py-1.5 rounded-full">
             {tool === "freehand" ? t("zones.hintFreehand") : t("zones.hintRect")}

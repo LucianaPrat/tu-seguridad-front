@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useConfigureDvr } from "@/hooks/useDvr"
+import { useRenameSpace } from "@/hooks/useSpaces"
 import DVRForm, { type DVRFormValues } from "@/components/dvr/DVRForm"
 import { ApiError } from "@/lib/http"
 import LogoMark from "@/components/common/LogoMark"
@@ -8,9 +9,10 @@ import { useT } from "@/hooks/useT"
 import type { TranslationKey } from "@/lib/i18n"
 
 /*
- * Three different failures, three different next steps. PUT /dvr is admin-only,
- * and the gate routes every member of an unconfigured space here — a plain
- * "check the DVR fields" parks a non-admin in a form they can never submit. The
+ * Three different failures, three different next steps. PUT /dvr is admin-only;
+ * the gate now sends only admins here, but a 403 can still come back (role
+ * changed mid-session), and a plain "check the DVR fields" would park them in a
+ * form they can never submit. The
  * upstream codes mean the opposite of bad data: the fields were fine, the
  * recorder did not answer.
  */
@@ -25,7 +27,8 @@ function configureErrorKey(error: unknown): TranslationKey {
 
 export default function DVRInitPage() {
   const { t } = useT()
-  const { updateUser } = useSessionStore()
+  const rename = useRenameSpace()
+  const currentName = useSessionStore((s) => s.user?.currentSpace?.name ?? "")
   const configure = useConfigureDvr()
   const navigate = useNavigate()
 
@@ -39,9 +42,9 @@ export default function DVRInitPage() {
       },
       {
         onSuccess: () => {
-          // spaceName has no backend column yet, so it stays a display field
-          // in the store. PUT /dvr rejects it as an unknown key.
-          updateUser({ spaceName: values.spaceName })
+          // Only admins reach this wizard, and PATCH /spaces/current is admin-only.
+          // Fire-and-forget: a failed rename leaves the old name, nothing else.
+          if (values.spaceName !== currentName) rename.mutate(values.spaceName)
           navigate("/")
         },
       },
@@ -72,6 +75,7 @@ export default function DVRInitPage() {
             </p>
           )}
           <DVRForm
+            defaultValues={{ spaceName: currentName }}
             onSubmit={handleSubmit}
             submitLabel={t("dvr.init.submit")}
             showTestConnection

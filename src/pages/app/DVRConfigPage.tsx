@@ -4,6 +4,7 @@ import DVRForm, { type DVRFormValues } from "@/components/dvr/DVRForm"
 import PageHeader from "@/components/common/PageHeader"
 import ConfirmModal from "@/components/common/ConfirmModal"
 import { useT } from "@/hooks/useT"
+import { useCan } from "@/lib/permissions"
 
 const DEFAULT_VALUES: DVRFormValues = {
   spaceName: "Mi Espacio Seguro",
@@ -15,6 +16,7 @@ const DEFAULT_VALUES: DVRFormValues = {
 
 export default function DVRConfigPage() {
   const { t } = useT()
+  const readOnly = !useCan().canEdit("dvr")
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingValues, setPendingValues] = useState<DVRFormValues | null>(null)
   const [saved, setSaved] = useState(false)
@@ -42,19 +44,24 @@ export default function DVRConfigPage() {
           </div>
         )}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+          {readOnly && (
+            <p className="mb-4 text-sm text-muted-foreground">{t("dvr.config.readOnly")}</p>
+          )}
           {/*
             Probe stays off while this page is fixture-backed: DEFAULT_VALUES are
             mock credentials and handleConfirm saves nothing, so the button would
             POST fixtures at the real backend and a green badge would mean
             nothing. Turn it back on with the real DVR config load.
           */}
-          <DVRForm
-            defaultValues={DEFAULT_VALUES}
-            onSubmit={handleSubmit}
-            submitLabel={t("dvr.config.submit")}
-            showTestConnection={false}
-            submitNotImplemented
-          />
+          <fieldset disabled={readOnly} className="contents">
+            <DVRForm
+              defaultValues={DEFAULT_VALUES}
+              onSubmit={handleSubmit}
+              submitLabel={t("dvr.config.submit")}
+              showTestConnection={false}
+              submitNotImplemented
+            />
+          </fieldset>
         </div>
       </div>
 

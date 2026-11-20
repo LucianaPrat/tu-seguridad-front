@@ -16,6 +16,7 @@ import {
 } from "@/hooks/useCameras"
 import { ApiError } from "@/lib/http"
 import { useT } from "@/hooks/useT"
+import { useCan } from "@/lib/permissions"
 import type { TranslationKey } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 import type { AlertType, MonitorMode, MonitorZone } from "@/data/mockData"
@@ -101,6 +102,8 @@ function signature(draft: Draft) {
 
 export default function CameraMonitorPage() {
   const { t } = useT()
+  // PUT /cameras and zones need admin or collaborator plus the dvr section.
+  const readOnly = !useCan().canEdit("dvr")
   const errorMessage = (error: unknown) =>
     error instanceof ApiError ? error.message : t("monitor.saveFailed")
   const { data: cameras, isPending, error } = useCameras()
@@ -179,7 +182,7 @@ export default function CameraMonitorPage() {
    * beside the title is for.
    */
   useEffect(() => {
-    if (!selected || !draft || !storedZones || !pending) return
+    if (readOnly || !selected || !draft || !storedZones || !pending) return
     // Blank is a 400, and the operator clearing the field to retype it would
     // spend one failed request on the pause.
     if (!draft.name.trim()) return
@@ -205,7 +208,7 @@ export default function CameraMonitorPage() {
     }, AUTOSAVE_DELAY)
 
     return () => clearTimeout(timer)
-  }, [selected, draft, storedZones, pending, save.mutate])
+  }, [readOnly, selected, draft, storedZones, pending, save.mutate])
 
   return (
     <AppShell>
@@ -214,7 +217,10 @@ export default function CameraMonitorPage() {
           title={t("monitor.title")}
           subtitle={t("monitor.subtitle")}
           action={
-            draft && (
+            draft &&
+            (readOnly ? (
+              <p className="text-xs text-muted-foreground">{t("monitor.readOnly")}</p>
+            ) : (
               <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                 {save.isError ? (
                   <span className="text-destructive">{t("monitor.couldNotSave")}</span>
@@ -227,7 +233,7 @@ export default function CameraMonitorPage() {
                   </>
                 )}
               </p>
-            )
+            ))
           }
         />
 
@@ -299,6 +305,7 @@ export default function CameraMonitorPage() {
                         onChange={(zones) => updateDraft({ zones })}
                         defaultAlertType={draft.alertType}
                         onFrameLoad={setNatural}
+                        readOnly={readOnly}
                       />
                     )}
 
@@ -339,7 +346,9 @@ export default function CameraMonitorPage() {
                     )}
 
                     <div className="shrink-0 flex items-center justify-between gap-3 flex-wrap">
-                      {draft.monitorMode === "partial" ? (
+                      {readOnly ? (
+                        <span />
+                      ) : draft.monitorMode === "partial" ? (
                         <div className="flex gap-2 items-center">
                           <span className="text-xs text-gray-500">{t("monitor.drawAs")}</span>
                           <AlertTypeToggle
@@ -370,78 +379,82 @@ export default function CameraMonitorPage() {
 
                 {/* Inspector: everything that is not the frame. */}
                 <aside className="shrink-0 flex flex-col gap-4 lg:w-80 lg:min-h-0 lg:overflow-y-auto">
-                  {save.error && <p className="text-sm text-red-600">{errorMessage(save.error)}</p>}
+                  <fieldset disabled={readOnly} className="contents">
+                    {save.error && (
+                      <p className="text-sm text-red-600">{errorMessage(save.error)}</p>
+                    )}
 
-                  <div className={cn(CARD, "flex flex-col gap-3")}>
-                    <FormField
-                      label={t("monitor.customName")}
-                      value={draft.name}
-                      onChange={(e) => updateDraft({ name: e.target.value })}
-                    />
-                    <FormField
-                      label={t("monitor.location")}
-                      value={draft.location}
-                      placeholder={t("monitor.locationPlaceholder")}
-                      onChange={(e) => updateDraft({ location: e.target.value })}
-                    />
-                  </div>
-
-                  <div className={CARD}>
-                    <p className="text-sm font-medium text-gray-700 mb-3">
-                      {t("monitor.modeTitle")}
-                    </p>
-                    <div className="flex flex-col gap-2">
-                      {MODES.map(({ mode, label, hint, Icon }) => (
-                        <button
-                          key={mode}
-                          onClick={() => updateDraft({ monitorMode: mode })}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm text-left transition-colors",
-                            draft.monitorMode === mode
-                              ? "border-primary bg-primary/5 text-primary"
-                              : "border-gray-200 text-gray-600 hover:border-gray-300",
-                          )}
-                        >
-                          <Icon size={16} className="shrink-0" />
-                          <span>
-                            <span className="block font-medium">{t(label)}</span>
-                            <span className="block text-xs opacity-70">{t(hint)}</span>
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {draft.monitorMode === "full" ? (
-                    <div className={CARD}>
-                      <p className="text-sm font-medium text-gray-700 mb-2">
-                        {t("monitor.alertLevel")}
-                      </p>
-                      <AlertTypeToggle
-                        value={draft.alertType}
-                        onChange={(alertType) => updateDraft({ alertType })}
+                    <div className={cn(CARD, "flex flex-col gap-3")}>
+                      <FormField
+                        label={t("monitor.customName")}
+                        value={draft.name}
+                        onChange={(e) => updateDraft({ name: e.target.value })}
+                      />
+                      <FormField
+                        label={t("monitor.location")}
+                        value={draft.location}
+                        placeholder={t("monitor.locationPlaceholder")}
+                        onChange={(e) => updateDraft({ location: e.target.value })}
                       />
                     </div>
-                  ) : (
+
                     <div className={CARD}>
                       <p className="text-sm font-medium text-gray-700 mb-3">
-                        {t("monitor.zonesTitle", { count: draft.zones.length })}
+                        {t("monitor.modeTitle")}
                       </p>
-                      <ZoneList
-                        zones={draft.zones}
-                        onRemove={(id) =>
-                          updateDraft({ zones: draft.zones.filter((zone) => zone.id !== id) })
-                        }
-                        onChangeAlertType={(id, type) =>
-                          updateDraft({
-                            zones: draft.zones.map((zone) =>
-                              zone.id === id ? { ...zone, alertType: type } : zone,
-                            ),
-                          })
-                        }
-                      />
+                      <div className="flex flex-col gap-2">
+                        {MODES.map(({ mode, label, hint, Icon }) => (
+                          <button
+                            key={mode}
+                            onClick={() => updateDraft({ monitorMode: mode })}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm text-left transition-colors",
+                              draft.monitorMode === mode
+                                ? "border-primary bg-primary/5 text-primary"
+                                : "border-gray-200 text-gray-600 hover:border-gray-300",
+                            )}
+                          >
+                            <Icon size={16} className="shrink-0" />
+                            <span>
+                              <span className="block font-medium">{t(label)}</span>
+                              <span className="block text-xs opacity-70">{t(hint)}</span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  )}
+
+                    {draft.monitorMode === "full" ? (
+                      <div className={CARD}>
+                        <p className="text-sm font-medium text-gray-700 mb-2">
+                          {t("monitor.alertLevel")}
+                        </p>
+                        <AlertTypeToggle
+                          value={draft.alertType}
+                          onChange={(alertType) => updateDraft({ alertType })}
+                        />
+                      </div>
+                    ) : (
+                      <div className={CARD}>
+                        <p className="text-sm font-medium text-gray-700 mb-3">
+                          {t("monitor.zonesTitle", { count: draft.zones.length })}
+                        </p>
+                        <ZoneList
+                          zones={draft.zones}
+                          onRemove={(id) =>
+                            updateDraft({ zones: draft.zones.filter((zone) => zone.id !== id) })
+                          }
+                          onChangeAlertType={(id, type) =>
+                            updateDraft({
+                              zones: draft.zones.map((zone) =>
+                                zone.id === id ? { ...zone, alertType: type } : zone,
+                              ),
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                  </fieldset>
                 </aside>
               </>
             )}

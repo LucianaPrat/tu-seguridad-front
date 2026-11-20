@@ -17,7 +17,8 @@ import {
 } from "lucide-react"
 import { useT } from "@/hooks/useT"
 import type { TranslationKey } from "@/lib/i18n"
-import { useSessionStore } from "@/stores/sessionStore"
+import { useCan, type MenuKey } from "@/lib/permissions"
+import SpaceSwitcher from "@/components/spaces/SpaceSwitcher"
 import { useLogout } from "@/hooks/useAuth"
 
 interface NavItem {
@@ -28,10 +29,18 @@ interface NavItem {
   disabled?: true
   children?: { label: TranslationKey; to: string }[]
   tour?: string
+  /** Section gate; absent = always visible (profile, help, placeholders). */
+  menu?: MenuKey
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "nav.home", icon: <LayoutDashboard size={18} />, to: "/", tour: "nav-home" },
+  {
+    label: "nav.home",
+    icon: <LayoutDashboard size={18} />,
+    to: "/",
+    tour: "nav-home",
+    menu: "home",
+  },
 ]
 
 const SERVICE_ITEMS: NavItem[] = [
@@ -40,9 +49,37 @@ const SERVICE_ITEMS: NavItem[] = [
     icon: <Shield size={18} />,
     to: "/cameras/monitor",
     tour: "nav-monitor",
+    menu: "monitor",
   },
-  { label: "nav.events", icon: <Calendar size={18} />, to: "/events", tour: "nav-events" },
+  {
+    label: "nav.events",
+    icon: <Calendar size={18} />,
+    to: "/events",
+    tour: "nav-events",
+    menu: "events",
+  },
   { label: "nav.recordings", icon: <PlayCircle size={18} />, disabled: true },
+  {
+    label: "nav.dvr",
+    icon: <HardDrive size={18} />,
+    to: "/dvr-config",
+    tour: "nav-dvr",
+    menu: "dvr",
+  },
+  {
+    label: "nav.channels",
+    icon: <MessageCircle size={18} />,
+    to: "/channels",
+    tour: "nav-channels",
+    menu: "channels",
+  },
+  {
+    label: "nav.members",
+    icon: <Users size={18} />,
+    to: "/members",
+    tour: "nav-members",
+    menu: "members",
+  },
 ]
 
 const ACCOUNT_ITEMS: NavItem[] = [
@@ -97,7 +134,8 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
  */
 export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useT()
-  const { user } = useSessionStore()
+  const { canView } = useCan()
+  const visible = (items: NavItem[]) => items.filter((i) => !i.menu || canView(i.menu))
   const { mutate: logout } = useLogout()
   const navigate = useNavigate()
 
@@ -110,21 +148,16 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <>
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5">
+      <div className="flex items-start gap-3 px-4 py-5">
         <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
           <LogoMark size={22} />
         </div>
-        <div className="min-w-0">
-          <p className="text-white font-semibold text-sm leading-tight truncate">
-            {user?.spaceName ?? t("nav.defaultSpaceName")}
-          </p>
-          <p className="text-white/50 text-xs">{t("nav.controlPanel")}</p>
-        </div>
+        <SpaceSwitcher onNavigate={onNavigate} />
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 space-y-0.5">
-        {NAV_ITEMS.map((item) => (
+        {visible(NAV_ITEMS).map((item) => (
           <NavItemLink key={item.to} item={item} onNavigate={onNavigate} />
         ))}
 
@@ -133,55 +166,16 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             {t("nav.services")}
           </p>
         </div>
-        {SERVICE_ITEMS.map((item) => (
+        {visible(SERVICE_ITEMS).map((item) => (
           <NavItemLink key={item.label} item={item} onNavigate={onNavigate} />
         ))}
-
-        {/* DVR Config under services */}
-        <NavLink
-          to="/dvr-config"
-          data-tour="nav-dvr"
-          onClick={onNavigate}
-          className={({ isActive }) => rowClass(isActive)}
-        >
-          <span className="shrink-0">
-            <HardDrive size={18} />
-          </span>
-          {t("nav.dvr")}
-        </NavLink>
-
-        {/* Canales */}
-        <NavLink
-          to="/channels"
-          data-tour="nav-channels"
-          onClick={onNavigate}
-          className={({ isActive }) => rowClass(isActive)}
-        >
-          <span className="shrink-0">
-            <MessageCircle size={18} />
-          </span>
-          {t("nav.channels")}
-        </NavLink>
-
-        {/* Miembros */}
-        <NavLink
-          to="/members"
-          data-tour="nav-members"
-          onClick={onNavigate}
-          className={({ isActive }) => rowClass(isActive)}
-        >
-          <span className="shrink-0">
-            <Users size={18} />
-          </span>
-          {t("nav.members")}
-        </NavLink>
 
         <div className="pt-4 pb-1">
           <p className="px-3 text-white/40 text-xs font-semibold uppercase tracking-wider">
             {t("nav.account")}
           </p>
         </div>
-        {ACCOUNT_ITEMS.map((item) => (
+        {visible(ACCOUNT_ITEMS).map((item) => (
           <NavItemLink key={item.label} item={item} onNavigate={onNavigate} />
         ))}
 

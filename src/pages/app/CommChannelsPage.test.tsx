@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import CommChannelsPage from "./CommChannelsPage"
-import { meResponse } from "@/test/fixtures"
+import { currentSpace, meResponse } from "@/test/fixtures"
 import { renderWithProviders } from "@/test/renderWithProviders"
 import { useSessionStore } from "@/stores/sessionStore"
 
@@ -106,20 +106,37 @@ describe("CommChannelsPage", () => {
     expect(screen.getByRole("checkbox", { name: "Sospechoso por Email" })).not.toBeDisabled()
   })
 
-  it("disables every checkbox and switch for a non-admin", async () => {
+  it("lets a collaborator edit routing but not recipients", async () => {
     mockRoutes({
       "/alert-routings": { body: { items: ROUTINGS } },
       "/members": { body: { items: [member()], total: 1 } },
     })
-    useSessionStore.setState({ user: meResponse({ role: "collaborator" }) })
+    useSessionStore.setState({
+      user: meResponse({ currentSpace: currentSpace({ role: "collaborator" }) }),
+    })
 
     renderWithProviders(<CommChannelsPage />)
 
-    expect(await screen.findByRole("checkbox", { name: "Intruso por Llamada" })).toBeDisabled()
-    for (const checkbox of screen.getAllByRole("checkbox")) {
-      expect(checkbox).toBeDisabled()
-    }
+    expect(await screen.findByRole("checkbox", { name: "Sospechoso por Email" })).not.toBeDisabled()
+    expect(screen.getByRole("checkbox", { name: "Intruso por Llamada" })).toBeDisabled()
     expect(screen.getByRole("switch")).toBeDisabled()
+  })
+
+  it("hides the recipients without the members section", async () => {
+    const fetchMock = mockRoutes({ "/alert-routings": { body: { items: ROUTINGS } } })
+    useSessionStore.setState({
+      user: meResponse({
+        currentSpace: currentSpace({
+          role: "collaborator",
+          menuAccess: ["home", "monitor", "events", "dvr", "channels"],
+        }),
+      }),
+    })
+
+    renderWithProviders(<CommChannelsPage />)
+
+    expect(await screen.findByText(/Tu acceso no incluye la sección Miembros/)).toBeInTheDocument()
+    expect(fetchMock.mock.calls.every(([url]) => !String(url).includes("/members"))).toBe(true)
   })
 
   it("disables the switch and flags an incomplete profile, but not a complete one", async () => {

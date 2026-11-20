@@ -27,7 +27,7 @@ describe("sessionStore", () => {
     const state = useSessionStore.getState()
     expect(state.isLoggedIn).toBe(true)
     expect(state.user).not.toBeNull()
-    expect(state.user?.spaceName).toBe("Mi Espacio Seguro")
+    expect(state.user?.currentSpace?.name).toBe("Mi Espacio Seguro")
   })
 
   it("logout clears user and session flags", () => {
@@ -66,7 +66,7 @@ describe("sessionStore", () => {
     })
 
     it("setSession stores the API profile as the session user", () => {
-      const profile = meResponse({ id: 42, firstName: "Ada", spaceName: "Depósito" })
+      const profile = meResponse({ id: 42, firstName: "Ada" })
 
       useSessionStore.getState().setSession(profile)
 

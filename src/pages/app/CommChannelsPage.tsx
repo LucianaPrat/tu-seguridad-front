@@ -3,7 +3,7 @@ import PageHeader from "@/components/common/PageHeader"
 import Badge from "@/components/common/Badge"
 import { useAlertRoutings, useSetAlertRouting } from "@/hooks/useChannels"
 import { useMembers, useSetMemberAlerts } from "@/hooks/useMembers"
-import { useSessionStore } from "@/stores/sessionStore"
+import { useCan } from "@/lib/permissions"
 import { ApiError } from "@/lib/http"
 import { displayName, initials } from "@/lib/members"
 import { type AlertType, type ChannelType } from "@/data/mockData"
@@ -40,7 +40,7 @@ const ALERT_NAMES = {
 
 export default function CommChannelsPage() {
   const { t } = useT()
-  const isAdmin = useSessionStore((state) => state.user?.role === "admin")
+  const { canView, canEdit, isAdmin } = useCan()
   const routings = useAlertRoutings()
   const setRouting = useSetAlertRouting()
   const members = useMembers()
@@ -57,7 +57,7 @@ export default function CommChannelsPage() {
     <AppShell>
       <PageHeader
         title={t("channels.title")}
-        subtitle={isAdmin ? t("channels.subtitleAdmin") : t("channels.subtitleMember")}
+        subtitle={canEdit("channels") ? t("channels.subtitleAdmin") : t("channels.subtitleMember")}
       />
 
       <div className="flex flex-col gap-6 max-w-2xl">
@@ -129,7 +129,9 @@ export default function CommChannelsPage() {
                             // Disabling the whole matrix while one write is in flight is
                             // deliberate — the route answers with the full matrix, so two
                             // overlapping writes could clobber each other.
-                            disabled={!isAdmin || setRouting.isPending || !CHANNEL_READY[ch]}
+                            disabled={
+                              !canEdit("channels") || setRouting.isPending || !CHANNEL_READY[ch]
+                            }
                             onChange={() =>
                               setRouting.mutate({
                                 alertType: alert,
@@ -167,7 +169,11 @@ export default function CommChannelsPage() {
               {t("channels.saveFailed")}
             </p>
           )}
-          {members.isPending ? (
+          {!canView("members") ? (
+            <p className="px-3 sm:px-5 py-6 text-sm text-muted-foreground">
+              {t("channels.recipientsNoAccess")}
+            </p>
+          ) : members.isPending ? (
             <p className="px-3 sm:px-5 py-6 text-sm text-muted-foreground">
               {t("channels.loading")}
             </p>
@@ -220,6 +226,7 @@ export default function CommChannelsPage() {
                       // Email, not the name: every unfinished invitation shares the
                       // "Sin nombre" fallback, and two of them would label alike.
                       aria-label={t("channels.alertsFor", { email: member.email })}
+                      // PATCH /members is admin-only, unlike the routing matrix
                       disabled={!isAdmin || !member.profileCompleted}
                       onClick={() =>
                         setMemberAlerts.mutate({

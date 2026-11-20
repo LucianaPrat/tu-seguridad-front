@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import * as authApi from "@/api/auth"
 import { API_BASE_URL } from "@/lib/http"
-import { meResponse } from "@/test/fixtures"
+import { currentSpace, meResponse } from "@/test/fixtures"
 import { mockFetchSequence } from "@/test/mockFetch"
 import { useSessionStore } from "@/stores/sessionStore"
 
@@ -67,9 +67,22 @@ describe("me", () => {
   })
 
   it("throws on a role the app does not know", async () => {
-    mockFetchSequence([{ body: { ...meResponse(), role: "owner" } }])
+    mockFetchSequence([
+      { body: { ...meResponse(), currentSpace: { ...currentSpace(), role: "owner" } } },
+    ])
 
     await expect(authApi.me()).rejects.toThrow()
+  })
+
+  it("strips the deprecated spaceId, spaceName and role the back still sends", async () => {
+    mockFetchSequence([
+      { body: { ...meResponse(), spaceId: "space-1", spaceName: "Old", role: "admin" } },
+    ])
+
+    const profile = await authApi.me()
+    expect(profile).not.toHaveProperty("spaceName")
+    expect(profile).not.toHaveProperty("spaceId")
+    expect(profile).not.toHaveProperty("role")
   })
 })
 

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as authApi from "@/api/auth"
 import * as invitationsApi from "@/api/invitations"
+import { useCan } from "@/lib/permissions"
 import { useSessionStore } from "@/stores/sessionStore"
 import type { InvitationListResponse, MeResponse } from "@/lib/schemas"
 
@@ -24,7 +25,7 @@ export function useCreateInvitation() {
  * of rendering a 403 nobody can act on.
  */
 export function usePendingInvitations() {
-  const isAdmin = useSessionStore((state) => state.user?.role === "admin")
+  const { isAdmin } = useCan()
 
   return useQuery<InvitationListResponse>({
     queryKey: invitationKeys.pending,

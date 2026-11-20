@@ -3,7 +3,8 @@ import { QueryClientProvider } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 import { queryClient } from "@/lib/queryClient"
 import { useLogout, useSessionBootstrap } from "@/hooks/useAuth"
-import { useDvr } from "@/hooks/useDvr"
+import { useSwitchSpace } from "@/hooks/useSpaces"
+import { useCan, MENU_KEYS, MENU_ROUTES, type MenuKey } from "@/lib/permissions"
 import { useSessionStore } from "@/stores/sessionStore"
 import Button from "@/components/common/Button"
 import { useT } from "@/hooks/useT"
@@ -21,6 +22,7 @@ import AcknowledgeAlertPage from "@/pages/events/AcknowledgeAlertPage"
 
 // Onboarding
 import DVRInitPage from "@/pages/onboarding/DVRInitPage"
+import SpaceStartPage from "@/pages/onboarding/SpaceStartPage"
 import CompleteProfilePage from "@/pages/onboarding/CompleteProfilePage"
 
 // App pages
@@ -48,53 +50,65 @@ function AuthGate({ children }: { children: ReactNode }) {
 }
 
 /*
- * Logging out is the only exit this screen can offer. A reload prompt was
- * worse than nothing: the fixture login path (Face-Auth) holds no
- * access token, so GET /dvr answers 401 and it lands here, and a reload
- * replays the boot refresh, finds no cookie and drops back to /login anyway.
- * Clearing the session first is what keeps the guard from looping.
+ * Order matters: session → profile → space → recorder. The recorder answer is
+ * currentSpace.hasDvr from /auth/me — GET /dvr needs the dvr section, so it
+ * cannot be the probe for a member without it.
  */
-function DVRUnavailable() {
-  const { t } = useT()
-  const { mutate: logout } = useLogout()
+function DVRGate({
+  need,
+  children,
+}: {
+  need: "configured" | "missing" | "noSpace"
+  children: ReactNode
+}) {
+  const { isLoggedIn, user } = useSessionStore()
+  if (!isLoggedIn) return <Navigate to="/login" replace />
+  // Invited account with no name/phone/password: every route but /auth/me answers 403.
+  if (user && !user.profileCompleted) return <Navigate to="/onboarding/profile" replace />
+  const space = user?.currentSpace ?? null
+  if (!space) return need === "noSpace" ? <>{children}</> : <Navigate to="/spaces/start" replace />
+  if (need === "noSpace") return <Navigate to="/" replace />
+  if (space.hasDvr) return need === "configured" ? <>{children}</> : <Navigate to="/" replace />
+  // Only an admin can finish setup (the wizard also renames the space, admin-only).
+  if (space.role !== "admin") return <SpaceNotConfigured />
+  return need === "missing" ? <>{children}</> : <Navigate to="/onboarding/dvr" replace />
+}
 
+function SpaceNotConfigured() {
+  const { t } = useT()
+  const { user } = useSessionStore()
+  const { mutate: logout } = useLogout()
+  const switchSpace = useSwitchSpace()
+  const others = (user?.spaces ?? []).filter((s) => s.id !== user?.currentSpace?.id)
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
-      <p className="text-sm text-muted-foreground">{t("errors.dvrUnavailable")}</p>
-      <Button variant="secondary" onClick={() => logout()}>
-        {t("errors.signInAgain")}
+      <h1 className="text-lg font-semibold">{t("spaces.notConfigured.title")}</h1>
+      <p className="text-sm text-muted-foreground">
+        {t("spaces.notConfigured.body", { name: user?.currentSpace?.name ?? "" })}
+      </p>
+      {others.map((space) => (
+        <Button
+          key={space.id}
+          variant="secondary"
+          loading={switchSpace.isPending}
+          onClick={() => switchSpace.mutate(space.id)}
+        >
+          {t("spaces.switchTo", { name: space.name })}
+        </Button>
+      ))}
+      <Button variant="ghost" onClick={() => logout()}>
+        {t("nav.logout")}
       </Button>
     </div>
   )
 }
 
-/*
- * The recorder stored server-side is what decides onboarding, not a flag in
- * the store: a flag dies with the tab, so every login walked back into the DVR
- * wizard.
- *
- * Three answers, three behaviours. Pending renders nothing, or a configured
- * space flashes the wizard on every load. A failed GET renders the notice: a
- * dead or refusing backend is not the same as "never configured", and sending
- * the operator into the wizard there offers to overwrite a recorder we merely
- * failed to read. Only a resolved answer forks.
- */
-function DVRGate({ need, children }: { need: "configured" | "missing"; children: ReactNode }) {
-  const { isLoggedIn, user } = useSessionStore()
-  const { data: dvr, isPending, isError } = useDvr()
-
-  if (!isLoggedIn) return <Navigate to="/login" replace />
-  /*
-   * An invited account has no name, no phone and no password of its own, and
-   * the backend answers 403 on every route until it does — GET /dvr included.
-   * This has to sit above the isPending check: useDvr stays disabled for such a
-   * session, and a disabled query is pending forever.
-   */
-  if (user && !user.profileCompleted) return <Navigate to="/onboarding/profile" replace />
-  if (isPending) return null
-  if (isError) return <DVRUnavailable />
-  if (dvr) return need === "configured" ? <>{children}</> : <Navigate to="/" replace />
-  return need === "missing" ? <>{children}</> : <Navigate to="/onboarding/dvr" replace />
+/** Section gate per route. Falls back to the first section the member has, else Profile (always visible). */
+function RequireMenu({ menu, children }: { menu: MenuKey; children: ReactNode }) {
+  const { canView } = useCan()
+  if (canView(menu)) return <>{children}</>
+  const first = MENU_KEYS.find(canView)
+  return <Navigate to={first ? MENU_ROUTES[first] : "/profile"} replace />
 }
 
 function RequireDVR({ children }: { children: ReactNode }) {
@@ -135,12 +149,23 @@ export function AppRoutes() {
         }
       />
 
+      <Route
+        path="/spaces/start"
+        element={
+          <DVRGate need="noSpace">
+            <SpaceStartPage />
+          </DVRGate>
+        }
+      />
+
       {/* App routes */}
       <Route
         path="/"
         element={
           <RequireDVR>
-            <DashboardPage />
+            <RequireMenu menu="home">
+              <DashboardPage />
+            </RequireMenu>
           </RequireDVR>
         }
       />
@@ -148,7 +173,9 @@ export function AppRoutes() {
         path="/dvr-config"
         element={
           <RequireDVR>
-            <DVRConfigPage />
+            <RequireMenu menu="dvr">
+              <DVRConfigPage />
+            </RequireMenu>
           </RequireDVR>
         }
       />
@@ -156,7 +183,9 @@ export function AppRoutes() {
         path="/cameras/monitor"
         element={
           <RequireDVR>
-            <CameraMonitorPage />
+            <RequireMenu menu="monitor">
+              <CameraMonitorPage />
+            </RequireMenu>
           </RequireDVR>
         }
       />
@@ -164,7 +193,9 @@ export function AppRoutes() {
         path="/events"
         element={
           <RequireDVR>
-            <EventsPage />
+            <RequireMenu menu="events">
+              <EventsPage />
+            </RequireMenu>
           </RequireDVR>
         }
       />
@@ -174,7 +205,9 @@ export function AppRoutes() {
         path="/events/:id"
         element={
           <RequireDVR>
-            <EventDetailPage />
+            <RequireMenu menu="events">
+              <EventDetailPage />
+            </RequireMenu>
           </RequireDVR>
         }
       />
@@ -182,7 +215,9 @@ export function AppRoutes() {
         path="/members"
         element={
           <RequireDVR>
-            <MembersPage />
+            <RequireMenu menu="members">
+              <MembersPage />
+            </RequireMenu>
           </RequireDVR>
         }
       />
@@ -190,7 +225,9 @@ export function AppRoutes() {
         path="/channels"
         element={
           <RequireDVR>
-            <CommChannelsPage />
+            <RequireMenu menu="channels">
+              <CommChannelsPage />
+            </RequireMenu>
           </RequireDVR>
         }
       />

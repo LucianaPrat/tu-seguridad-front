@@ -4,6 +4,7 @@ import { driver, type Driver, type PopoverDOM } from "driver.js"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useNavStore } from "@/stores/navStore"
 import { useLocaleStore } from "@/stores/localeStore"
+import { MENU_KEYS, MENU_ROUTES, canView } from "@/lib/permissions"
 import { translate, type TranslationKey } from "@/lib/i18n"
 import "driver.js/dist/driver.css"
 
@@ -248,7 +249,13 @@ export function startTour(navigate: NavigateFunction) {
   const locale = useLocaleStore.getState().locale
   const t = (key: TranslationKey, vars?: Record<string, string | number>) =>
     translate(locale, key, vars)
-  const isAdmin = useSessionStore.getState().user?.role === "admin"
+  const space = useSessionStore.getState().user?.currentSpace ?? null
+  const isAdmin = space?.role === "admin"
+  // A step on a section the member cannot open would be redirected away by RequireMenu.
+  const allowed = (to: string) => {
+    const key = MENU_KEYS.find((k) => MENU_ROUTES[k] === to)
+    return key === undefined || canView(space, key)
+  }
   /*
    * Below `lg` the sidebar lives in a closed drawer, so the eight steps anchored
    * to it would each stall for `waitForElement` and then vanish. A step pointing
@@ -259,7 +266,9 @@ export function startTour(navigate: NavigateFunction) {
    * branch. jsdom's window is 1024 wide, so this reads as desktop there.
    */
   const isDesktop = window.innerWidth >= 1024
-  const steps = STEPS.filter((s) => (!s.adminOnly || isAdmin) && (!s.mobileOnly || !isDesktop))
+  const steps = STEPS.filter(
+    (s) => (!s.adminOnly || isAdmin) && (!s.mobileOnly || !isDesktop) && allowed(s.to),
+  )
 
   /*
    * Both menus are in the DOM below `lg` — the aside is only `display: none`,

@@ -8,7 +8,7 @@ import Button from "@/components/common/Button"
 import PageHeader from "@/components/common/PageHeader"
 import InviteModal from "@/components/common/InviteModal"
 import { useCameras, useSetCameraEnabled } from "@/hooks/useCameras"
-import { useSessionStore } from "@/stores/sessionStore"
+import { useCan } from "@/lib/permissions"
 import { ApiError } from "@/lib/http"
 import { useT } from "@/hooks/useT"
 import { cn } from "@/lib/utils"
@@ -24,7 +24,7 @@ export default function DashboardPage() {
   const [disabledOpen, setDisabledOpen] = useState(true)
   const [inviteOpen, setInviteOpen] = useState(false)
   // POST /invitations is admin-only; a member gets no button instead of a 403.
-  const isAdmin = useSessionStore((state) => state.user?.role === "admin")
+  const { isAdmin } = useCan()
 
   const all = cameras ?? []
   const configured = all.filter((c) => c.isConfigured && c.isEnabled)

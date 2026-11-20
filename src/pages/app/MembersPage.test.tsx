@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { screen, waitFor } from "@testing-library/react"
 import MembersPage from "./MembersPage"
-import { meResponse } from "@/test/fixtures"
+import { currentSpace, meResponse } from "@/test/fixtures"
 import { renderWithProviders } from "@/test/renderWithProviders"
 import { useSessionStore } from "@/stores/sessionStore"
 
@@ -88,7 +88,9 @@ describe("MembersPage", () => {
 
   it("never asks for the invitations as a plain member", async () => {
     const fetchMock = mockRoutes({ "/members": { body: { items: [member()], total: 1 } } })
-    useSessionStore.setState({ user: meResponse({ role: "collaborator" }) })
+    useSessionStore.setState({
+      user: meResponse({ currentSpace: currentSpace({ role: "collaborator" }) }),
+    })
 
     renderWithProviders(<MembersPage />)
 
@@ -99,7 +101,9 @@ describe("MembersPage", () => {
 
   it("offers no invite button to a plain member", async () => {
     mockRoutes({ "/members": { body: { items: [member()], total: 1 } } })
-    useSessionStore.setState({ user: meResponse({ role: "collaborator" }) })
+    useSessionStore.setState({
+      user: meResponse({ currentSpace: currentSpace({ role: "collaborator" }) }),
+    })
 
     renderWithProviders(<MembersPage />)
 

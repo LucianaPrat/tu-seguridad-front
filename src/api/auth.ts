@@ -32,6 +32,12 @@ export async function register(payload: RegisterPayload): Promise<string> {
   return accessTokenSchema.parse(data).accessToken
 }
 
+/** Moves the session into another space of the caller; the back replaces the refresh cookie too. */
+export async function switchSpace(spaceId: string): Promise<string> {
+  const data = await request<unknown>("/auth/switch-space", { method: "POST", body: { spaceId } })
+  return accessTokenSchema.parse(data).accessToken
+}
+
 /** Cookie-driven: there is nothing to pass, the browser carries the token. */
 export async function refresh(): Promise<string> {
   const data = await request<unknown>("/auth/refresh", { method: "POST", auth: false })

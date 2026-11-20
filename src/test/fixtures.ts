@@ -1,4 +1,17 @@
-import type { MeResponse } from "@/lib/schemas"
+import type { CurrentSpace, MeResponse } from "@/lib/schemas"
+import { MENU_KEYS } from "@/lib/permissions"
+
+export function currentSpace(overrides: Partial<CurrentSpace> = {}): CurrentSpace {
+  return {
+    id: "space-1",
+    name: "Mi Espacio Seguro",
+    role: "admin",
+    menuAccess: [...MENU_KEYS],
+    cameraIds: [],
+    hasDvr: true,
+    ...overrides,
+  }
+}
 
 /*
  * GET /auth/me, the full profile. Every test that mocks a session needs the
@@ -15,9 +28,9 @@ export function meResponse(overrides: Partial<MeResponse> = {}): MeResponse {
     avatarUrl: null,
     isActive: true,
     profileCompleted: true,
-    spaceId: "space-1",
-    spaceName: "Mi Espacio Seguro",
-    role: "admin",
+    spaces: [{ id: "space-1", name: "Mi Espacio Seguro", role: "admin" }],
+    currentSpace: currentSpace(),
+    pendingInvitationsCount: 0,
     receiveAlerts: true,
     locale: "es",
     ...overrides,

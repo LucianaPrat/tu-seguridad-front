@@ -5,25 +5,9 @@ import App, { AppRoutes } from "./App"
 import { queryClient } from "@/lib/queryClient"
 import { useLocaleStore } from "@/stores/localeStore"
 import { useSessionStore } from "@/stores/sessionStore"
-import { meResponse } from "@/test/fixtures"
+import { currentSpace, meResponse } from "@/test/fixtures"
 import { mockFetchSequence } from "@/test/mockFetch"
 import { renderWithProviders } from "@/test/renderWithProviders"
-
-/** GET /dvr answers 404 while the space has never configured a recorder. */
-const NO_DVR = {
-  status: 404,
-  body: { statusCode: 404, code: "NOT_FOUND", message: "Dvr not found" },
-}
-
-const DVR = {
-  body: {
-    id: "dvr-1",
-    url: "http://192.168.1.10:8000",
-    username: "admin",
-    timezone: "America/Argentina/Buenos_Aires",
-    cameraCount: 4,
-  },
-}
 
 /*
  * Smoke test for the provider chain and the guard redirects. App mounts
@@ -54,8 +38,12 @@ describe("App", () => {
   })
 
   it("sends an authenticated user with no stored DVR to onboarding", async () => {
-    mockFetchSequence([NO_DVR])
-    useSessionStore.getState().login("luciana@example.com")
+    mockFetchSequence([])
+    useSessionStore.setState({
+      isLoggedIn: true,
+      accessToken: "atoken",
+      user: meResponse({ currentSpace: currentSpace({ hasDvr: false }) }),
+    })
 
     render(<App />)
 
@@ -63,7 +51,7 @@ describe("App", () => {
   })
 
   it("lets an authenticated user with a stored DVR reach the dashboard", async () => {
-    mockFetchSequence([DVR])
+    mockFetchSequence([{ body: [] }])
     useSessionStore.getState().login("luciana@example.com")
 
     render(<App />)
@@ -78,7 +66,7 @@ describe("App", () => {
   /* Mirror of the case above: the wizard cannot be reached by typing the URL
      once a recorder is stored, or a re-visit offers to overwrite it. */
   it("bounces a stored-DVR user off the onboarding wizard", async () => {
-    mockFetchSequence([DVR])
+    mockFetchSequence([{ body: [] }])
     useSessionStore.getState().login("luciana@example.com")
     window.history.pushState({}, "", "/onboarding/dvr")
 
@@ -119,7 +107,10 @@ describe("App session bootstrap", () => {
   })
 
   it("restores the session from the refresh cookie before rendering routes", async () => {
-    mockFetchSequence([{ body: { accessToken: "atoken" } }, { body: meResponse() }, NO_DVR])
+    mockFetchSequence([
+      { body: { accessToken: "atoken" } },
+      { body: meResponse({ currentSpace: currentSpace({ hasDvr: false }) }) },
+    ])
 
     render(<App />)
 
@@ -133,8 +124,7 @@ describe("App session bootstrap", () => {
   it("applies the account language from /auth/me", async () => {
     mockFetchSequence([
       { body: { accessToken: "atoken" } },
-      { body: meResponse({ locale: "en" }) },
-      NO_DVR,
+      { body: meResponse({ locale: "en", currentSpace: currentSpace({ hasDvr: false }) }) },
     ])
 
     render(<App />)
@@ -164,37 +154,83 @@ describe("App session bootstrap", () => {
 
 /*
  * Rendered through renderWithProviders rather than App: the test client has
- * retries off, so a deliberate 500 fails once instead of after a backoff.
+ * retries off, and the session is set directly so each case picks its own space.
  */
-describe("DVR gate on a failed read", () => {
-  it("shows the notice instead of offering to overwrite the recorder", async () => {
-    mockFetchSequence([
-      { status: 500, body: { statusCode: 500, code: "INTERNAL_ERROR", message: "boom" } },
-    ])
-    useSessionStore.getState().login("luciana@example.com")
+describe("space and section gates", () => {
+  const signIn = (user: ReturnType<typeof meResponse>) =>
+    useSessionStore.setState({ isLoggedIn: true, accessToken: "atoken", user })
+
+  it("sends an account with no space to the create-space screen", async () => {
+    mockFetchSequence([])
+    signIn(meResponse({ spaces: [], currentSpace: null }))
 
     renderWithProviders(<AppRoutes />, { route: "/" })
 
-    expect(await screen.findByText(/No pudimos leer la configuración/)).toBeInTheDocument()
+    expect(await screen.findByText("Creá tu espacio")).toBeInTheDocument()
+  })
+
+  it("creates the first space and lands on the dashboard", async () => {
+    const fetchMock = mockFetchSequence([
+      { body: { accessToken: "new" } },
+      { body: meResponse() },
+      { body: [] },
+    ])
+    signIn(meResponse({ spaces: [], currentSpace: null }))
+
+    renderWithProviders(<AppRoutes />, { route: "/" })
+
+    const user = userEvent.setup()
+    await user.type(await screen.findByLabelText("Nombre del espacio"), "Depósito")
+    await user.click(screen.getByRole("button", { name: "Crear espacio" }))
+
+    expect(await screen.findByText("Panel de cámaras")).toBeInTheDocument()
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url.endsWith("/spaces")).toBe(true)
+    expect(init.method).toBe("POST")
+    expect(JSON.parse(init.body as string)).toEqual({ name: "Depósito" })
+    expect(useSessionStore.getState().accessToken).toBe("new")
+  })
+
+  it("tells a non-admin the space is not configured instead of offering the wizard", async () => {
+    mockFetchSequence([])
+    signIn(meResponse({ currentSpace: currentSpace({ role: "collaborator", hasDvr: false }) }))
+
+    renderWithProviders(<AppRoutes />, { route: "/" })
+
+    expect(await screen.findByText("Este espacio todavía no está configurado")).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Conectar y continuar" })).not.toBeInTheDocument()
   })
 
-  /* The fixture login paths (register, Face-Auth) carry no access token, so
-     GET /dvr answers 401 and they land here. Without an exit the screen is a
-     dead end: reloading finds no refresh cookie either. */
-  it("offers a way out that clears the session first", async () => {
-    mockFetchSequence([
-      { status: 401, body: { statusCode: 401, code: "UNAUTHORIZED", message: "no token" } },
-      { status: 204 },
-    ])
-    useSessionStore.getState().login("luciana@example.com")
+  it("bounces a user with a space off the create-space screen", async () => {
+    mockFetchSequence([{ body: [] }])
+    signIn(meResponse())
+
+    renderWithProviders(<AppRoutes />, { route: "/spaces/start" })
+
+    expect(await screen.findByText("Panel de cámaras")).toBeInTheDocument()
+  })
+
+  it("redirects a section the member cannot see to the first one they can", async () => {
+    mockFetchSequence([{ body: [] }])
+    signIn(
+      meResponse({
+        currentSpace: currentSpace({ role: "guest", menuAccess: ["home", "monitor"] }),
+      }),
+    )
+
+    renderWithProviders(<AppRoutes />, { route: "/events" })
+
+    expect(await screen.findByText("Panel de cámaras")).toBeInTheDocument()
+  })
+
+  it("falls back to the first granted section when home is not granted", async () => {
+    mockFetchSequence([{ body: [] }])
+    signIn(
+      meResponse({ currentSpace: currentSpace({ role: "collaborator", menuAccess: ["monitor"] }) }),
+    )
 
     renderWithProviders(<AppRoutes />, { route: "/" })
 
-    const exit = await screen.findByRole("button", { name: "Volver a iniciar sesión" })
-    await userEvent.setup().click(exit)
-
-    expect(await screen.findByRole("button", { name: "Ingresar" })).toBeInTheDocument()
-    expect(useSessionStore.getState().isLoggedIn).toBe(false)
+    expect(await screen.findByText("Comportamiento de monitoreo")).toBeInTheDocument()
   })
 })

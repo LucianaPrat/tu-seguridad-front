@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import userEvent from "@testing-library/user-event"
 import { screen, waitFor } from "@testing-library/react"
 import DVRInitPage from "./DVRInitPage"
+import { meResponse } from "@/test/fixtures"
 import { mockFetchSequence } from "@/test/mockFetch"
 import { renderWithProviders } from "@/test/renderWithProviders"
 
@@ -34,7 +35,11 @@ describe("DVRInitPage", () => {
    * putting the display field back on the wire.
    */
   it("puts exactly the four whitelisted keys, spaceName not among them", async () => {
-    const fetchMock = mockFetchSequence([STORED_DVR])
+    const fetchMock = mockFetchSequence([
+      STORED_DVR,
+      { body: { id: "space-1", name: "Mi casa", role: "admin" } },
+      { body: meResponse() },
+    ])
     renderWithProviders(<DVRInitPage />)
 
     await fillWizard()

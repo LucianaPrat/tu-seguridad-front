@@ -39,9 +39,17 @@ const FIXTURE_USER: SessionUser = {
   avatarUrl: null,
   isActive: true,
   profileCompleted: true,
-  spaceId: "",
-  spaceName: "Mi Espacio Seguro",
-  role: "admin",
+  spaces: [{ id: "", name: "Mi Espacio Seguro", role: "admin" }],
+  currentSpace: {
+    id: "",
+    name: "Mi Espacio Seguro",
+    role: "admin",
+    // Literal, not MENU_KEYS: permissions.ts imports this store, so importing it back is a cycle.
+    menuAccess: ["home", "monitor", "events", "dvr", "channels", "members"],
+    cameraIds: [],
+    hasDvr: true,
+  },
+  pendingInvitationsCount: 0,
   receiveAlerts: true,
   locale: "es",
 }

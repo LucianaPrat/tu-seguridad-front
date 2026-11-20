@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { MENU_KEYS } from "@/lib/permissions"
 
 /*
  * Single home for form validation. Messages are translation keys (src/lib/i18n),
@@ -87,6 +88,10 @@ export type DVRFormValues = z.infer<typeof dvrSchema>
 export const inviteSchema = z.object({ email: emailField })
 export type InviteValues = z.infer<typeof inviteSchema>
 
+/** POST /spaces and PATCH /spaces/current: trimmed, 1..80 (SpaceNameDto). */
+export const spaceNameSchema = z.object({ name: required().max(80, "validation.max80") })
+export type SpaceNameValues = z.infer<typeof spaceNameSchema>
+
 /*
  * Mirrors CompleteProfileDto on the backend: E.164 phone and a 12-character
  * password floor. Both are checked here so a rejected profile is a field error
@@ -115,6 +120,10 @@ export type CompleteProfileValues = z.infer<typeof completeProfileSchema>
 export const accessTokenSchema = z.object({ accessToken: z.string().min(1) })
 export type AccessTokenResponse = z.infer<typeof accessTokenSchema>
 
+const spaceRoleSchema = z.enum(["admin", "collaborator", "guest"])
+export type SpaceRole = z.infer<typeof spaceRoleSchema>
+const spaceSummarySchema = z.object({ id: z.string(), name: z.string(), role: spaceRoleSchema })
+
 export const meSchema = z.object({
   id: z.number(),
   email: z.email(),
@@ -124,13 +133,20 @@ export const meSchema = z.object({
   avatarUrl: z.string().nullable(),
   isActive: z.boolean(),
   profileCompleted: z.boolean(),
-  spaceId: z.string(),
-  spaceName: z.string(),
-  role: z.enum(["admin", "collaborator", "guest"]),
+  spaces: z.array(spaceSummarySchema),
+  currentSpace: spaceSummarySchema
+    .extend({
+      menuAccess: z.array(z.enum(MENU_KEYS)),
+      cameraIds: z.array(z.string()),
+      hasDvr: z.boolean(),
+    })
+    .nullable(),
+  pendingInvitationsCount: z.number(),
   receiveAlerts: z.boolean(),
   locale: z.enum(["es", "en"]),
 })
 export type MeResponse = z.infer<typeof meSchema>
+export type CurrentSpace = NonNullable<MeResponse["currentSpace"]>
 
 /*
  * GET /dvr and PUT /dvr answer with this. Only the fields the UI reads are

@@ -51,7 +51,7 @@ export function useSessionBootstrap() {
  * The token has to land in the store before me() runs — that is where the
  * request layer reads the Authorization header from.
  */
-async function openSession(): Promise<MeResponse> {
+export async function openSession(): Promise<MeResponse> {
   const store = useSessionStore.getState()
   try {
     const profile = await authApi.me()

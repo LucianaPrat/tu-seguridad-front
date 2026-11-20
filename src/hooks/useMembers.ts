@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as membersApi from "@/api/members"
+import { useCan } from "@/lib/permissions"
 import { useSessionStore } from "@/stores/sessionStore"
 import type { MemberListResponse, MemberResponse } from "@/lib/schemas"
 
@@ -7,14 +8,16 @@ export const memberKeys = {
   list: ["members", "list"] as const,
 }
 
-/** Disabled while logged out: the route needs the bearer token. */
+/** Disabled while logged out or without the members section. */
 export function useMembers() {
   const isLoggedIn = useSessionStore((state) => state.isLoggedIn)
+  const { canView } = useCan()
 
   return useQuery<MemberListResponse>({
     queryKey: memberKeys.list,
     queryFn: membersApi.listMembers,
-    enabled: isLoggedIn,
+    // GET /members needs the members section; Channels and Events read the roster too.
+    enabled: isLoggedIn && canView("members"),
   })
 }
 
