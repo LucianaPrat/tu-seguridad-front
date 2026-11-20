@@ -6,6 +6,8 @@ import DVRForm, { type DVRFormValues } from "@/components/dvr/DVRForm"
 import { ApiError } from "@/lib/http"
 import LogoMark from "@/components/common/LogoMark"
 import { useT } from "@/hooks/useT"
+import { useLogout } from "@/hooks/useAuth"
+import Button from "@/components/common/Button"
 import type { TranslationKey } from "@/lib/i18n"
 
 /*
@@ -31,6 +33,7 @@ export default function DVRInitPage() {
   const currentName = useSessionStore((s) => s.user?.currentSpace?.name ?? "")
   const configure = useConfigureDvr()
   const navigate = useNavigate()
+  const logout = useLogout()
 
   function handleSubmit(values: DVRFormValues) {
     configure.mutate(
@@ -81,6 +84,12 @@ export default function DVRInitPage() {
             showTestConnection
             loading={configure.isPending}
           />
+        </div>
+        {/* The gate keeps a DVR-less admin here; logout is the only way out. */}
+        <div className="mt-4 flex justify-center">
+          <Button variant="ghost" loading={logout.isPending} onClick={() => logout.mutate()}>
+            {t("nav.logout")}
+          </Button>
         </div>
       </div>
     </div>
