@@ -91,8 +91,6 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
 
   const age = relativeTime(camera.lastSnapshotAt)
   const subtitle = camera.location ?? t("cameras.channelN", { id: camera.externalId })
-  // The monitor page reads this id, so configuring "Cámara 04" edits that one.
-  const configureUrl = `/cameras/monitor?camera=${camera.id}`
   const thumbnail = lastFrame ?? snapshotUrl
 
   function handleEnter() {
@@ -121,7 +119,7 @@ export default function CameraCard({ camera, onToggleEnabled }: CameraCardProps)
       className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden group cursor-pointer transition-shadow hover:shadow-md"
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
-      onClick={() => navigate(configureUrl)}
+      onClick={() => navigate(`/cameras/${camera.id}/live`)}
     >
       {/* Thumbnail */}
       <div className="relative aspect-video overflow-hidden bg-gray-900">

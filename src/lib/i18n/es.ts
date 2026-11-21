@@ -111,6 +111,7 @@ export const es = {
   "cameras.noSignal": "Sin señal",
   "cameras.live": "EN VIVO",
   "cameras.connecting": "Conectando",
+  "cameras.backToHome": "Volver al inicio",
   "cameras.channelN": "Canal {id}",
   "zones.freehand": "Mano alzada",
   "zones.rectangle": "Rectángulo",

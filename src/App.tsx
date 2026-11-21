@@ -29,6 +29,7 @@ import CompleteProfilePage from "@/pages/onboarding/CompleteProfilePage"
 import DashboardPage from "@/pages/app/DashboardPage"
 import DVRConfigPage from "@/pages/app/DVRConfigPage"
 import CameraMonitorPage from "@/pages/app/CameraMonitorPage"
+import CameraLivePage from "@/pages/app/CameraLivePage"
 import EventsPage from "@/pages/app/EventsPage"
 import EventDetailPage from "@/pages/app/EventDetailPage"
 import MembersPage from "@/pages/app/MembersPage"
@@ -190,6 +191,17 @@ export function AppRoutes() {
           <RequireDVR>
             <RequireMenu menu="monitor">
               <CameraMonitorPage />
+            </RequireMenu>
+          </RequireDVR>
+        }
+      />
+      {/* Where a dashboard card lands. Gated on home, not monitor: guests watch. */}
+      <Route
+        path="/cameras/:id/live"
+        element={
+          <RequireDVR>
+            <RequireMenu menu="home">
+              <CameraLivePage />
             </RequireMenu>
           </RequireDVR>
         }

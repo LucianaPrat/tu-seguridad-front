@@ -12,6 +12,8 @@ interface LiveThumbnailProps {
   onPlaying: () => void
   /** Fires when the stream cannot play — the card swaps the pill for "sin señal". */
   onError: () => void
+  /** Defaults to the card's cropped fill; the full-screen view letterboxes instead. */
+  className?: string
 }
 
 /*
@@ -41,6 +43,7 @@ export default function LiveThumbnail({
   cameraId,
   onPlaying,
   onError,
+  className = "absolute inset-0 w-full h-full object-cover",
 }: LiveThumbnailProps) {
   const { data, isError } = useCameraLive(cameraId)
 
@@ -99,7 +102,7 @@ export default function LiveThumbnail({
       playsInline
       autoPlay
       onPlaying={onPlaying}
-      className="absolute inset-0 w-full h-full object-cover"
+      className={className}
     />
   )
 }

@@ -114,6 +114,7 @@ export const en: Record<keyof typeof es, string> = {
   "cameras.noSignal": "No signal",
   "cameras.live": "LIVE",
   "cameras.connecting": "Connecting",
+  "cameras.backToHome": "Back to home",
   "cameras.channelN": "Channel {id}",
   "zones.freehand": "Freehand",
   "zones.rectangle": "Rectangle",
