@@ -57,8 +57,19 @@ export async function me(): Promise<MeResponse> {
   return meSchema.parse(await request<unknown>("/auth/me"))
 }
 
-export async function updateMe(body: { locale: Locale }): Promise<MeResponse> {
+export async function updateMe(
+  body: Partial<{ locale: Locale; firstName: string; lastName: string; phone: string }>,
+): Promise<MeResponse> {
   return meSchema.parse(await request<unknown>("/auth/me", { method: "PATCH", body }))
+}
+
+/** The back revokes other sessions and rotates the refresh cookie; the token it returns replaces ours. */
+export async function changePassword(body: {
+  currentPassword: string
+  newPassword: string
+}): Promise<string> {
+  const data = await request<unknown>("/auth/password", { method: "POST", body })
+  return accessTokenSchema.parse(data).accessToken
 }
 
 /*

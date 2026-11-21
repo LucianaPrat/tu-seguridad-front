@@ -123,6 +123,21 @@ export function useUpdateLocale() {
   })
 }
 
+/** Autosave of the personal data: the caller sends only the changed fields. */
+export function useUpdateProfile() {
+  return useMutation<MeResponse, unknown, Parameters<typeof authApi.updateMe>[0]>({
+    mutationFn: authApi.updateMe,
+    onSuccess: (profile) => useSessionStore.getState().updateUser(profile),
+  })
+}
+
+export function useChangePassword() {
+  return useMutation<string, unknown, { currentPassword: string; newPassword: string }>({
+    mutationFn: authApi.changePassword,
+    onSuccess: (token) => useSessionStore.getState().setAccessToken(token),
+  })
+}
+
 export function useLogout() {
   const queryClient = useQueryClient()
 

@@ -53,8 +53,11 @@ export type PasswordChangeValues = z.infer<typeof passwordChangeSchema>
 export const profileSchema = z.object({
   firstName: required(),
   lastName: required(),
-  email: emailField,
-  phone: required(),
+  // Email is not editable. E.164, same rule the backend enforces.
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\+[1-9]\d{7,14}$/, "validation.phoneFormat"),
 })
 export type ProfileValues = z.infer<typeof profileSchema>
 

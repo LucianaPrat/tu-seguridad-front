@@ -28,12 +28,12 @@ describe("locale", () => {
     })
     renderWithProviders(<ProfilePage />, { route: "/profile" })
 
-    expect(screen.getByRole("heading", { name: "Información personal" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Datos personales" })).toBeInTheDocument()
 
     const fetchMock = mockFetchSequence([{ body: meResponse({ id: 7, locale: "en" }) }])
     await userEvent.selectOptions(screen.getByLabelText("Idioma / Language"), "en")
 
-    expect(screen.getByRole("heading", { name: "Personal information" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Personal details" })).toBeInTheDocument()
     expect(document.documentElement.lang).toBe("en")
     expect(localStorage.getItem("locale")).toBe("en")
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
