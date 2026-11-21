@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { startTour, waitFor } from "./useOnboardingTour"
 import { useNavStore } from "@/stores/navStore"
+import { useSessionStore } from "@/stores/sessionStore"
+import { meResponse } from "@/test/fixtures"
 
 /*
  * waitFor is what lets the tour cross a route: it holds until the outgoing
@@ -47,6 +49,7 @@ describe("startTour", () => {
     // src/test/setup.ts seeds the "already seen" flag for every other suite.
     localStorage.removeItem("ts-tour-done")
     useNavStore.setState({ open: false, tourActive: false, userMenuOpen: false })
+    useSessionStore.setState({ user: meResponse() })
   })
 
   afterEach(() => {

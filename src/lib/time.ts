@@ -1,3 +1,6 @@
+import { translate } from "@/lib/i18n"
+import { useLocaleStore } from "@/stores/localeStore"
+
 /**
  * Age of a timestamp the way the camera panel says it: "2 min", "1 h", "3 d".
  * Null in, null out — a camera that never stored a frame has no age to show.
@@ -14,7 +17,7 @@ export function relativeTime(iso: string | null): string | null {
   const minutes = Math.floor(ms / 60_000)
   // Covers clock skew too: a frame stamped in the future reads as "ahora"
   // rather than as a negative age.
-  if (minutes < 1) return "ahora"
+  if (minutes < 1) return translate(useLocaleStore.getState().locale, "common.now")
   if (minutes < 60) return `${minutes} min`
 
   const hours = Math.floor(minutes / 60)

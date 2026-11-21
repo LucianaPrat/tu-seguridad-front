@@ -1,12 +1,15 @@
 import { Bell, ChevronDown, Construction, Menu } from "lucide-react"
-import { NOT_IMPLEMENTED } from "@/components/common/NotImplemented"
+import { useT } from "@/hooks/useT"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useLogout } from "@/hooks/useAuth"
 import { useNavigate } from "react-router-dom"
 import { startTour } from "@/hooks/useOnboardingTour"
+import { useCan } from "@/lib/permissions"
 import { useNavStore } from "@/stores/navStore"
 
 export default function TopBar() {
+  const { t } = useT()
+  const { showNotImplemented } = useCan()
   const {
     setOpen,
     userMenuOpen: menuOpen,
@@ -30,21 +33,23 @@ export default function TopBar() {
       <button
         data-tour="nav-toggle"
         onClick={() => setOpen(true)}
-        aria-label="Abrir menú"
+        aria-label={t("nav.openMenu")}
         className="lg:hidden mr-auto -ml-1 p-3 rounded-lg hover:bg-gray-100 transition-colors text-gray-600"
       >
         <Menu size={22} />
       </button>
 
       {/* Bell — no notifications feed yet. The unread dot was fake; the badge says why it is off. */}
-      <button
-        disabled
-        title={NOT_IMPLEMENTED}
-        className="relative min-h-11 min-w-11 flex items-center justify-center rounded-lg text-gray-400 disabled:cursor-not-allowed"
-      >
-        <Bell size={18} />
-        <Construction size={10} className="absolute top-2 right-2" />
-      </button>
+      {showNotImplemented && (
+        <button
+          disabled
+          title={t("common.notImplemented")}
+          className="relative min-h-11 min-w-11 flex items-center justify-center rounded-lg text-gray-400 disabled:cursor-not-allowed"
+        >
+          <Bell size={18} />
+          <Construction size={10} className="absolute top-2 right-2" />
+        </button>
+      )}
 
       {/* User menu */}
       <div className="relative">
@@ -86,7 +91,7 @@ export default function TopBar() {
                 }}
                 className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
               >
-                Mi perfil
+                {t("nav.myProfile")}
               </button>
               <button
                 onClick={() => {
@@ -95,14 +100,14 @@ export default function TopBar() {
                 }}
                 className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
               >
-                Ver el tutorial
+                {t("nav.viewTutorial")}
               </button>
               <hr className="my-1 border-gray-100" />
               <button
                 onClick={handleLogout}
                 className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
               >
-                Cerrar sesión
+                {t("nav.logout")}
               </button>
             </div>
           </>

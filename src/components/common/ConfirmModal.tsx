@@ -4,6 +4,7 @@ import Modal from "./Modal"
 import Button from "./Button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { useT } from "@/hooks/useT"
 
 interface ConfirmModalProps {
   open: boolean
@@ -22,10 +23,11 @@ export default function ConfirmModal({
   onConfirm,
   title,
   message,
-  confirmLabel = "Confirmar",
+  confirmLabel,
   requireAcknowledge = false,
-  acknowledgeLabel = "Entiendo las consecuencias",
+  acknowledgeLabel,
 }: ConfirmModalProps) {
+  const { t } = useT()
   const [acknowledged, setAcknowledged] = useState(false)
 
   function handleConfirm() {
@@ -47,14 +49,14 @@ export default function ConfirmModal({
       footer={
         <>
           <Button variant="secondary" onClick={handleClose}>
-            Cancelar
+            {t("common.cancel")}
           </Button>
           <Button
             variant="danger"
             onClick={handleConfirm}
             disabled={requireAcknowledge && !acknowledged}
           >
-            {confirmLabel}
+            {confirmLabel ?? t("common.confirm")}
           </Button>
         </>
       }
@@ -77,7 +79,7 @@ export default function ConfirmModal({
                 htmlFor="acknowledge"
                 className="text-sm font-normal text-secondary-foreground"
               >
-                {acknowledgeLabel}
+                {acknowledgeLabel ?? t("common.acknowledgeConsequences")}
               </Label>
             </div>
           )}

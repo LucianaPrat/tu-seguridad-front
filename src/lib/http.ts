@@ -1,6 +1,11 @@
 import { useSessionStore } from "@/stores/sessionStore"
+import { useLocaleStore } from "@/stores/localeStore"
+import { translate, type TranslationKey } from "@/lib/i18n"
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/v1"
+
+// Our own fallbacks only; messages from the API stay as the backend sent them.
+const tr = (key: TranslationKey) => translate(useLocaleStore.getState().locale, key)
 
 /**
  * The backend wraps business failures in `{statusCode, code, message}`. Framework
@@ -51,7 +56,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
     })
   } catch {
-    throw new ApiError(0, "NETWORK_ERROR", "No pudimos conectar con el servidor")
+    throw new ApiError(0, "NETWORK_ERROR", tr("errors.network"))
   }
 
   if (response.status === 204) return undefined as T
@@ -63,7 +68,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     throw new ApiError(
       response.status,
       envelope?.code ?? "UNKNOWN_ERROR",
-      envelope?.message ?? "Error inesperado",
+      envelope?.message ?? tr("errors.unexpected"),
     )
   }
 
@@ -100,11 +105,11 @@ export async function requestBlob(
       body: body === undefined ? undefined : JSON.stringify(body),
     })
   } catch {
-    throw new ApiError(0, "NETWORK_ERROR", "No pudimos conectar con el servidor")
+    throw new ApiError(0, "NETWORK_ERROR", tr("errors.network"))
   }
 
   if (!response.ok) {
-    throw new ApiError(response.status, "UNKNOWN_ERROR", "No pudimos cargar el archivo")
+    throw new ApiError(response.status, "UNKNOWN_ERROR", tr("errors.fileLoad"))
   }
 
   return response.blob()

@@ -1,6 +1,8 @@
 import { useRef, useState } from "react"
 import { PenTool, Square } from "lucide-react"
 import type { AlertType, MonitorZone } from "@/data/mockData"
+import { useT } from "@/hooks/useT"
+import type { TranslationKey } from "@/lib/i18n"
 import { bboxOf, MAX_POINTS, rectPoints, toSvgPoints, type Point } from "@/lib/zones"
 
 interface ZoneEditorProps {
@@ -10,6 +12,8 @@ interface ZoneEditorProps {
   defaultAlertType: AlertType
   /** The frame's own resolution — the page sizes the box from it. */
   onFrameLoad?: (natural: { width: number; height: number }) => void
+  /** Viewing only: no drawing, no per-zone buttons, no tool picker. */
+  readOnly?: boolean
 }
 
 const ALERT_FILL: Record<AlertType, string> = {
@@ -25,8 +29,8 @@ const ALERT_STROKE: Record<AlertType, string> = {
 type Tool = "freehand" | "rect"
 
 const TOOLS = [
-  { tool: "freehand" as Tool, label: "Mano alzada", Icon: PenTool },
-  { tool: "rect" as Tool, label: "Rectángulo", Icon: Square },
+  { tool: "freehand" as Tool, label: "zones.freehand" as TranslationKey, Icon: PenTool },
+  { tool: "rect" as Tool, label: "zones.rectangle" as TranslationKey, Icon: Square },
 ]
 
 const PREVIEW_STYLE = (alertType: AlertType) => ({
@@ -48,7 +52,9 @@ export default function ZoneEditor({
   onChange,
   defaultAlertType,
   onFrameLoad,
+  readOnly,
 }: ZoneEditorProps) {
+  const { t } = useT()
   const containerRef = useRef<HTMLDivElement>(null)
   const [tool, setTool] = useState<Tool>("freehand")
   const [path, setPath] = useState<Point[] | null>(null)
@@ -110,7 +116,7 @@ export default function ZoneEditor({
   return (
     <div
       ref={containerRef}
-      className="relative select-none cursor-crosshair rounded-xl overflow-hidden bg-gray-900 touch-none"
+      className={`relative select-none cursor-crosshair rounded-xl overflow-hidden bg-gray-900 touch-none${readOnly ? " pointer-events-none" : ""}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -124,7 +130,7 @@ export default function ZoneEditor({
       */}
       <img
         src={imageUrl}
-        alt="Captura de la cámara"
+        alt={t("zones.cameraCapture")}
         className="block w-full h-auto pointer-events-none"
         onLoad={(e) =>
           onFrameLoad?.({
@@ -185,7 +191,7 @@ export default function ZoneEditor({
             }}
           >
             <button
-              title="Cambiar nivel de alerta"
+              title={t("zones.changeLevel")}
               className="px-2 py-1.5 min-h-8 flex items-center"
               onPointerDown={(e) => {
                 e.stopPropagation()
@@ -194,10 +200,10 @@ export default function ZoneEditor({
                 })
               }}
             >
-              {zone.alertType === "intruso" ? "Intruso" : "Sospechoso"}
+              {t(zone.alertType === "intruso" ? "alert.intruso" : "alert.sospechoso")}
             </button>
             <button
-              aria-label="Borrar zona"
+              aria-label={t("zones.delete")}
               className="hover:opacity-70 px-2 py-1.5 min-h-8 flex items-center"
               onPointerDown={(e) => {
                 e.stopPropagation()
@@ -210,33 +216,33 @@ export default function ZoneEditor({
         )
       })}
 
-      <div
-        className="absolute top-2 right-2 flex gap-1 bg-black/60 rounded-lg p-1"
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        {TOOLS.map(({ tool: option, label, Icon }) => (
-          <button
-            key={option}
-            type="button"
-            title={label}
-            aria-label={label}
-            aria-pressed={tool === option}
-            onClick={() => setTool(option)}
-            className={`p-2.5 rounded-md transition-colors ${
-              tool === option ? "bg-white text-gray-900" : "text-white hover:bg-white/20"
-            }`}
-          >
-            <Icon size={18} />
-          </button>
-        ))}
-      </div>
+      {!readOnly && (
+        <div
+          className="absolute top-2 right-2 flex gap-1 bg-black/60 rounded-lg p-1"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          {TOOLS.map(({ tool: option, label, Icon }) => (
+            <button
+              key={option}
+              type="button"
+              title={t(label)}
+              aria-label={t(label)}
+              aria-pressed={tool === option}
+              onClick={() => setTool(option)}
+              className={`p-2.5 rounded-md transition-colors ${
+                tool === option ? "bg-white text-gray-900" : "text-white hover:bg-white/20"
+              }`}
+            >
+              <Icon size={18} />
+            </button>
+          ))}
+        </div>
+      )}
 
-      {zones.length === 0 && !path && (
+      {!readOnly && zones.length === 0 && !path && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <p className="bg-black/50 text-white text-sm px-3 py-1.5 rounded-full">
-            {tool === "freehand"
-              ? "Dibujá a mano alzada la zona a monitorear"
-              : "Arrastrá para definir una zona rectangular"}
+            {tool === "freehand" ? t("zones.hintFreehand") : t("zones.hintRect")}
           </p>
         </div>
       )}

@@ -7,9 +7,11 @@ import FormField from "@/components/common/FormField"
 import Button from "@/components/common/Button"
 import NotImplemented from "@/components/common/NotImplemented"
 import { passwordChangeSchema, type PasswordChangeValues } from "@/lib/schemas"
+import { useT } from "@/hooks/useT"
 import { CheckCircle, Construction } from "lucide-react"
 
 export default function PasswordChangePage() {
+  const { t } = useT()
   const [done, setDone] = useState(false)
 
   const {
@@ -27,42 +29,40 @@ export default function PasswordChangePage() {
   }
 
   return (
-    <AuthCard title="Nueva contraseña" subtitle="Elegí una contraseña segura para tu cuenta">
+    <AuthCard title={t("auth.change.title")} subtitle={t("auth.change.subtitle")}>
       {done ? (
         <div className="text-center py-4">
           <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
             <CheckCircle size={20} className="text-green-600" />
           </div>
-          <p className="font-medium text-foreground">Contraseña actualizada</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Ya podés ingresar con tu nueva contraseña.
-          </p>
+          <p className="font-medium text-foreground">{t("auth.change.done")}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("auth.change.doneHint")}</p>
           <Link
             to="/login"
             className="inline-flex items-center mt-5 text-sm text-primary font-medium hover:underline py-2"
           >
-            Ir al inicio de sesión
+            {t("common.goToLogin")}
           </Link>
         </div>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
           <FormField
-            label="Nueva contraseña"
+            label={t("auth.change.newPassword")}
             type="password"
-            placeholder="Mínimo 8 caracteres"
+            placeholder={t("auth.change.placeholder")}
             error={errors.password?.message}
             {...register("password")}
           />
           <FormField
-            label="Repetir contraseña"
+            label={t("common.repeatPassword")}
             type="password"
-            placeholder="••••••••"
+            placeholder={t("common.passwordMask")}
             error={errors.repeat?.message}
             {...register("repeat")}
           />
           <NotImplemented className="block">
             <Button type="submit" disabled loading={isSubmitting} className="w-full">
-              Cambiar contraseña
+              {t("auth.change.submit")}
               <Construction size={14} />
             </Button>
           </NotImplemented>

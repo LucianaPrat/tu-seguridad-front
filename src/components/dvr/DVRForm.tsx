@@ -6,6 +6,7 @@ import TimezoneCombobox from "@/components/common/TimezoneCombobox"
 import Button from "@/components/common/Button"
 import NotImplemented from "@/components/common/NotImplemented"
 import { useTestDvrConnection } from "@/hooks/useDvr"
+import { useT } from "@/hooks/useT"
 import { dvrSchema, type DVRFormValues } from "@/lib/schemas"
 import { Eye, EyeOff, CheckCircle, XCircle, Construction } from "lucide-react"
 
@@ -24,11 +25,12 @@ interface DVRFormProps {
 export default function DVRForm({
   defaultValues,
   onSubmit,
-  submitLabel = "Guardar",
+  submitLabel,
   showTestConnection = true,
   submitNotImplemented = false,
   loading = false,
 }: DVRFormProps) {
+  const { t } = useT()
   const [showPass, setShowPass] = useState(false)
   const testConnection = useTestDvrConnection()
 
@@ -78,26 +80,26 @@ export default function DVRForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
       <FormField
-        label="Nombre del espacio"
-        placeholder="Ej: Mi casa"
+        label={t("dvr.spaceName")}
+        placeholder={t("dvr.spaceNamePlaceholder")}
         error={errors.spaceName?.message}
         {...register("spaceName")}
       />
       <FormField
-        label="URL del DVR"
+        label={t("dvr.url")}
         placeholder="http://192.168.1.100:8080"
         error={errors.dvrUrl?.message}
         {...register("dvrUrl", { onChange: resetProbe })}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <FormField
-          label="Usuario DVR"
+          label={t("dvr.user")}
           placeholder="admin"
           error={errors.dvrUser?.message}
           {...register("dvrUser", { onChange: resetProbe })}
         />
         <FormField
-          label="Contraseña DVR"
+          label={t("dvr.password")}
           type={showPass ? "text" : "password"}
           placeholder="••••••••"
           error={errors.dvrPassword?.message}
@@ -105,7 +107,7 @@ export default function DVRForm({
             <button
               type="button"
               onClick={() => setShowPass((s) => !s)}
-              aria-label={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
+              aria-label={showPass ? t("dvr.hidePassword") : t("dvr.showPassword")}
               className="text-muted-foreground hover:text-foreground"
             >
               {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -135,16 +137,16 @@ export default function DVRForm({
             onClick={handleTest}
             loading={testConnection.isPending}
           >
-            Probar conexión
+            {t("dvr.testConnection")}
           </Button>
           {testConnection.isSuccess && (
             <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
-              <CheckCircle size={15} /> Conexión exitosa
+              <CheckCircle size={15} /> {t("dvr.connectionOk")}
             </span>
           )}
           {testConnection.isError && (
             <span className="flex items-center gap-1.5 text-sm text-red-600 font-medium">
-              <XCircle size={15} /> No se pudo conectar
+              <XCircle size={15} /> {t("dvr.connectionFailed")}
             </span>
           )}
         </div>
@@ -154,13 +156,13 @@ export default function DVRForm({
         {submitNotImplemented ? (
           <NotImplemented className="block">
             <Button type="submit" disabled className="w-full">
-              {submitLabel}
+              {submitLabel ?? t("common.save")}
               <Construction size={14} />
             </Button>
           </NotImplemented>
         ) : (
           <Button type="submit" loading={loading} className="w-full">
-            {submitLabel}
+            {submitLabel ?? t("common.save")}
           </Button>
         )}
       </div>

@@ -8,23 +8,23 @@ import Button from "@/components/common/Button"
 import PageHeader from "@/components/common/PageHeader"
 import InviteModal from "@/components/common/InviteModal"
 import { useCameras, useSetCameraEnabled } from "@/hooks/useCameras"
-import { useSessionStore } from "@/stores/sessionStore"
+import { useCan } from "@/lib/permissions"
 import { ApiError } from "@/lib/http"
+import { useT } from "@/hooks/useT"
 import { cn } from "@/lib/utils"
 
 const NOTICE = "bg-white rounded-xl border border-gray-100 p-5 sm:p-8 text-center text-sm"
 
-function errorMessage(error: unknown) {
-  return error instanceof ApiError ? error.message : "No pudimos cargar las cámaras"
-}
-
 export default function DashboardPage() {
+  const { t } = useT()
+  const errorMessage = (error: unknown) =>
+    error instanceof ApiError ? error.message : t("cameras.loadError")
   const { data: cameras, isPending, error } = useCameras()
   const setEnabled = useSetCameraEnabled()
   const [disabledOpen, setDisabledOpen] = useState(true)
   const [inviteOpen, setInviteOpen] = useState(false)
   // POST /invitations is admin-only; a member gets no button instead of a 403.
-  const isAdmin = useSessionStore((state) => state.user?.role === "admin")
+  const { isAdmin } = useCan()
 
   const all = cameras ?? []
   const configured = all.filter((c) => c.isConfigured && c.isEnabled)
@@ -43,8 +43,8 @@ export default function DashboardPage() {
   return (
     <AppShell>
       <PageHeader
-        title="Panel de cámaras"
-        subtitle={`${configured.length} cámaras activas`}
+        title={t("cameras.dashboard.title")}
+        subtitle={t("cameras.dashboard.subtitle", { count: configured.length })}
         action={
           isAdmin ? (
             <Button
@@ -52,13 +52,15 @@ export default function DashboardPage() {
               icon={<UserPlus size={14} />}
               onClick={() => setInviteOpen(true)}
             >
-              Invitar miembro
+              {t("members.invite.title")}
             </Button>
           ) : undefined
         }
       />
 
-      {isPending && <div className={cn(NOTICE, "text-gray-400")}>Cargando cámaras…</div>}
+      {isPending && (
+        <div className={cn(NOTICE, "text-gray-400")}>{t("cameras.dashboard.loading")}</div>
+      )}
 
       {error && (
         <div role="alert" className={cn(NOTICE, "text-red-600")}>
@@ -78,13 +80,15 @@ export default function DashboardPage() {
           <section className="mb-8">
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               <CameraIcon size={16} className="text-[#1a6b61]" />
-              <h2 className="text-sm font-semibold text-gray-700">Cámaras configuradas</h2>
-              <span className="text-xs text-gray-400">
-                Cámaras activas y listas para monitoreo.
-              </span>
+              <h2 className="text-sm font-semibold text-gray-700">
+                {t("cameras.dashboard.configured")}
+              </h2>
+              <span className="text-xs text-gray-400">{t("cameras.dashboard.configuredHint")}</span>
             </div>
             {configured.length === 0 ? (
-              <div className={cn(NOTICE, "text-gray-400")}>No hay cámaras configuradas aún.</div>
+              <div className={cn(NOTICE, "text-gray-400")}>
+                {t("cameras.dashboard.noneConfigured")}
+              </div>
             ) : (
               <CameraGrid>
                 {configured.map((cam) => (
@@ -99,9 +103,11 @@ export default function DashboardPage() {
             <section className="mb-8">
               <div className="flex items-center gap-2 mb-3 flex-wrap">
                 <CameraIcon size={16} className="text-gray-400" />
-                <h2 className="text-sm font-semibold text-gray-700">Cámaras sin configurar</h2>
+                <h2 className="text-sm font-semibold text-gray-700">
+                  {t("cameras.dashboard.unconfigured")}
+                </h2>
                 <span className="text-xs text-gray-400">
-                  Cámaras detectadas que aún no han sido configuradas.
+                  {t("cameras.dashboard.unconfiguredHint")}
                 </span>
               </div>
               <CameraGrid>
@@ -124,7 +130,7 @@ export default function DashboardPage() {
                 onClick={() => setDisabledOpen((o) => !o)}
               >
                 {disabledOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
-                Cámaras desactivadas ({disabled.length})
+                {t("cameras.dashboard.disabled", { count: disabled.length })}
               </button>
               {disabledOpen && (
                 <CameraGrid>

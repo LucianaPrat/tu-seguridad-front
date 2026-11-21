@@ -7,9 +7,11 @@ import FormField from "@/components/common/FormField"
 import Button from "@/components/common/Button"
 import NotImplemented from "@/components/common/NotImplemented"
 import { emailOnlySchema, type EmailOnlyValues } from "@/lib/schemas"
+import { useT } from "@/hooks/useT"
 import { Mail, ArrowLeft, CheckCircle, Construction } from "lucide-react"
 
 export default function MagicLinkPage() {
+  const { t } = useT()
   // Held separately so the confirmation copy survives the form reset.
   const [sentTo, setSentTo] = useState<string | null>(null)
 
@@ -34,40 +36,36 @@ export default function MagicLinkPage() {
   }
 
   return (
-    <AuthCard title="Magic Link" subtitle="Ingresá sin contraseña">
+    <AuthCard title={t("auth.magic.title")} subtitle={t("auth.magic.subtitle")}>
       {sentTo ? (
         <div className="flex flex-col items-center text-center gap-3 py-2">
           <div className="w-14 h-14 rounded-full bg-teal-50 border border-teal-100 flex items-center justify-center">
             <CheckCircle size={26} className="text-primary" />
           </div>
           <div>
-            <p className="font-semibold text-foreground">Revisá tu correo</p>
+            <p className="font-semibold text-foreground">{t("common.checkEmail")}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Enviamos un enlace de acceso a{" "}
-              <span className="font-medium text-secondary-foreground">{sentTo}</span>. Hacé clic en
-              el enlace para ingresar automáticamente.
+              {t("auth.magic.sentTo")}{" "}
+              <span className="font-medium text-secondary-foreground">{sentTo}</span>
+              {t("auth.magic.sentToTail")}
             </p>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Si no lo encontrás, revisá la carpeta de spam.
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">{t("auth.magic.spam")}</p>
           <button
             type="button"
             onClick={handleRetry}
             className="text-sm text-primary hover:underline mt-1 inline-flex items-center py-2"
           >
-            Intentar con otro email
+            {t("auth.magic.retry")}
           </button>
         </div>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
-          <p className="text-sm text-secondary-foreground">
-            Ingresá tu email y te enviamos un enlace para acceder sin necesidad de contraseña.
-          </p>
+          <p className="text-sm text-secondary-foreground">{t("auth.magic.intro")}</p>
           <FormField
-            label="Email"
+            label={t("common.email")}
             type="email"
-            placeholder="nombre@ejemplo.com"
+            placeholder={t("members.invite.emailPlaceholder")}
             error={errors.email?.message}
             {...register("email")}
           />
@@ -79,7 +77,7 @@ export default function MagicLinkPage() {
               icon={<Mail size={14} />}
               className="w-full"
             >
-              Enviar Magic Link
+              {t("auth.magic.submit")}
               <Construction size={14} />
             </Button>
           </NotImplemented>
@@ -92,7 +90,7 @@ export default function MagicLinkPage() {
           className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-secondary-foreground transition-colors py-2"
         >
           <ArrowLeft size={14} />
-          Volver al inicio de sesión
+          {t("common.backToLogin")}
         </Link>
       </div>
     </AuthCard>

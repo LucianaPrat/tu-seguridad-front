@@ -3,6 +3,9 @@ import { useNavigate, type NavigateFunction } from "react-router-dom"
 import { driver, type Driver, type PopoverDOM } from "driver.js"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useNavStore } from "@/stores/navStore"
+import { useLocaleStore } from "@/stores/localeStore"
+import { MENU_KEYS, MENU_ROUTES, canView } from "@/lib/permissions"
+import { translate, type TranslationKey } from "@/lib/i18n"
 import "driver.js/dist/driver.css"
 
 /*
@@ -48,125 +51,118 @@ interface TourStep {
   align?: "start" | "center" | "end"
   /** Leading glyph. Carries the step at a glance so the body can stay one line. */
   icon: string
-  title: string
-  body: string
+  title: TranslationKey
+  body: TranslationKey
 }
 
 const STEPS: TourStep[] = [
   {
     to: "/",
     icon: "👋",
-    title: "Bienvenido",
-    body: "Un minuto para ver qué hace cada sección. Podés saltarlo cuando quieras.",
+    title: "onboarding.step1.title",
+    body: "onboarding.step1.body",
   },
   {
     to: "/",
     element: '[data-tour="nav-toggle"]',
     mobileOnly: true,
     icon: "☰",
-    title: "El menú",
-    body: "Desde acá abrís el menú: monitoreo, eventos, DVR, canales y miembros.",
+    title: "onboarding.step2.title",
+    body: "onboarding.step2.body",
   },
   {
     to: "/",
     element: '[data-tour="nav-home"]',
     inNav: true,
     icon: "🏠",
-    title: "Inicio",
-    body: "Todas tus cámaras de un vistazo: online u offline, y hace cuánto es la foto.",
+    title: "onboarding.step3.title",
+    body: "onboarding.step3.body",
   },
   {
     to: "/",
     element: '[data-tour="page-action"]',
     adminOnly: true,
     icon: "👥",
-    title: "Invitar",
-    body: "Sumás gente al espacio con su email. Le llega un link para entrar.",
+    title: "onboarding.step4.title",
+    body: "onboarding.step4.body",
   },
   {
     to: "/cameras/monitor",
     element: '[data-tour="nav-monitor"]',
     inNav: true,
     icon: "🎯",
-    title: "Monitoreo",
-    body: "Qué vigila cada cámara: toda la imagen, o zonas que dibujás vos.",
+    title: "onboarding.step5.title",
+    body: "onboarding.step5.body",
   },
   {
     to: "/cameras/monitor",
     element: '[data-tour="page-action"]',
     icon: "✅",
-    title: "Se guarda solo",
-    body: "No hay botón: las zonas se guardan al soltar el dibujo. Acá ves si ya salió.",
+    title: "onboarding.step6.title",
+    body: "onboarding.step6.body",
   },
   {
     to: "/events",
     element: '[data-tour="nav-events"]',
     inNav: true,
     icon: "📋",
-    title: "Eventos",
-    body: "El histórico de alertas. Tocá una fila y ves la imagen del momento.",
+    title: "onboarding.step7.title",
+    body: "onboarding.step7.body",
   },
   {
     to: "/events",
     element: '[data-tour="events-filters"]',
     icon: "🔎",
-    title: "Filtros",
-    body: "Por fecha y por nivel: intruso o sospechoso.",
+    title: "onboarding.step8.title",
+    body: "onboarding.step8.body",
   },
   {
     to: "/dvr-config",
     element: '[data-tour="nav-dvr"]',
     inNav: true,
     icon: "📼",
-    title: "DVR",
-    body: "La conexión al grabador. Ojo: cambiarla puede borrar la config de las cámaras.",
+    title: "onboarding.step9.title",
+    body: "onboarding.step9.body",
   },
   {
     to: "/channels",
     element: '[data-tour="nav-channels"]',
     inNav: true,
     icon: "📣",
-    title: "Canales",
-    body: "Por dónde salen las alertas y a quién le llegan. Se guarda solo.",
+    title: "onboarding.step10.title",
+    body: "onboarding.step10.body",
   },
   {
     to: "/channels",
     element: '[data-tour="channels-routing"]',
     icon: "🔀",
-    title: "Enrutamiento",
-    body: "Por cada nivel marcás los medios: llamada, WhatsApp o email.",
+    title: "onboarding.step11.title",
+    body: "onboarding.step11.body",
   },
   {
     to: "/channels",
     element: '[data-tour="channels-recipients"]',
     icon: "🔔",
-    title: "Destinatarios",
-    body: "Un interruptor por miembro. Usa el mail y el teléfono de su registro.",
+    title: "onboarding.step12.title",
+    body: "onboarding.step12.body",
   },
   {
     to: "/members",
     element: '[data-tour="nav-members"]',
     inNav: true,
     icon: "🧑‍🤝‍🧑",
-    title: "Miembros",
-    body: "Quiénes entran al espacio y cuándo entraron por última vez.",
+    title: "onboarding.step13.title",
+    body: "onboarding.step13.body",
   },
   {
     to: "/profile",
     element: '[data-tour="nav-profile"]',
     inNav: true,
     icon: "⚙️",
-    title: "Perfil",
-    body: "Tus datos y tu contraseña.",
+    title: "onboarding.step14.title",
+    body: "onboarding.step14.body",
   },
-  {
-    to: "/help",
-    element: '[data-tour="nav-help"]',
-    inNav: true,
-    icon: "💬",
-    title: "Ayuda",
-    body: "Un asistente en chat para tus dudas sobre el sistema.",
-  },
+  // Help step hidden with the Help menu item; restore both together.
   {
     to: "/",
     element: '[data-tour="topbar-menu"]',
@@ -174,8 +170,8 @@ const STEPS: TourStep[] = [
     side: "bottom",
     align: "end",
     icon: "🎉",
-    title: "Listo",
-    body: "Acá está tu perfil, cerrar sesión, y «Ver el tutorial» para repetir esto.",
+    title: "onboarding.step16.title",
+    body: "onboarding.step16.body",
   },
 ]
 
@@ -243,7 +239,16 @@ export function startTour(navigate: NavigateFunction) {
    * index paired with the route it belongs to — and keeps the progress count
    * honest for a member who is never shown that step.
    */
-  const isAdmin = useSessionStore.getState().user?.role === "admin"
+  const locale = useLocaleStore.getState().locale
+  const t = (key: TranslationKey, vars?: Record<string, string | number>) =>
+    translate(locale, key, vars)
+  const space = useSessionStore.getState().user?.currentSpace ?? null
+  const isAdmin = space?.role === "admin"
+  // A step on a section the member cannot open would be redirected away by RequireMenu.
+  const allowed = (to: string) => {
+    const key = MENU_KEYS.find((k) => MENU_ROUTES[k] === to)
+    return key === undefined || canView(space, key)
+  }
   /*
    * Below `lg` the sidebar lives in a closed drawer, so the eight steps anchored
    * to it would each stall for `waitForElement` and then vanish. A step pointing
@@ -254,7 +259,9 @@ export function startTour(navigate: NavigateFunction) {
    * branch. jsdom's window is 1024 wide, so this reads as desktop there.
    */
   const isDesktop = window.innerWidth >= 1024
-  const steps = STEPS.filter((s) => (!s.adminOnly || isAdmin) && (!s.mobileOnly || !isDesktop))
+  const steps = STEPS.filter(
+    (s) => (!s.adminOnly || isAdmin) && (!s.mobileOnly || !isDesktop) && allowed(s.to),
+  )
 
   /*
    * Both menus are in the DOM below `lg` — the aside is only `display: none`,
@@ -352,17 +359,17 @@ export function startTour(navigate: NavigateFunction) {
       icon.textContent = step.icon
       popover.title.prepend(icon)
     }
-    popover.closeButton.textContent = "Saltar"
-    popover.closeButton.setAttribute("aria-label", "Saltar el tutorial")
+    popover.closeButton.textContent = t("onboarding.skip")
+    popover.closeButton.setAttribute("aria-label", t("onboarding.skipAria"))
     popover.footer.prepend(popover.closeButton)
   }
 
   const d = driver({
     showProgress: true,
-    progressText: "{{current}} de {{total}}",
-    nextBtnText: "Siguiente",
-    prevBtnText: "Anterior",
-    doneBtnText: "Entendido",
+    progressText: t("onboarding.progress"),
+    nextBtnText: t("onboarding.next"),
+    prevBtnText: t("onboarding.prev"),
+    doneBtnText: t("onboarding.done"),
     showButtons: ["next", "previous", "close"],
     // Load-bearing: driver.js filters "close" out of showButtons when this is
     // false, which would leave the tour with no skip button at all.
@@ -390,7 +397,7 @@ export function startTour(navigate: NavigateFunction) {
     // footer is what stays put, pinned in CSS.
     steps: steps.map((s) => ({
       element: anchorOf(s),
-      popover: { title: s.title, description: s.body, side: s.side, align: s.align },
+      popover: { title: t(s.title), description: t(s.body), side: s.side, align: s.align },
     })),
     // Overriding these turns off driver.js's own advance, so every move — the
     // done button included — routes through goTo and its navigation.

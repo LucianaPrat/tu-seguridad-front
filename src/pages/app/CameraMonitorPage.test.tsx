@@ -3,6 +3,7 @@ import { screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import CameraMonitorPage from "./CameraMonitorPage"
 import { mockFetchSequence } from "@/test/mockFetch"
+import { meResponse } from "@/test/fixtures"
 import { renderWithProviders } from "@/test/renderWithProviders"
 import { useSessionStore } from "@/stores/sessionStore"
 
@@ -32,7 +33,7 @@ const CAMERA = {
 
 describe("CameraMonitorPage", () => {
   beforeEach(() => {
-    useSessionStore.setState({ isLoggedIn: true, accessToken: "token" })
+    useSessionStore.setState({ isLoggedIn: true, accessToken: "token", user: meResponse() })
   })
 
   it("reports a stale ?camera= id instead of falling through to the first camera", async () => {

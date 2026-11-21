@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as authApi from "@/api/auth"
 import { ApiError } from "@/lib/http"
+import { useLocaleStore } from "@/stores/localeStore"
+import type { Locale } from "@/lib/i18n"
 import { useSessionStore } from "@/stores/sessionStore"
 import type { CompleteProfileValues, LoginValues, MeResponse } from "@/lib/schemas"
 
@@ -49,7 +51,7 @@ export function useSessionBootstrap() {
  * The token has to land in the store before me() runs — that is where the
  * request layer reads the Authorization header from.
  */
-async function openSession(): Promise<MeResponse> {
+export async function openSession(): Promise<MeResponse> {
   const store = useSessionStore.getState()
   try {
     const profile = await authApi.me()
@@ -102,6 +104,37 @@ export function useCompleteProfile() {
       }
       return openSession()
     },
+  })
+}
+
+/** Optimistic: the UI flips at once, a failed save puts the old language back. */
+export function useUpdateLocale() {
+  return useMutation<MeResponse, unknown, Locale, { previous: Locale }>({
+    mutationFn: (locale) => authApi.updateMe({ locale }),
+    onMutate: (locale) => {
+      const { locale: previous, setLocale } = useLocaleStore.getState()
+      setLocale(locale)
+      return { previous }
+    },
+    onSuccess: (profile) => useSessionStore.getState().updateUser(profile),
+    onError: (_error, _locale, context) => {
+      if (context) useLocaleStore.getState().setLocale(context.previous)
+    },
+  })
+}
+
+/** Autosave of the personal data: the caller sends only the changed fields. */
+export function useUpdateProfile() {
+  return useMutation<MeResponse, unknown, Parameters<typeof authApi.updateMe>[0]>({
+    mutationFn: authApi.updateMe,
+    onSuccess: (profile) => useSessionStore.getState().updateUser(profile),
+  })
+}
+
+export function useChangePassword() {
+  return useMutation<string, unknown, { currentPassword: string; newPassword: string }>({
+    mutationFn: authApi.changePassword,
+    onSuccess: (token) => useSessionStore.getState().setAccessToken(token),
   })
 }
 

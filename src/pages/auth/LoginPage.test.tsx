@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import { screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { Route, Routes, useLocation } from "react-router-dom"
 import LoginPage from "./LoginPage"
 import { useSessionStore } from "@/stores/sessionStore"
 import { meResponse } from "@/test/fixtures"
@@ -20,6 +21,21 @@ async function fillAndSubmit(email: string, password: string) {
   await userEvent.type(screen.getByLabelText("Email"), email)
   await userEvent.type(screen.getByLabelText("Contraseña"), password)
   await userEvent.click(screen.getByRole("button", { name: "Ingresar" }))
+}
+
+function Probe() {
+  const l = useLocation()
+  return <p data-testid="loc">{l.pathname + l.search}</p>
+}
+
+function renderRoute(route: string) {
+  return renderWithProviders(
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="*" element={<Probe />} />
+    </Routes>,
+    { route },
+  )
 }
 
 beforeEach(() => {
@@ -147,5 +163,29 @@ describe("LoginPage", () => {
       "Aún no implementado",
     )
     expect(screen.queryByRole("link", { name: /Olvidaste/ })).not.toBeInTheDocument()
+  })
+
+  it("prefills the email from the query string", () => {
+    renderRoute("/login?email=ada%40example.com")
+
+    expect(screen.getByLabelText("Email")).toHaveValue("ada@example.com")
+  })
+
+  it("goes back to next after a successful login", async () => {
+    mockSuccessfulLogin()
+    renderRoute("/login?next=%2Finvitations%2Faccept%3Ftoken%3Dtok")
+
+    await fillAndSubmit("admin@tu-seguridad.local", "hunter2")
+
+    expect(await screen.findByTestId("loc")).toHaveTextContent("/invitations/accept?token=tok")
+  })
+
+  it("ignores a protocol-relative next", async () => {
+    mockSuccessfulLogin()
+    renderRoute("/login?next=%2F%2Fevil.com")
+
+    await fillAndSubmit("admin@tu-seguridad.local", "hunter2")
+
+    expect(await screen.findByTestId("loc")).toHaveTextContent(/^\/$/)
   })
 })

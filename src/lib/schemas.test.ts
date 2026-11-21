@@ -8,14 +8,16 @@ import {
   profilePasswordSchema,
   registerSchema,
 } from "./schemas"
+import { isTranslationKey, translate } from "@/lib/i18n"
 
-/** First error message recorded for a field path, or undefined. */
+/** First error message for a field path, resolved from its key through the `es` dictionary. */
 function messageFor(
   result: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } },
   field: string,
 ) {
   if (result.success) return undefined
-  return result.error?.issues.find((issue) => issue.path[0] === field)?.message
+  const message = result.error?.issues.find((issue) => issue.path[0] === field)?.message
+  return message && isTranslationKey(message) ? translate("es", message) : message
 }
 
 describe("loginSchema", () => {
@@ -49,8 +51,10 @@ describe("registerSchema", () => {
   })
 
   it("rejects a phone the backend would refuse", () => {
-    const result = registerSchema.safeParse({ ...valid, phone: "+54 9 11 1234-5678" })
-    expect(messageFor(result, "phone")).toBe("Usá formato internacional, ej +5491122334455")
+    const result = registerSchema.safeParse({ ...valid, phone: "+598123" })
+    expect(messageFor(result, "phone")).toBe(
+      "Número de teléfono inválido para el país seleccionado",
+    )
   })
 
   it("flags mismatched passwords on the repeat field", () => {
@@ -148,8 +152,8 @@ describe("completeProfileSchema", () => {
     expect(completeProfileSchema.safeParse(valid).success).toBe(true)
   })
 
-  it("rejects a phone without a country code", () => {
-    const result = completeProfileSchema.safeParse({ ...valid, phone: "1112345678" })
+  it("rejects a raw phone without a country code", () => {
+    const result = completeProfileSchema.safeParse({ ...valid, phone: "099050445" })
     expect(result.success).toBe(false)
   })
 

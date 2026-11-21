@@ -3,11 +3,13 @@ import Sidebar from "./Sidebar"
 import MobileNav from "./MobileNav"
 import TopBar from "./TopBar"
 import { useOnboardingTour } from "@/hooks/useOnboardingTour"
+import { useRefreshOnFocus } from "@/hooks/useRefreshOnFocus"
 
 export default function AppShell({ children }: { children: ReactNode }) {
   // Every app page renders its own AppShell, so this is the one hook that runs
   // on all of them — and the tour survives the remount navigation causes.
   useOnboardingTour()
+  useRefreshOnFocus()
 
   return (
     // `h-dvh`, not `h-screen`: on mobile Safari `100vh` counts the URL bar, so
