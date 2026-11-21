@@ -35,7 +35,7 @@ const FIXTURE_USER: SessionUser = {
   email: "luciana@ejemplo.com",
   firstName: "Luciana",
   lastName: "García",
-  phone: "+54 9 11 1234-5678",
+  phone: "+5491112345678",
   avatarUrl: null,
   isActive: true,
   profileCompleted: true,

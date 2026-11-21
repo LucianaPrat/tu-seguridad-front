@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { isValidPhoneNumber } from "libphonenumber-js/min"
 import { MENU_KEYS } from "@/lib/permissions"
 
 /*
@@ -8,6 +9,12 @@ import { MENU_KEYS } from "@/lib/permissions"
 
 const emailField = z.email("validation.emailInvalid")
 const strongPassword = z.string().min(8, "validation.min8")
+
+// PhoneField emits E.164 when the number parses for the chosen country; anything else fails here.
+const phoneField = z
+  .string()
+  .trim()
+  .refine((v) => isValidPhoneNumber(v), "validation.phoneFormat")
 
 function required(message = "validation.required") {
   return z.string().trim().min(1, message)
@@ -25,7 +32,7 @@ export const registerSchema = z
     lastName: required(),
     email: emailField,
     // Backend rules: E.164 phone, 12-char password minimum.
-    phone: z.string().regex(/^\+[1-9]\d{7,14}$/, "validation.phoneFormat"),
+    phone: phoneField,
     password: z.string().min(12, "validation.min12"),
     repeatPassword: z.string(),
   })
@@ -54,10 +61,7 @@ export const profileSchema = z.object({
   firstName: required(),
   lastName: required(),
   // Email is not editable. E.164, same rule the backend enforces.
-  phone: z
-    .string()
-    .trim()
-    .regex(/^\+[1-9]\d{7,14}$/, "validation.phoneFormat"),
+  phone: phoneField,
 })
 export type ProfileValues = z.infer<typeof profileSchema>
 
@@ -105,7 +109,7 @@ export const completeProfileSchema = z
   .object({
     firstName: required(),
     lastName: required(),
-    phone: z.string().regex(/^\+[1-9]\d{7,14}$/, "validation.phoneFormat"),
+    phone: phoneField,
     password: z.string().min(12, "validation.min12"),
     repeatPassword: z.string(),
   })

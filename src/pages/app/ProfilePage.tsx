@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react"
 import { useSearchParams } from "react-router-dom"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/common/PageHeader"
+import PhoneField from "@/components/common/PhoneField"
 import FormField from "@/components/common/FormField"
 import Button from "@/components/common/Button"
 import NotImplemented from "@/components/common/NotImplemented"
@@ -240,11 +241,17 @@ function PersonalSection() {
           readOnly
           hint={t("profile.emailHint")}
         />
-        <FormField
-          label={t("auth.register.phone")}
-          type="tel"
-          error={errors.phone?.message}
-          {...form.register("phone")}
+        <Controller
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <PhoneField
+              label={t("auth.register.phone")}
+              placeholder="099 123 456"
+              error={errors.phone?.message}
+              {...field}
+            />
+          )}
         />
       </form>
 

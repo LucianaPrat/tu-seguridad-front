@@ -51,8 +51,10 @@ describe("registerSchema", () => {
   })
 
   it("rejects a phone the backend would refuse", () => {
-    const result = registerSchema.safeParse({ ...valid, phone: "+54 9 11 1234-5678" })
-    expect(messageFor(result, "phone")).toBe("Usá formato internacional, ej +5491122334455")
+    const result = registerSchema.safeParse({ ...valid, phone: "+598123" })
+    expect(messageFor(result, "phone")).toBe(
+      "Número de teléfono inválido para el país seleccionado",
+    )
   })
 
   it("flags mismatched passwords on the repeat field", () => {
@@ -150,8 +152,8 @@ describe("completeProfileSchema", () => {
     expect(completeProfileSchema.safeParse(valid).success).toBe(true)
   })
 
-  it("rejects a phone without a country code", () => {
-    const result = completeProfileSchema.safeParse({ ...valid, phone: "1112345678" })
+  it("rejects a raw phone without a country code", () => {
+    const result = completeProfileSchema.safeParse({ ...valid, phone: "099050445" })
     expect(result.success).toBe(false)
   })
 

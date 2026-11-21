@@ -1,7 +1,8 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import AuthCard from "@/components/auth/AuthCard"
+import PhoneField from "@/components/common/PhoneField"
 import FormField from "@/components/common/FormField"
 import Button from "@/components/common/Button"
 import NotImplemented from "@/components/common/NotImplemented"
@@ -32,6 +33,7 @@ export default function RegisterPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
@@ -108,12 +110,17 @@ export default function RegisterPage() {
           readOnly={lockedEmail !== ""}
           {...register("email")}
         />
-        <FormField
-          label={t("auth.register.phone")}
-          type="tel"
-          placeholder="+5491112345678"
-          error={errors.phone?.message}
-          {...register("phone")}
+        <Controller
+          control={control}
+          name="phone"
+          render={({ field }) => (
+            <PhoneField
+              label={t("auth.register.phone")}
+              placeholder="099 123 456"
+              error={errors.phone?.message}
+              {...field}
+            />
+          )}
         />
         <FormField
           label={t("common.password")}

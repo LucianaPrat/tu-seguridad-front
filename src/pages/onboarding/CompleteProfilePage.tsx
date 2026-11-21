@@ -1,7 +1,8 @@
 import { Navigate, useNavigate } from "react-router-dom"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import AuthCard from "@/components/auth/AuthCard"
+import PhoneField from "@/components/common/PhoneField"
 import FormField from "@/components/common/FormField"
 import Button from "@/components/common/Button"
 import { useCompleteProfile } from "@/hooks/useAuth"
@@ -24,6 +25,7 @@ export default function CompleteProfilePage() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<CompleteProfileValues>({
@@ -74,13 +76,18 @@ export default function CompleteProfilePage() {
             {...register("lastName")}
           />
         </div>
-        <FormField
-          label={t("auth.register.phone")}
-          type="tel"
-          placeholder="+5491112345678"
-          hint={t("onboarding.profile.phoneHint")}
-          error={errors.phone?.message}
-          {...register("phone")}
+        <Controller
+          control={control}
+          name="phone"
+          render={({ field }) => (
+            <PhoneField
+              label={t("auth.register.phone")}
+              placeholder="099 123 456"
+              hint={t("onboarding.profile.phoneHint")}
+              error={errors.phone?.message}
+              {...field}
+            />
+          )}
         />
         <FormField
           label={t("common.password")}
