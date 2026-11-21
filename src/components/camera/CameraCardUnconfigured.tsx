@@ -1,6 +1,7 @@
 import { Settings } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import type { Camera } from "@/api/cameras"
+import { useT } from "@/hooks/useT"
 import { useSnapshotImage } from "@/hooks/useCameras"
 import CameraCardMenu from "@/components/camera/CameraCardMenu"
 
@@ -15,6 +16,7 @@ export default function CameraCardUnconfigured({
   camera,
   onToggleEnabled,
 }: CameraCardUnconfiguredProps) {
+  const { t } = useT()
   const navigate = useNavigate()
   const snapshotUrl = useSnapshotImage(camera.snapshotUrl, camera.lastSnapshotAt)
 
@@ -25,7 +27,7 @@ export default function CameraCardUnconfigured({
         {snapshotUrl && (
           <img
             src={snapshotUrl}
-            alt={`Última captura de ${camera.name}`}
+            alt={t("cameras.lastCapture", { name: camera.name })}
             className="w-full h-full object-cover grayscale opacity-40"
           />
         )}
@@ -37,7 +39,7 @@ export default function CameraCardUnconfigured({
             <div className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center group-hover:bg-white/30 transition-colors">
               <Settings size={18} className="text-white" />
             </div>
-            <span className="text-white text-xs font-medium">Configurar</span>
+            <span className="text-white text-xs font-medium">{t("cameras.menu.configure")}</span>
           </button>
         </div>
       </div>
@@ -47,7 +49,7 @@ export default function CameraCardUnconfigured({
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900 truncate">{camera.name}</p>
           <p className="text-xs text-gray-400 truncate">
-            {camera.location ?? `Canal ${camera.externalId}`}
+            {camera.location ?? t("cameras.channelN", { id: camera.externalId })}
           </p>
         </div>
         <CameraCardMenu camera={camera} onToggleEnabled={onToggleEnabled} />

@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react"
 import type { AlertType, MonitorZone } from "@/data/mockData"
 import AlertTypeToggle from "@/components/common/AlertTypeToggle"
+import { useT } from "@/hooks/useT"
 
 interface ZoneListProps {
   zones: MonitorZone[]
@@ -9,8 +10,9 @@ interface ZoneListProps {
 }
 
 export default function ZoneList({ zones, onRemove, onChangeAlertType }: ZoneListProps) {
+  const { t } = useT()
   if (zones.length === 0) {
-    return <p className="text-sm text-gray-400 italic">Sin zonas definidas.</p>
+    return <p className="text-sm text-gray-400 italic">{t("zones.none")}</p>
   }
 
   return (
@@ -29,7 +31,7 @@ export default function ZoneList({ zones, onRemove, onChangeAlertType }: ZoneLis
           />
           <button
             onClick={() => onRemove(zone.id)}
-            aria-label={`Borrar zona ${i + 1}`}
+            aria-label={t("zones.deleteN", { n: i + 1 })}
             className="p-2 text-gray-400 hover:text-red-500 transition-colors"
           >
             <Trash2 size={14} />

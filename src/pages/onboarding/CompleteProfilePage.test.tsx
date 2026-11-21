@@ -62,7 +62,7 @@ describe("CompleteProfilePage", () => {
     renderWithProviders(<CompleteProfilePage />)
     await fill({ phone: "1112345678", password: "corta123" })
 
-    expect(await screen.findByText(/formato internacional/i)).toBeInTheDocument()
+    expect(await screen.findByText(/teléfono inválido/i)).toBeInTheDocument()
     expect(screen.getByText("Mínimo 12 caracteres")).toBeInTheDocument()
     expect(fetchMock).not.toHaveBeenCalled()
   })

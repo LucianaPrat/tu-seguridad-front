@@ -7,6 +7,8 @@ import { useEvent } from "@/hooks/useEvents"
 import { useMembers } from "@/hooks/useMembers"
 import { useSnapshotImage } from "@/hooks/useCameras"
 import { ApiError } from "@/lib/http"
+import { useT } from "@/hooks/useT"
+import { dateLocale, type Locale, type TranslationKey } from "@/lib/i18n"
 import { displayName } from "@/lib/members"
 import type { ChannelType } from "@/data/mockData"
 
@@ -16,14 +18,14 @@ const CHANNEL_ICONS: Record<ChannelType, React.ReactNode> = {
   email: <Mail size={13} />,
 }
 
-const CHANNEL_LABELS: Record<ChannelType, string> = {
-  llamada: "Llamada",
-  whatsapp: "WhatsApp",
-  email: "Email",
-}
+const CHANNEL_LABELS = {
+  llamada: "channel.llamada",
+  whatsapp: "channel.whatsapp",
+  email: "channel.email",
+} as const satisfies Record<ChannelType, TranslationKey>
 
-function formatTimestamp(iso: string) {
-  return new Date(iso).toLocaleString("es-AR", {
+function formatTimestamp(iso: string, locale: Locale) {
+  return new Date(iso).toLocaleString(dateLocale(locale), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -48,6 +50,7 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
  * sit many pages back even when there is.
  */
 export default function EventDetailPage() {
+  const { t, locale } = useT()
   const { id } = useParams<{ id: string }>()
   const { data: event, isPending, isError, error } = useEvent(id ?? "")
   // The event carries `acknowledgedByUserId`; the roster is where the name is.
@@ -63,7 +66,7 @@ export default function EventDetailPage() {
       className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mb-4 py-2"
     >
       <ArrowLeft size={14} />
-      Volver a eventos
+      {t("events.detail.back")}
     </Link>
   )
 
@@ -71,7 +74,7 @@ export default function EventDetailPage() {
     return (
       <AppShell>
         {backLink}
-        <p className="text-sm text-muted-foreground">Cargando alerta…</p>
+        <p className="text-sm text-muted-foreground">{t("events.detail.loading")}</p>
       </AppShell>
     )
   }
@@ -81,7 +84,7 @@ export default function EventDetailPage() {
       <AppShell>
         {backLink}
         <p role="alert" className="text-sm text-destructive">
-          {error instanceof ApiError ? error.message : "No pudimos cargar la alerta."}
+          {error instanceof ApiError ? error.message : t("events.detail.loadError")}
         </p>
       </AppShell>
     )
@@ -92,14 +95,14 @@ export default function EventDetailPage() {
       (members.data?.items ?? [])
         .filter((member) => member.id === event.acknowledgedByUserId)
         .map(displayName)[0]) ||
-    "un miembro"
+    t("events.detail.aMember")
 
   return (
     <AppShell>
       {backLink}
       <PageHeader
         title={event.cameraName}
-        subtitle={formatTimestamp(event.timestamp)}
+        subtitle={formatTimestamp(event.timestamp, locale)}
         action={<Badge variant={event.alertType} />}
       />
 
@@ -108,48 +111,50 @@ export default function EventDetailPage() {
           {snapshot ? (
             <img
               src={snapshot}
-              alt={`Captura de ${event.cameraName} al momento de la alerta`}
+              alt={t("events.detail.snapshotAlt", { name: event.cameraName })}
               className="w-full max-h-[60dvh] object-contain bg-gray-900"
             />
           ) : (
             <div className="aspect-video flex flex-col items-center justify-center gap-2 text-gray-400">
               <ImageOff size={28} />
               <p className="text-xs">
-                {event.snapshotUrl ? "Cargando captura…" : "Esta alerta no guardó una captura"}
+                {event.snapshotUrl
+                  ? t("events.detail.loadingSnapshot")
+                  : t("events.detail.noSnapshot")}
               </p>
             </div>
           )}
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 grid gap-4">
-          <Fact label="Reconocimiento">
+          <Fact label={t("events.detail.acknowledgement")}>
             {event.acknowledgedAt ? (
               <span className="flex items-start gap-1.5">
                 <CheckCircle size={15} className="text-green-500 mt-0.5 shrink-0" />
                 <span>
-                  Reconocido por {acknowledgedBy}
+                  {t("events.detail.acknowledgedBy", { name: acknowledgedBy })}
                   <span className="block text-gray-400 text-xs">
-                    {formatTimestamp(event.acknowledgedAt)}
+                    {formatTimestamp(event.acknowledgedAt, locale)}
                   </span>
                 </span>
               </span>
             ) : (
               <span className="flex items-center gap-1.5 text-gray-400">
                 <Clock size={15} />
-                No reconocido
+                {t("events.detail.notAcknowledged")}
               </span>
             )}
           </Fact>
 
-          <Fact label="Canales notificados">
+          <Fact label={t("events.detail.channelsNotified")}>
             {event.channels.length === 0 ? (
-              <span className="text-gray-400">Sin envío</span>
+              <span className="text-gray-400">{t("events.detail.noDelivery")}</span>
             ) : (
               <span className="flex flex-wrap items-center gap-3 text-gray-600">
                 {event.channels.map((channel) => (
                   <span key={channel} className="flex items-center gap-1.5">
                     {CHANNEL_ICONS[channel]}
-                    {CHANNEL_LABELS[channel]}
+                    {t(CHANNEL_LABELS[channel])}
                   </span>
                 ))}
               </span>
@@ -157,19 +162,21 @@ export default function EventDetailPage() {
           </Fact>
 
           {/* Null on an alert recorded before the pipeline stored its detections. */}
-          <Fact label="Personas detectadas">
-            {event.personsDetected ?? <span className="text-gray-400">Sin dato</span>}
-          </Fact>
-
-          <Fact label="Confianza">
-            {event.confidence !== null ? (
-              `${Math.round(event.confidence * 100)}%`
-            ) : (
-              <span className="text-gray-400">Sin dato</span>
+          <Fact label={t("events.detail.persons")}>
+            {event.personsDetected ?? (
+              <span className="text-gray-400">{t("events.detail.noData")}</span>
             )}
           </Fact>
 
-          <Fact label="Identificador">
+          <Fact label={t("events.detail.confidence")}>
+            {event.confidence !== null ? (
+              `${Math.round(event.confidence * 100)}%`
+            ) : (
+              <span className="text-gray-400">{t("events.detail.noData")}</span>
+            )}
+          </Fact>
+
+          <Fact label={t("events.detail.identifier")}>
             <span className="font-mono text-xs text-gray-500 break-all">{event.id}</span>
           </Fact>
         </div>

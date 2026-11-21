@@ -1,29 +1,39 @@
-import { Link, useNavigate } from "react-router-dom"
-import { useForm } from "react-hook-form"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
+import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import AuthCard from "@/components/auth/AuthCard"
+import PhoneField from "@/components/common/PhoneField"
 import FormField from "@/components/common/FormField"
 import Button from "@/components/common/Button"
 import NotImplemented from "@/components/common/NotImplemented"
 import { useRegister } from "@/hooks/useAuth"
 import { ApiError } from "@/lib/http"
+import { type TranslationKey } from "@/lib/i18n"
+import { useT } from "@/hooks/useT"
 import { registerSchema, type RegisterValues } from "@/lib/schemas"
 import { Camera, Construction } from "lucide-react"
 
-function registerErrorMessage(error: unknown): string {
+function registerErrorKey(error: unknown): TranslationKey {
   if (error instanceof ApiError) {
-    if (error.status === 409) return "Ese email ya está registrado"
-    if (error.status === 0) return "No pudimos conectar con el servidor. Revisá tu conexión."
+    if (error.status === 404) return "invitations.gone"
+    if (error.status === 403) return "auth.register.inviteMismatch"
+    if (error.status === 409) return "auth.register.emailTaken"
+    if (error.status === 0) return "auth.networkError"
   }
-  return "Ocurrió un error. Intentá de nuevo."
+  return "errors.generic"
 }
 
 export default function RegisterPage() {
+  const { t } = useT()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const inviteToken = params.get("inviteToken")
+  const lockedEmail = inviteToken ? (params.get("email") ?? "") : ""
   const { mutateAsync: submitRegister } = useRegister()
 
   const {
     register,
+    control,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
@@ -32,7 +42,7 @@ export default function RegisterPage() {
     defaultValues: {
       firstName: "",
       lastName: "",
-      email: "",
+      email: lockedEmail,
       phone: "",
       password: "",
       repeatPassword: "",
@@ -41,16 +51,22 @@ export default function RegisterPage() {
 
   async function onSubmit({ repeatPassword: _repeat, ...values }: RegisterValues) {
     try {
-      // The form asks for no space name; the backend requires one.
-      await submitRegister({ ...values, spaceName: `Espacio de ${values.firstName}` })
-      navigate("/")
+      // Without an invitation the form asks for no space name; the backend requires one.
+      await submitRegister(
+        inviteToken
+          ? { ...values, inviteToken }
+          : { ...values, spaceName: t("auth.register.spaceName", { name: values.firstName }) },
+      )
+      navigate(
+        inviteToken ? `/invitations/accept?${new URLSearchParams({ token: inviteToken })}` : "/",
+      )
     } catch (error) {
-      setError("root", { message: registerErrorMessage(error) })
+      setError("root", { message: t(registerErrorKey(error)) })
     }
   }
 
   return (
-    <AuthCard title="Crear cuenta" subtitle="Completá tus datos para registrarte">
+    <AuthCard title={t("auth.register.title")} subtitle={t("auth.register.subtitle")}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
         {errors.root && (
           <p
@@ -67,63 +83,69 @@ export default function RegisterPage() {
               <Camera size={20} className="text-muted-foreground" />
             </div>
             <p className="text-xs text-muted-foreground text-center mt-1 flex items-center gap-1">
-              Foto de perfil <Construction size={12} />
+              {t("auth.register.photo")} <Construction size={12} />
             </p>
           </NotImplemented>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <FormField
-            label="Nombre"
-            placeholder="Luciana"
+            label={t("auth.register.firstName")}
+            placeholder={t("auth.register.firstNamePlaceholder")}
             error={errors.firstName?.message}
             {...register("firstName")}
           />
           <FormField
-            label="Apellido"
-            placeholder="García"
+            label={t("auth.register.lastName")}
+            placeholder={t("auth.register.lastNamePlaceholder")}
             error={errors.lastName?.message}
             {...register("lastName")}
           />
         </div>
         <FormField
-          label="Email"
+          label={t("common.email")}
           type="email"
-          placeholder="nombre@ejemplo.com"
+          placeholder={t("members.invite.emailPlaceholder")}
           error={errors.email?.message}
+          readOnly={lockedEmail !== ""}
           {...register("email")}
         />
-        <FormField
-          label="Teléfono móvil"
-          type="tel"
-          placeholder="+5491112345678"
-          error={errors.phone?.message}
-          {...register("phone")}
+        <Controller
+          control={control}
+          name="phone"
+          render={({ field }) => (
+            <PhoneField
+              label={t("auth.register.phone")}
+              placeholder="099 123 456"
+              error={errors.phone?.message}
+              {...field}
+            />
+          )}
         />
         <FormField
-          label="Contraseña"
+          label={t("common.password")}
           type="password"
-          placeholder="Mínimo 12 caracteres"
+          placeholder={t("auth.register.passwordPlaceholder")}
           error={errors.password?.message}
           {...register("password")}
         />
         <FormField
-          label="Repetir contraseña"
+          label={t("common.repeatPassword")}
           type="password"
-          placeholder="••••••••"
+          placeholder={t("common.passwordMask")}
           error={errors.repeatPassword?.message}
           {...register("repeatPassword")}
         />
 
         <Button type="submit" loading={isSubmitting} className="w-full mt-1">
-          Crear cuenta
+          {t("auth.register.submit")}
         </Button>
       </form>
 
       <p className="text-center text-sm text-muted-foreground mt-5">
-        ¿Ya tenés cuenta?{" "}
+        {t("auth.register.haveAccount")}{" "}
         <Link to="/login" className="text-primary font-medium hover:underline">
-          Ingresar
+          {t("auth.register.signIn")}
         </Link>
       </p>
     </AuthCard>

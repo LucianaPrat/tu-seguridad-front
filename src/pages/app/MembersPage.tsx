@@ -4,15 +4,23 @@ import PageHeader from "@/components/common/PageHeader"
 import Button from "@/components/common/Button"
 import Badge from "@/components/common/Badge"
 import InviteModal from "@/components/common/InviteModal"
+import MemberEditSheet from "@/components/members/MemberEditSheet"
 import { useMembers } from "@/hooks/useMembers"
-import { usePendingInvitations } from "@/hooks/useInvitations"
-import { useSessionStore } from "@/stores/sessionStore"
+import {
+  usePendingInvitations,
+  useResendInvitation,
+  useRevokeInvitation,
+} from "@/hooks/useInvitations"
+import { ROLE_LABELS, useCan } from "@/lib/permissions"
+import type { MemberResponse } from "@/lib/schemas"
 import { ApiError } from "@/lib/http"
-import { displayName, initials } from "@/lib/members"
+import { useT } from "@/hooks/useT"
+import { dateLocale, type Locale } from "@/lib/i18n"
+import { accessSummary, displayName, initials } from "@/lib/members"
 import { Mail, UserPlus } from "lucide-react"
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("es-AR", {
+function formatDate(iso: string, locale: Locale) {
+  return new Date(iso).toLocaleString(dateLocale(locale), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -40,14 +48,19 @@ const LABELLED =
   "max-md:before:text-gray-400"
 
 export default function MembersPage() {
+  const { t, locale } = useT()
   const [inviteOpen, setInviteOpen] = useState(false)
   // Inviting is admin-only on the backend, so a member gets no button rather
   // than a 403 behind one.
-  const isAdmin = useSessionStore((state) => state.user?.role === "admin")
+  const { isAdmin } = useCan()
   const members = useMembers()
   // Admin only on the backend; disabled for a plain member, so `data` stays
   // undefined there and no pending rows render.
   const invitations = usePendingInvitations()
+  const [editing, setEditing] = useState<MemberResponse | null>(null)
+  const revoke = useRevokeInvitation()
+  const resend = useResendInvitation()
+  const actionError = resend.error ?? revoke.error
 
   const rows = members.data?.items ?? []
   const pending = invitations.data?.items ?? []
@@ -55,44 +68,60 @@ export default function MembersPage() {
   return (
     <AppShell>
       <PageHeader
-        title="Miembros del espacio"
+        title={t("members.title")}
         subtitle={
-          members.data ? `${members.data.total} usuarios registrados` : "Cargando miembros…"
+          members.data ? t("members.subtitle", { count: members.data.total }) : t("members.loading")
         }
         action={
           isAdmin ? (
             <Button icon={<UserPlus size={14} />} onClick={() => setInviteOpen(true)}>
-              Invitar miembro
+              {t("members.invite.title")}
             </Button>
           ) : undefined
         }
       />
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        {actionError && (
+          <p role="alert" className="px-4 pt-4 text-sm text-destructive">
+            {actionError instanceof ApiError ? actionError.message : t("members.actionError")}
+          </p>
+        )}
         {members.isPending ? (
-          <p className="px-4 py-6 text-sm text-muted-foreground">Cargando miembros…</p>
+          <p className="px-4 py-6 text-sm text-muted-foreground">{t("members.loading")}</p>
         ) : members.isError ? (
           <p role="alert" className="px-4 py-6 text-sm text-destructive">
-            {members.error instanceof ApiError
-              ? members.error.message
-              : "No pudimos cargar los miembros del espacio."}
+            {members.error instanceof ApiError ? members.error.message : t("members.loadError")}
           </p>
         ) : (
           <table role="table" className={TABLE}>
             <thead role="rowgroup" className="max-md:hidden">
               <tr role="row" className="border-b border-gray-100">
                 <th role="columnheader" className={HEAD_CELL}>
-                  Miembro
+                  {t("members.col.member")}
                 </th>
                 <th role="columnheader" className={HEAD_CELL}>
-                  Email
+                  {t("members.col.email")}
                 </th>
                 <th role="columnheader" className={HEAD_CELL}>
-                  Estado
+                  {t("members.col.role")}
+                </th>
+                {isAdmin && (
+                  <th role="columnheader" className={HEAD_CELL}>
+                    {t("members.col.access")}
+                  </th>
+                )}
+                <th role="columnheader" className={HEAD_CELL}>
+                  {t("members.col.status")}
                 </th>
                 <th role="columnheader" className={HEAD_CELL}>
-                  Último acceso
+                  {t("members.col.lastAccess")}
                 </th>
+                {isAdmin && (
+                  <th role="columnheader" className={HEAD_CELL}>
+                    <span className="sr-only">{t("members.col.actions")}</span>
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody role="rowgroup" className="divide-y divide-gray-50 max-md:block">
@@ -100,10 +129,10 @@ export default function MembersPage() {
                 <tr role="row">
                   <td
                     role="cell"
-                    colSpan={4}
+                    colSpan={isAdmin ? 7 : 5}
                     className="px-4 py-6 text-muted-foreground max-md:block"
                   >
-                    Todavía no hay miembros en este espacio.
+                    {t("members.empty")}
                   </td>
                 </tr>
               )}
@@ -136,28 +165,50 @@ export default function MembersPage() {
                         {member.profileCompleted ? (
                           <p className="text-xs text-gray-400 truncate">{member.phone}</p>
                         ) : (
-                          <Badge variant="unconfigured" label="Perfil incompleto" />
+                          <Badge variant="unconfigured" label={t("members.incomplete")} />
                         )}
                       </div>
                     </div>
                   </td>
                   <td
                     role="cell"
-                    data-label="Email"
+                    data-label={t("members.col.email")}
                     className={`${LABELLED} text-gray-600 max-md:break-all`}
                   >
                     {member.email}
                   </td>
-                  <td role="cell" data-label="Estado" className={LABELLED}>
+                  <td role="cell" data-label={t("members.col.role")} className={LABELLED}>
+                    {t(ROLE_LABELS[member.role])}
+                  </td>
+                  {isAdmin && (
+                    <td role="cell" data-label={t("members.col.access")} className={LABELLED}>
+                      {accessSummary(member)}
+                    </td>
+                  )}
+                  <td role="cell" data-label={t("members.col.status")} className={LABELLED}>
                     <Badge variant={member.isActive ? "active" : "inactive"} />
                   </td>
                   <td
                     role="cell"
-                    data-label="Último acceso"
+                    data-label={t("members.col.lastAccess")}
                     className={`${LABELLED} text-gray-500 text-xs`}
                   >
-                    {member.lastLoginAt ? formatDate(member.lastLoginAt) : "Nunca"}
+                    {member.lastLoginAt
+                      ? formatDate(member.lastLoginAt, locale)
+                      : t("members.never")}
                   </td>
+                  {isAdmin && (
+                    <td role="cell" className={`${CELL} md:text-right`}>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        aria-label={t("members.editFor", { email: member.email })}
+                        onClick={() => setEditing(member)}
+                      >
+                        {t("members.edit")}
+                      </Button>
+                    </td>
+                  )}
                 </tr>
               ))}
 
@@ -170,26 +221,58 @@ export default function MembersPage() {
                       <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 shrink-0">
                         <Mail size={14} />
                       </div>
-                      <p className="text-gray-500">Invitación pendiente</p>
+                      <p className="text-gray-500">{t("members.pendingInvitation")}</p>
                     </div>
                   </td>
                   <td
                     role="cell"
-                    data-label="Email"
+                    data-label={t("members.col.email")}
                     className={`${LABELLED} text-gray-600 max-md:break-all`}
                   >
                     {invitation.email}
                   </td>
-                  <td role="cell" data-label="Estado" className={LABELLED}>
-                    <Badge variant="unconfigured" label="Pendiente" />
+                  <td role="cell" data-label={t("members.col.role")} className={LABELLED}>
+                    {t(ROLE_LABELS[invitation.role])}
+                  </td>
+                  {isAdmin && (
+                    <td role="cell" data-label={t("members.col.access")} className={LABELLED}>
+                      {accessSummary(invitation)}
+                    </td>
+                  )}
+                  <td role="cell" data-label={t("members.col.status")} className={LABELLED}>
+                    <Badge variant="unconfigured" label={t("members.pending")} />
                   </td>
                   <td
                     role="cell"
-                    data-label="Último acceso"
+                    data-label={t("members.col.lastAccess")}
                     className={`${LABELLED} text-gray-500 text-xs`}
                   >
-                    Expira {formatDate(invitation.expiresAt)}
+                    {t("members.expires", { date: formatDate(invitation.expiresAt, locale) })}
                   </td>
+                  {isAdmin && (
+                    <td role="cell" className={`${CELL} md:text-right`}>
+                      <div className="flex gap-2 md:justify-end">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          aria-label={t("members.resendFor", { email: invitation.email })}
+                          loading={resend.isPending && resend.variables === invitation.id}
+                          onClick={() => resend.mutate(invitation.id)}
+                        >
+                          {t("members.resend")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          aria-label={t("members.revokeFor", { email: invitation.email })}
+                          loading={revoke.isPending && revoke.variables === invitation.id}
+                          onClick={() => revoke.mutate(invitation.id)}
+                        >
+                          {t("members.revoke")}
+                        </Button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -198,6 +281,7 @@ export default function MembersPage() {
       </div>
 
       <InviteModal open={inviteOpen} onClose={() => setInviteOpen(false)} />
+      {editing && <MemberEditSheet member={editing} onClose={() => setEditing(null)} />}
     </AppShell>
   )
 }

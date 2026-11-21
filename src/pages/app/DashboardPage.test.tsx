@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { fireEvent, screen, waitFor } from "@testing-library/react"
 import DashboardPage from "./DashboardPage"
 import { mockFetchSequence } from "@/test/mockFetch"
+import { meResponse } from "@/test/fixtures"
 import { renderWithProviders } from "@/test/renderWithProviders"
 import { useSessionStore } from "@/stores/sessionStore"
 
@@ -52,7 +53,7 @@ const RAW_OFF = camera({
 
 describe("DashboardPage", () => {
   beforeEach(() => {
-    useSessionStore.setState({ isLoggedIn: true, accessToken: "token" })
+    useSessionStore.setState({ isLoggedIn: true, accessToken: "token", user: meResponse() })
   })
 
   it("splits the API's cameras into configured, disabled and unconfigured", async () => {

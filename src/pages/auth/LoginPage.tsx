@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom"
+import { Link, Navigate, useSearchParams } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import AuthCard from "@/components/auth/AuthCard"
@@ -9,15 +9,18 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useLogin } from "@/hooks/useAuth"
 import { ApiError } from "@/lib/http"
+import { isTranslationKey, type TranslationKey } from "@/lib/i18n"
+import { useT } from "@/hooks/useT"
 import { loginSchema, type LoginValues } from "@/lib/schemas"
+import { useSessionStore } from "@/stores/sessionStore"
 import { Construction, Mail } from "lucide-react"
 
-function loginErrorMessage(error: unknown): string {
+function loginErrorKey(error: unknown): TranslationKey {
   if (error instanceof ApiError) {
-    if (error.status === 401) return "Email o contraseña incorrectos"
-    if (error.status === 0) return "No pudimos conectar con el servidor. Revisá tu conexión."
+    if (error.status === 401) return "auth.login.badCredentials"
+    if (error.status === 0) return "auth.networkError"
   }
-  return "Ocurrió un error. Intentá de nuevo."
+  return "errors.generic"
 }
 
 // Face-Auth icon
@@ -39,8 +42,17 @@ function FaceAuthIcon() {
   )
 }
 
+/** Same-origin paths only: "//host" and "/\host" are protocol-relative to a browser. */
+function safeNext(next: string | null): string {
+  return next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\")
+    ? next
+    : "/"
+}
+
 export default function LoginPage() {
-  const navigate = useNavigate()
+  const { t } = useT()
+  const [params] = useSearchParams()
+  const isLoggedIn = useSessionStore((s) => s.isLoggedIn)
   const { mutateAsync: submitLogin } = useLogin()
 
   const {
@@ -50,20 +62,22 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: params.get("email") ?? "", password: "" },
   })
 
   async function onSubmit(values: LoginValues) {
     try {
+      // setSession flips isLoggedIn and the Navigate below takes over.
       await submitLogin(values)
-      navigate("/")
     } catch (error) {
-      setError("root", { message: loginErrorMessage(error) })
+      setError("root", { message: t(loginErrorKey(error)) })
     }
   }
 
+  if (isLoggedIn) return <Navigate to={safeNext(params.get("next"))} replace />
+
   return (
-    <AuthCard title="Iniciar sesión" subtitle="Ingresá a tu panel de seguridad">
+    <AuthCard title={t("auth.login.title")} subtitle={t("auth.login.subtitle")}>
       {/* ── Primary form: email + password ── */}
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
         {/* Server-side failures: wrong credentials, dead backend. */}
@@ -76,9 +90,9 @@ export default function LoginPage() {
           </p>
         )}
         <FormField
-          label="Email"
+          label={t("common.email")}
           type="email"
-          placeholder="nombre@ejemplo.com"
+          placeholder={t("members.invite.emailPlaceholder")}
           error={errors.email?.message}
           {...register("email")}
         />
@@ -86,16 +100,16 @@ export default function LoginPage() {
             the shadcn primitives directly instead of FormField. */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Contraseña</Label>
+            <Label htmlFor="password">{t("common.password")}</Label>
             <NotImplemented className="text-xs text-muted-foreground inline-flex items-center gap-1 py-2">
               <Construction size={12} />
-              ¿Olvidaste tu contraseña?
+              {t("auth.login.forgot")}
             </NotImplemented>
           </div>
           <Input
             id="password"
             type="password"
-            placeholder="••••••••"
+            placeholder={t("common.passwordMask")}
             aria-invalid={Boolean(errors.password)}
             aria-describedby={errors.password ? "password-error" : undefined}
             className="h-auto bg-card py-2.5"
@@ -103,20 +117,22 @@ export default function LoginPage() {
           />
           {errors.password && (
             <p id="password-error" className="text-xs text-destructive">
-              {errors.password.message}
+              {isTranslationKey(errors.password.message ?? "")
+                ? t(errors.password.message as TranslationKey)
+                : errors.password.message}
             </p>
           )}
         </div>
 
         <Button type="submit" loading={isSubmitting} className="w-full mt-1">
-          Ingresar
+          {t("auth.login.submit")}
         </Button>
       </form>
 
       {/* ── Divider ── */}
       <div className="flex items-center gap-3 my-5">
         <hr className="flex-1 border-border" />
-        <span className="text-xs text-muted-foreground font-medium">o</span>
+        <span className="text-xs text-muted-foreground font-medium">{t("auth.login.or")}</span>
         <hr className="flex-1 border-border" />
       </div>
 
@@ -130,7 +146,7 @@ export default function LoginPage() {
             icon={<Mail size={15} className="text-muted-foreground" />}
             className="w-full"
           >
-            Continuar con Magic Link
+            {t("auth.login.magicLink")}
             <Construction size={14} />
           </Button>
         </NotImplemented>
@@ -143,7 +159,7 @@ export default function LoginPage() {
             icon={<FaceAuthIcon />}
             className="w-full"
           >
-            Continuar con Face-Auth
+            {t("auth.login.faceAuth")}
             <Construction size={14} />
           </Button>
         </NotImplemented>
@@ -151,12 +167,12 @@ export default function LoginPage() {
 
       {/* ── Register link ── */}
       <p className="text-center text-sm text-muted-foreground mt-5">
-        ¿No tenés cuenta?{" "}
+        {t("auth.login.noAccount")}{" "}
         <Link
           to="/register"
           className="text-primary font-medium hover:underline inline-flex items-center py-2"
         >
-          Registrarse
+          {t("auth.login.register")}
         </Link>
       </p>
     </AuthCard>

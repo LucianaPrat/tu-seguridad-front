@@ -57,6 +57,7 @@ const ROSTER = {
       profileCompleted: true,
       lastLoginAt: null,
       receiveAlerts: true,
+      role: "admin",
     },
   ],
   total: 1,

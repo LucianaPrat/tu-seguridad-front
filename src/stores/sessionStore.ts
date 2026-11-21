@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import type { MeResponse } from "@/lib/schemas"
+import { useLocaleStore } from "@/stores/localeStore"
 
 /** GET /auth/me is the whole session identity — no fields added on the client. */
 export type SessionUser = MeResponse
@@ -34,14 +35,23 @@ const FIXTURE_USER: SessionUser = {
   email: "luciana@ejemplo.com",
   firstName: "Luciana",
   lastName: "García",
-  phone: "+54 9 11 1234-5678",
+  phone: "+5491112345678",
   avatarUrl: null,
   isActive: true,
   profileCompleted: true,
-  spaceId: "",
-  spaceName: "Mi Espacio Seguro",
-  role: "admin",
+  spaces: [{ id: "", name: "Mi Espacio Seguro", role: "admin" }],
+  currentSpace: {
+    id: "",
+    name: "Mi Espacio Seguro",
+    role: "admin",
+    // Literal, not MENU_KEYS: permissions.ts imports this store, so importing it back is a cycle.
+    menuAccess: ["home", "monitor", "events", "dvr", "channels", "members"],
+    cameraIds: [],
+    hasDvr: true,
+  },
+  pendingInvitationsCount: 0,
   receiveAlerts: true,
+  locale: "es",
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
@@ -58,7 +68,11 @@ export const useSessionStore = create<SessionState>((set) => ({
 
   setAccessToken: (token) => set({ accessToken: token }),
 
-  setSession: (profile) => set({ authStatus: "ready", isLoggedIn: true, user: profile }),
+  // The account's language wins over the browser's once somebody is logged in.
+  setSession: (profile) => {
+    useLocaleStore.getState().setLocale(profile.locale)
+    set({ authStatus: "ready", isLoggedIn: true, user: profile })
+  },
 
   setAuthReady: () => set({ authStatus: "ready" }),
 

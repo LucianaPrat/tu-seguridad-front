@@ -12,6 +12,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { TIMEZONES } from "@/data/timezones"
+import { useT } from "@/hooks/useT"
+import { isTranslationKey } from "@/lib/i18n"
 
 interface TimezoneComboboxProps {
   value: string
@@ -25,12 +27,13 @@ interface TimezoneComboboxProps {
  * ancestor. Search still matches IANA name, label and UTC offset.
  */
 export default function TimezoneCombobox({ value, onChange, error }: TimezoneComboboxProps) {
+  const { t } = useT()
   const [open, setOpen] = useState(false)
   const selected = TIMEZONES.find((tz) => tz.iana === value)
 
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor="timezone">Zona horaria</Label>
+      <Label htmlFor="timezone">{t("common.timezone")}</Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
@@ -47,16 +50,16 @@ export default function TimezoneCombobox({ value, onChange, error }: TimezoneCom
                 selected ? "text-foreground" : "text-muted-foreground",
               )}
             >
-              {selected ? `${selected.iana} — ${selected.offset}` : "Seleccioná una zona horaria"}
+              {selected ? `${selected.iana} — ${selected.offset}` : t("common.selectTimezone")}
             </span>
             <ChevronsUpDown size={14} className="shrink-0 text-muted-foreground" />
           </button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-0">
           <Command>
-            <CommandInput placeholder="Buscar zona horaria..." />
+            <CommandInput placeholder={t("common.searchTimezone")} />
             <CommandList>
-              <CommandEmpty>Sin resultados</CommandEmpty>
+              <CommandEmpty>{t("common.noResults")}</CommandEmpty>
               <CommandGroup>
                 {TIMEZONES.map((tz) => (
                   <CommandItem
@@ -79,7 +82,9 @@ export default function TimezoneCombobox({ value, onChange, error }: TimezoneCom
           </Command>
         </PopoverContent>
       </Popover>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && (
+        <p className="text-xs text-destructive">{isTranslationKey(error) ? t(error) : error}</p>
+      )}
     </div>
   )
 }

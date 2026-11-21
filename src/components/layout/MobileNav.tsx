@@ -1,12 +1,14 @@
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { SidebarContent } from "./Sidebar"
 import { useNavStore } from "@/stores/navStore"
+import { useT } from "@/hooks/useT"
 
 /**
  * The sidebar as a drawer, below `lg`. Same menu, same order — Sidebar owns the
  * markup and this owns the frame around it.
  */
 export default function MobileNav() {
+  const { t } = useT()
   const { open, tourActive, setOpen } = useNavStore()
 
   return (
@@ -34,7 +36,7 @@ export default function MobileNav() {
       >
         {/* Radix warns on a dialog with no accessible title, and the drawer's
             own title is the logo block inside SidebarContent. */}
-        <SheetTitle className="sr-only">Menú</SheetTitle>
+        <SheetTitle className="sr-only">{t("nav.menu")}</SheetTitle>
         <SidebarContent onNavigate={() => setOpen(false)} />
       </SheetContent>
     </Sheet>

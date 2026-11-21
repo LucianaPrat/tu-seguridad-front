@@ -1,5 +1,7 @@
 import { request } from "@/lib/http"
 import { accessTokenSchema, meSchema } from "@/lib/schemas"
+import type { Locale } from "@/lib/i18n"
+import { useLocaleStore } from "@/stores/localeStore"
 import type { LoginValues, MeResponse, RegisterValues } from "@/lib/schemas"
 
 /*
@@ -18,15 +20,26 @@ export async function login(values: LoginValues): Promise<string> {
 }
 
 /** What the route takes: the repeated password stays in the browser, the space name is derived. */
-export type RegisterPayload = Omit<RegisterValues, "repeatPassword"> & { spaceName: string }
+export type RegisterPayload = Omit<RegisterValues, "repeatPassword"> &
+  ({ spaceName: string } | { inviteToken: string })
 
-/** Creates the account, its space and an admin membership, and opens a session in one call. */
+/**
+ * Creates the account and opens a session in one call. Without a token it also
+ * creates a space and an admin membership; with `inviteToken` the account has no
+ * space and the invitation is accepted afterwards.
+ */
 export async function register(payload: RegisterPayload): Promise<string> {
   const data = await request<unknown>("/auth/register", {
     method: "POST",
-    body: payload,
+    body: { ...payload, locale: useLocaleStore.getState().locale },
     auth: false,
   })
+  return accessTokenSchema.parse(data).accessToken
+}
+
+/** Moves the session into another space of the caller; the back replaces the refresh cookie too. */
+export async function switchSpace(spaceId: string): Promise<string> {
+  const data = await request<unknown>("/auth/switch-space", { method: "POST", body: { spaceId } })
   return accessTokenSchema.parse(data).accessToken
 }
 
@@ -42,6 +55,21 @@ export async function logout(): Promise<void> {
 
 export async function me(): Promise<MeResponse> {
   return meSchema.parse(await request<unknown>("/auth/me"))
+}
+
+export async function updateMe(
+  body: Partial<{ locale: Locale; firstName: string; lastName: string; phone: string }>,
+): Promise<MeResponse> {
+  return meSchema.parse(await request<unknown>("/auth/me", { method: "PATCH", body }))
+}
+
+/** The back revokes other sessions and rotates the refresh cookie; the token it returns replaces ours. */
+export async function changePassword(body: {
+  currentPassword: string
+  newPassword: string
+}): Promise<string> {
+  const data = await request<unknown>("/auth/password", { method: "POST", body })
+  return accessTokenSchema.parse(data).accessToken
 }
 
 /*

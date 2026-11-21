@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import HelpChatPage from "./HelpChatPage"
+import { meResponse } from "@/test/fixtures"
 import { renderWithProviders } from "@/test/renderWithProviders"
 import { useSessionStore } from "@/stores/sessionStore"
 import { askAssistant, synthesizeSpeech, transcribeAudio } from "@/api/assistant"
@@ -25,7 +26,7 @@ async function record(user: ReturnType<typeof userEvent.setup>) {
 
 describe("HelpChatPage", () => {
   beforeEach(() => {
-    useSessionStore.setState({ isLoggedIn: true, accessToken: "token" })
+    useSessionStore.setState({ isLoggedIn: true, accessToken: "token", user: meResponse() })
     vi.clearAllMocks()
   })
 

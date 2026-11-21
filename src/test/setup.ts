@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest"
 import { cleanup } from "@testing-library/react"
-import { afterEach, vi } from "vitest"
+import { afterEach, beforeEach, vi } from "vitest"
+import { useLocaleStore } from "@/stores/localeStore"
 
 // jsdom has no layout engine, so Radix's pointer-capture calls are undefined.
 // Stub them or every Popover/Dialog interaction throws.
@@ -76,6 +77,11 @@ if (!URL.createObjectURL) {
   URL.createObjectURL = () => "blob:audio"
   URL.revokeObjectURL = () => {}
 }
+
+// Existing assertions are Spanish; a stray `en` from one test must not leak.
+beforeEach(() => {
+  useLocaleStore.setState({ locale: "es" })
+})
 
 afterEach(() => {
   cleanup()

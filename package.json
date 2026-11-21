@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm build"
+    "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
+    "preinstall": "npx only-allow pnpm"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.8.0",
@@ -26,6 +27,7 @@
     "cmdk": "^1.1.1",
     "driver.js": "^1.8.0",
     "hls.js": "^1.7.1",
+    "libphonenumber-js": "^1.13.17",
     "lucide-react": "^1.31.0",
     "radix-ui": "^1.6.7",
     "react": "^19.0.0",
@@ -54,5 +56,6 @@
     "typescript": "^5.7.0",
     "vite": "^8.0.0",
     "vitest": "^4.1.10"
-  }
+  },
+  "packageManager": "pnpm@10.26.1"
 }
