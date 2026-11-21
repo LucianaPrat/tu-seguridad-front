@@ -4,10 +4,12 @@ import { useSessionStore } from "@/stores/sessionStore"
 import { useLogout } from "@/hooks/useAuth"
 import { useNavigate } from "react-router-dom"
 import { startTour } from "@/hooks/useOnboardingTour"
+import { useCan } from "@/lib/permissions"
 import { useNavStore } from "@/stores/navStore"
 
 export default function TopBar() {
   const { t } = useT()
+  const { showNotImplemented } = useCan()
   const {
     setOpen,
     userMenuOpen: menuOpen,
@@ -38,14 +40,16 @@ export default function TopBar() {
       </button>
 
       {/* Bell — no notifications feed yet. The unread dot was fake; the badge says why it is off. */}
-      <button
-        disabled
-        title={t("common.notImplemented")}
-        className="relative min-h-11 min-w-11 flex items-center justify-center rounded-lg text-gray-400 disabled:cursor-not-allowed"
-      >
-        <Bell size={18} />
-        <Construction size={10} className="absolute top-2 right-2" />
-      </button>
+      {showNotImplemented && (
+        <button
+          disabled
+          title={t("common.notImplemented")}
+          className="relative min-h-11 min-w-11 flex items-center justify-center rounded-lg text-gray-400 disabled:cursor-not-allowed"
+        >
+          <Bell size={18} />
+          <Construction size={10} className="absolute top-2 right-2" />
+        </button>
+      )}
 
       {/* User menu */}
       <div className="relative">

@@ -9,7 +9,6 @@ import {
   User,
   Users,
   Bell,
-  HelpCircle,
   LogOut,
   ChevronRight,
   MessageCircle,
@@ -85,7 +84,12 @@ const SERVICE_ITEMS: NavItem[] = [
 const ACCOUNT_ITEMS: NavItem[] = [
   { label: "nav.profile", icon: <User size={18} />, to: "/profile", tour: "nav-profile" },
   { label: "nav.notifications", icon: <Bell size={18} />, disabled: true },
-  { label: "nav.help", icon: <HelpCircle size={18} />, to: "/help", tour: "nav-help" },
+  // Help hidden for now; the /help route stays. Restore with onboarding step 15.
+]
+
+const SECTIONS: [TranslationKey, NavItem[]][] = [
+  ["nav.services", SERVICE_ITEMS],
+  ["nav.account", ACCOUNT_ITEMS],
 ]
 
 /** A row is a tap target before it is a link: 44px is the phone floor. */
@@ -134,8 +138,9 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
  */
 export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useT()
-  const { canView } = useCan()
-  const visible = (items: NavItem[]) => items.filter((i) => !i.menu || canView(i.menu))
+  const { canView, showNotImplemented } = useCan()
+  const visible = (items: NavItem[]) =>
+    items.filter((i) => (!i.menu || canView(i.menu)) && (!i.disabled || showNotImplemented))
   const { mutate: logout } = useLogout()
   const navigate = useNavigate()
 
@@ -161,23 +166,23 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <NavItemLink key={item.to} item={item} onNavigate={onNavigate} />
         ))}
 
-        <div className="pt-4 pb-1">
-          <p className="px-3 text-white/40 text-xs font-semibold uppercase tracking-wider">
-            {t("nav.services")}
-          </p>
-        </div>
-        {visible(SERVICE_ITEMS).map((item) => (
-          <NavItemLink key={item.label} item={item} onNavigate={onNavigate} />
-        ))}
-
-        <div className="pt-4 pb-1">
-          <p className="px-3 text-white/40 text-xs font-semibold uppercase tracking-wider">
-            {t("nav.account")}
-          </p>
-        </div>
-        {visible(ACCOUNT_ITEMS).map((item) => (
-          <NavItemLink key={item.label} item={item} onNavigate={onNavigate} />
-        ))}
+        {SECTIONS.map(([heading, items]) => {
+          const shown = visible(items)
+          // A heading with nothing under it is noise: drop the whole section.
+          if (shown.length === 0) return null
+          return (
+            <div key={heading}>
+              <div className="pt-4 pb-1">
+                <p className="px-3 text-white/40 text-xs font-semibold uppercase tracking-wider">
+                  {t(heading)}
+                </p>
+              </div>
+              {shown.map((item) => (
+                <NavItemLink key={item.label} item={item} onNavigate={onNavigate} />
+              ))}
+            </div>
+          )
+        })}
 
         <button onClick={handleLogout} className={`w-full ${ROW} ${ROW_IDLE}`}>
           <LogOut size={18} className="shrink-0" />
@@ -189,15 +194,19 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="m-3 mt-4 p-3 rounded-xl bg-white/10 border border-white/10">
         <p className="text-white text-xs font-semibold">{t("nav.needHelp")}</p>
         <p className="text-white/60 text-xs mt-0.5">{t("nav.contactUs")}</p>
-        {/* No support channel wired yet. */}
-        <button
-          disabled
-          title={t("common.notImplemented")}
-          className="mt-2 w-full py-2 rounded-lg bg-white text-[#0d4f47] text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Construction size={12} />
-          {t("nav.support")}
-        </button>
+        {showNotImplemented && (
+          <>
+            {/* No support channel wired yet. */}
+            <button
+              disabled
+              title={t("common.notImplemented")}
+              className="mt-2 w-full py-2 rounded-lg bg-white text-[#0d4f47] text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Construction size={12} />
+              {t("nav.support")}
+            </button>
+          </>
+        )}
       </div>
     </>
   )

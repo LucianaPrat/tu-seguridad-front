@@ -57,5 +57,7 @@ export function useCan() {
     canView: (key: MenuKey) => canView(space, key),
     canEdit: (key: MenuKey) => canEdit(space, key),
     isAdmin: space?.role === "admin",
+    /** Not-implemented controls: admin sees them disabled, other roles do not see them. No session (auth pages) = show. */
+    showNotImplemented: !space || space.role === "admin",
   }
 }

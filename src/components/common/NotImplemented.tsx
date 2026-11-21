@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 import { useT } from "@/hooks/useT"
+import { useCan } from "@/lib/permissions"
 
 /*
  * Hover target for a control that has no working backend path yet. The control
@@ -16,6 +17,8 @@ export default function NotImplemented({
   className?: string
 }) {
   const { t } = useT()
+  const { showNotImplemented } = useCan()
+  if (!showNotImplemented) return null
   return (
     <span title={t("common.notImplemented")} className={cn("cursor-not-allowed", className)}>
       {children}

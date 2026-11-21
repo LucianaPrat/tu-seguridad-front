@@ -119,7 +119,8 @@ describe("CommChannelsPage", () => {
     renderWithProviders(<CommChannelsPage />)
 
     expect(await screen.findByRole("checkbox", { name: "Sospechoso por Email" })).not.toBeDisabled()
-    expect(screen.getByRole("checkbox", { name: "Intruso por Llamada" })).toBeDisabled()
+    expect(screen.queryByRole("checkbox", { name: "Intruso por Llamada" })).toBeNull()
+    expect(screen.queryByRole("checkbox", { name: "Sospechoso por WhatsApp" })).toBeNull()
     expect(screen.getByRole("switch")).toBeDisabled()
   })
 

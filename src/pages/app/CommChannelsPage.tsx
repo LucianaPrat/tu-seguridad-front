@@ -40,7 +40,10 @@ const ALERT_NAMES = {
 
 export default function CommChannelsPage() {
   const { t } = useT()
-  const { canView, canEdit, isAdmin } = useCan()
+  const { canView, canEdit, isAdmin, showNotImplemented } = useCan()
+  const channels = showNotImplemented
+    ? ALL_CHANNELS
+    : ALL_CHANNELS.filter((ch) => CHANNEL_READY[ch])
   const routings = useAlertRoutings()
   const setRouting = useSetAlertRouting()
   const members = useMembers()
@@ -92,7 +95,7 @@ export default function CommChannelsPage() {
                   <th className="text-left px-3 sm:px-5 py-2.5 text-xs font-semibold text-gray-500">
                     {t("channels.alertType")}
                   </th>
-                  {ALL_CHANNELS.map((ch) => (
+                  {channels.map((ch) => (
                     <th
                       key={ch}
                       title={CHANNEL_READY[ch] ? undefined : t("common.notImplemented")}
@@ -117,7 +120,7 @@ export default function CommChannelsPage() {
                     <td className="px-3 sm:px-5 py-3 font-medium text-gray-800">
                       {ALERT_EMOJI[alert]} {t(ALERT_NAMES[alert])}
                     </td>
-                    {ALL_CHANNELS.map((ch) => (
+                    {channels.map((ch) => (
                       <td key={ch} className="text-center px-2 sm:px-4 py-3">
                         <label
                           title={CHANNEL_READY[ch] ? undefined : t("common.notImplemented")}

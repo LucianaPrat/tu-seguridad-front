@@ -162,14 +162,7 @@ const STEPS: TourStep[] = [
     title: "onboarding.step14.title",
     body: "onboarding.step14.body",
   },
-  {
-    to: "/help",
-    element: '[data-tour="nav-help"]',
-    inNav: true,
-    icon: "💬",
-    title: "onboarding.step15.title",
-    body: "onboarding.step15.body",
-  },
+  // Help step hidden with the Help menu item; restore both together.
   {
     to: "/",
     element: '[data-tour="topbar-menu"]',
