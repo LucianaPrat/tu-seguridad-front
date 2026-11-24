@@ -31,6 +31,81 @@ interface RequestOptions {
   auth?: boolean
 }
 
+let inflight: Promise<string | null> | null = null
+
+/*
+ * Trades the HttpOnly refresh cookie for a new access token after a 401.
+ *
+ * Single-flight on purpose: the backend rotates the refresh token and treats a
+ * second use of the old one as theft — it revokes every session of the user.
+ * Several queries hitting 401 at once must share one refresh, and the Web Lock
+ * serialises it across tabs (they share the cookie). `stale` is the token the
+ * failed request carried: if the store already holds another one, somebody
+ * refreshed in the meantime and that token is reused without calling the back.
+ *
+ * A failed refresh ends the session; the route guards take it to login.
+ */
+export function refreshAccessToken(stale: string | null): Promise<string | null> {
+  const run = async (): Promise<string | null> => {
+    const store = useSessionStore.getState()
+    if (store.accessToken && store.accessToken !== stale) return store.accessToken
+    let response: Response
+    try {
+      response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+      })
+    } catch {
+      // Network blip: keep the session, the next call tries again.
+      return null
+    }
+    try {
+      const payload = (await response.json().catch(() => null)) as {
+        accessToken?: unknown
+      } | null
+      if (!response.ok || typeof payload?.accessToken !== "string") throw new Error()
+      store.setAccessToken(payload.accessToken)
+      return payload.accessToken
+    } catch {
+      useSessionStore.getState().logout()
+      return null
+    }
+  }
+
+  if (inflight) return inflight
+  const locked = (async () =>
+    navigator.locks ? await navigator.locks.request("auth-refresh", run) : run())()
+  inflight = locked.finally(() => {
+    inflight = null
+  })
+  return inflight
+}
+
+/**
+ * fetch with the bearer token from the store. A 401 on an authenticated call
+ * gets one refresh and one retry; the second answer is final either way.
+ */
+async function authedFetch(url: string | URL, init: RequestInit, auth: boolean): Promise<Response> {
+  const send = (token: string | null) => {
+    const headers = { ...(init.headers as Record<string, string>) }
+    if (auth && token) headers.Authorization = `Bearer ${token}`
+    return fetch(url, { ...init, headers, credentials: "include" })
+  }
+
+  const token = useSessionStore.getState().accessToken
+  let response: Response
+  try {
+    response = await send(token)
+    if (response.status === 401 && auth && token) {
+      const fresh = await refreshAccessToken(token)
+      if (fresh) response = await send(fresh)
+    }
+  } catch {
+    throw new ApiError(0, "NETWORK_ERROR", tr("errors.network"))
+  }
+  return response
+}
+
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, auth = true } = options
 
@@ -40,24 +115,19 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
 
   const headers: Record<string, string> = {}
   if (body !== undefined && !isFormData) headers["Content-Type"] = "application/json"
-  if (auth) {
-    const { accessToken } = useSessionStore.getState()
-    if (accessToken) headers.Authorization = `Bearer ${accessToken}`
-  }
 
-  let response: Response
-  try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+  // credentials: "include" carries the HttpOnly refresh cookie. The backend
+  // echoes the exact origin rather than "*", which is what makes credentialed
+  // CORS legal.
+  const response = await authedFetch(
+    `${API_BASE_URL}${path}`,
+    {
       method,
       headers,
-      // Carries the HttpOnly refresh cookie. The backend echoes the exact
-      // origin rather than "*", which is what makes credentialed CORS legal.
-      credentials: "include",
       body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
-    })
-  } catch {
-    throw new ApiError(0, "NETWORK_ERROR", tr("errors.network"))
-  }
+    },
+    auth,
+  )
 
   if (response.status === 204) return undefined as T
 
@@ -90,23 +160,15 @@ export async function requestBlob(
   options: { method?: "GET" | "POST"; body?: unknown } = {},
 ): Promise<Blob> {
   const { method = "GET", body } = options
-  const { accessToken } = useSessionStore.getState()
 
   const headers: Record<string, string> = {}
-  if (accessToken) headers.Authorization = `Bearer ${accessToken}`
   if (body !== undefined) headers["Content-Type"] = "application/json"
 
-  let response: Response
-  try {
-    response = await fetch(new URL(path, API_BASE_URL), {
-      method,
-      headers,
-      credentials: "include",
-      body: body === undefined ? undefined : JSON.stringify(body),
-    })
-  } catch {
-    throw new ApiError(0, "NETWORK_ERROR", tr("errors.network"))
-  }
+  const response = await authedFetch(
+    new URL(path, API_BASE_URL),
+    { method, headers, body: body === undefined ? undefined : JSON.stringify(body) },
+    true,
+  )
 
   if (!response.ok) {
     throw new ApiError(response.status, "UNKNOWN_ERROR", tr("errors.fileLoad"))

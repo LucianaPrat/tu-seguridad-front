@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { API_BASE_URL, ApiError, request } from "@/lib/http"
 import { mockFetchNetworkError, mockFetchSequence } from "@/test/mockFetch"
 import { useSessionStore } from "@/stores/sessionStore"
@@ -102,5 +102,52 @@ describe("request", () => {
     mockFetchSequence([{ status: 204 }])
 
     await expect(request("/auth/logout", { method: "POST", auth: false })).resolves.toBeUndefined()
+  })
+})
+
+describe("401 refresh", () => {
+  beforeEach(() => {
+    useSessionStore.setState({ accessToken: "old", isLoggedIn: true })
+  })
+
+  it("refreshes once and retries with the new token", async () => {
+    const fetchMock = mockFetchSequence([
+      { status: 401, body: { code: "UNAUTHORIZED", message: "Invalid or expired token" } },
+      { body: { accessToken: "new" } },
+      { body: { ok: true } },
+    ])
+
+    await expect(request("/cameras")).resolves.toEqual({ ok: true })
+
+    expect(fetchMock.mock.calls[1][0]).toBe(`${API_BASE_URL}/auth/refresh`)
+    const [, retry] = fetchMock.mock.calls[2] as [string, RequestInit]
+    expect((retry.headers as Record<string, string>).Authorization).toBe("Bearer new")
+    expect(useSessionStore.getState().accessToken).toBe("new")
+  })
+
+  it("shares one refresh between concurrent 401s", async () => {
+    const unauthorized = () =>
+      new Response(JSON.stringify({ code: "UNAUTHORIZED" }), { status: 401 })
+    const fetchMock = vi.fn(async (url: string, init: RequestInit) => {
+      if (url.endsWith("/auth/refresh")) return new Response(JSON.stringify({ accessToken: "new" }))
+      const auth = (init.headers as Record<string, string>).Authorization
+      return auth === "Bearer new" ? new Response(JSON.stringify({ ok: true })) : unauthorized()
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await Promise.all([request("/a"), request("/b"), request("/c")])
+
+    const refreshes = fetchMock.mock.calls.filter(([url]) => url.endsWith("/auth/refresh"))
+    expect(refreshes).toHaveLength(1)
+  })
+
+  it("logs out when the refresh fails", async () => {
+    mockFetchSequence([
+      { status: 401, body: { code: "UNAUTHORIZED", message: "Invalid or expired token" } },
+      { status: 401, body: { code: "UNAUTHORIZED" } },
+    ])
+
+    await expect(request("/cameras")).rejects.toMatchObject({ status: 401 })
+    expect(useSessionStore.getState()).toMatchObject({ accessToken: null, isLoggedIn: false })
   })
 })
