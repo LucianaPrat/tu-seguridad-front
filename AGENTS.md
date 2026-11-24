@@ -225,8 +225,10 @@ an HttpOnly cookie the backend sets on `/auth/login` and `/auth/refresh`, so JS
 never touches it — that is deliberate, do not move tokens to localStorage.
 `AuthGate` in `App.tsx` holds the routes until the boot-time refresh settles.
 
-There is no 401 auto-refresh interceptor yet. The access token lives 15
-minutes, so add one before any page starts consuming protected endpoints.
+A 401 on an authenticated call triggers one single-flight refresh and one retry
+(`refreshAccessToken` in `lib/http.ts`); a failed refresh logs out. Access token
+lives 15 minutes. HLS segments in `LiveThumbnail` do not retry — they pick up the
+new token on the next request.
 
 ## Tests
 
