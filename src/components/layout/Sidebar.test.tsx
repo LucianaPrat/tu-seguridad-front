@@ -63,4 +63,28 @@ describe("SidebarContent", () => {
     expect(screen.getByText("Grabaciones")).toBeInTheDocument()
     expect(screen.getByText("Notificaciones")).toBeInTheDocument()
   })
+
+  it("shows Estadísticas only to an admin", () => {
+    useSessionStore.setState({ user: meResponse() })
+    const { unmount } = renderWithProviders(<SidebarContent />)
+    expect(screen.getByRole("link", { name: "Estadísticas" })).toHaveAttribute("href", "/stats")
+    unmount()
+
+    useSessionStore.setState({
+      user: meResponse({
+        currentSpace: currentSpace({ role: "collaborator", menuAccess: ["members"] }),
+      }),
+    })
+    renderWithProviders(<SidebarContent />)
+    expect(screen.queryByText("Estadísticas")).toBeNull()
+  })
+
+  it("keeps the account section outside the main nav", () => {
+    useSessionStore.setState({ user: meResponse() })
+    renderWithProviders(<SidebarContent />)
+    const nav = screen.getByRole("navigation")
+    expect(nav).not.toContainElement(screen.getByText("Cuenta"))
+    expect(nav).not.toContainElement(screen.getByRole("link", { name: "Perfil" }))
+    expect(nav).not.toContainElement(screen.getByRole("button", { name: "Cerrar sesión" }))
+  })
 })
