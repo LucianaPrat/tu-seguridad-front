@@ -105,6 +105,19 @@ export const addMemberSchema = z.object({
 })
 export type AddMemberValues = z.infer<typeof addMemberSchema>
 
+/**
+ * Personal data inside MemberEditSheet. Empty stays allowed here: someone who
+ * never finished their profile has empty names/phone, and only changed fields
+ * are sent (the sheet rejects a changed-to-empty one itself).
+ */
+export const memberProfileSchema = z.object({
+  firstName: z.string().trim(),
+  lastName: z.string().trim(),
+  email: emailField,
+  phone: phoneField.or(z.literal("")),
+})
+export type MemberProfileValues = z.infer<typeof memberProfileSchema>
+
 /** POST /spaces and PATCH /spaces/current: trimmed, 1..80 (SpaceNameDto). */
 export const spaceNameSchema = z.object({ name: required().max(80, "validation.max80") })
 export type SpaceNameValues = z.infer<typeof spaceNameSchema>
@@ -294,6 +307,8 @@ export const memberResponseSchema = z.object({
   /** Only when the caller is an admin. */
   menuAccess: z.array(z.enum(MENU_KEYS)).optional(),
   cameraIds: z.array(z.string()).optional(),
+  /** False when the user belongs to other spaces: only they can edit their data. */
+  profileEditable: z.boolean().optional().default(false),
 })
 export type MemberResponse = z.infer<typeof memberResponseSchema>
 
