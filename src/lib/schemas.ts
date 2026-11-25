@@ -303,6 +303,20 @@ export const memberListResponseSchema = z.object({
 })
 export type MemberListResponse = z.infer<typeof memberListResponseSchema>
 
+/* GET /members/activity — admin only. Dates are "YYYY-MM-DD" in `timezone`; rows are non-zero only. */
+export const memberActivityResponseSchema = z.object({
+  timezone: z.string(),
+  days: z.string().array(),
+  accessesByDay: z.object({ date: z.string(), userId: z.number(), sessions: z.number() }).array(),
+  watchByDay: z.object({ date: z.string(), cameraId: z.string(), minutes: z.number() }).array(),
+  watchByUserCamera: z
+    .object({ userId: z.number(), cameraId: z.string(), minutes: z.number() })
+    .array(),
+  lastAccess: z.object({ userId: z.number(), at: z.string() }).array(),
+  previous: z.object({ sessions: z.number(), activeUsers: z.number(), watchMinutes: z.number() }),
+})
+export type MemberActivityResponse = z.infer<typeof memberActivityResponseSchema>
+
 /*
  * GET/PUT /alert-routings. Always the full alert type x channel grid, six
  * cells, even for a space that never wrote any of them. English on both axes;
