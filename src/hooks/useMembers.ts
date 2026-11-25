@@ -1,12 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as membersApi from "@/api/members"
-import type { UpdateMemberPayload } from "@/api/members"
+import type { ActivityDays, UpdateMemberPayload } from "@/api/members"
 import { useCan } from "@/lib/permissions"
 import { useSessionStore } from "@/stores/sessionStore"
-import type { MemberListResponse, MemberResponse } from "@/lib/schemas"
+import type { MemberActivityResponse, MemberListResponse, MemberResponse } from "@/lib/schemas"
 
 export const memberKeys = {
   list: ["members", "list"] as const,
+  activity: (days: ActivityDays) => ["members", "activity", days] as const,
 }
 
 /** Disabled while logged out or without the members section. */
@@ -19,6 +20,20 @@ export function useMembers() {
     queryFn: membersApi.listMembers,
     // GET /members needs the members section; Channels and Events read the roster too.
     enabled: isLoggedIn && canView("members"),
+  })
+}
+
+/** Admin only on the back, so disabled for everyone else. */
+export function useMemberActivity(days: ActivityDays) {
+  const isLoggedIn = useSessionStore((state) => state.isLoggedIn)
+  const { isAdmin } = useCan()
+
+  return useQuery<MemberActivityResponse>({
+    queryKey: memberKeys.activity(days),
+    queryFn: () => membersApi.getMemberActivity(days),
+    enabled: isLoggedIn && isAdmin,
+    // Switching the range keeps the old charts on screen (dimmed) instead of a skeleton.
+    placeholderData: keepPreviousData,
   })
 }
 

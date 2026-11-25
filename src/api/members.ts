@@ -1,8 +1,17 @@
 import { request } from "@/lib/http"
-import { memberListResponseSchema, memberResponseSchema } from "@/lib/schemas"
+import {
+  memberActivityResponseSchema,
+  memberListResponseSchema,
+  memberResponseSchema,
+} from "@/lib/schemas"
 import type { Locale } from "@/lib/i18n"
 import type { MenuKey } from "@/lib/permissions"
-import type { MemberListResponse, MemberResponse, SpaceRole } from "@/lib/schemas"
+import type {
+  MemberActivityResponse,
+  MemberListResponse,
+  MemberResponse,
+  SpaceRole,
+} from "@/lib/schemas"
 
 /**
  * The whole roster of the caller's space, inactive members included — the
@@ -61,4 +70,13 @@ export async function updateMember(
 /** Admin only. Removing yourself is a 409. */
 export async function removeMember(userId: number): Promise<void> {
   await request<void>(`/members/${userId}`, { method: "DELETE" })
+}
+
+export type ActivityDays = 7 | 30 | 90
+
+/** Admin only. Sessions and streaming minutes per day, plus the previous period's totals. */
+export async function getMemberActivity(days: ActivityDays): Promise<MemberActivityResponse> {
+  return memberActivityResponseSchema.parse(
+    await request<unknown>(`/members/activity?days=${days}`),
+  )
 }
