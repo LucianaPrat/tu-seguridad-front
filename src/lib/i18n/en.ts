@@ -73,6 +73,15 @@ export const en: Record<keyof typeof es, string> = {
   "badge.unconfigured": "Not configured",
   "badge.active": "Active",
   "badge.inactive": "Inactive",
+  "members.add.title": "Add member",
+  "members.add.intro":
+    "Add the person straight to the space, no invitation sent. You provide their email and password.",
+  "members.add.hint":
+    "If the email already has an account, it is added to the space without changing its password or details.",
+  "members.add.submit": "Add member",
+  "members.add.error": "We couldn't add the member",
+  "members.add.done": "Member added",
+  "members.add.doneHint": "They can now sign in to the space with the assigned permissions.",
   "members.invite.title": "Invite member",
   "members.invite.sent": "Invitation sent",
   "members.invite.sentHint":

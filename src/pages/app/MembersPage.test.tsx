@@ -115,6 +115,7 @@ describe("MembersPage", () => {
     ).not.toBeInTheDocument()
     expect(screen.queryByRole("columnheader", { name: "Acceso" })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: /Invitar miembro/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /Agregar miembro/ })).not.toBeInTheDocument()
   })
 
   it("never asks for the invitations without the members section", async () => {
@@ -147,6 +148,7 @@ describe("MembersPage", () => {
     expect(await screen.findByText("Luciana García")).toBeInTheDocument()
     // POST /invitations is admin-only: a button that can only 403 is worse than none.
     expect(screen.queryByRole("button", { name: /Invitar miembro/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /Agregar miembro/ })).not.toBeInTheDocument()
   })
 
   const OTHER = member({
