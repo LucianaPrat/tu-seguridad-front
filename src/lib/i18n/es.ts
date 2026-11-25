@@ -70,6 +70,15 @@ export const es = {
   "badge.unconfigured": "Sin configurar",
   "badge.active": "Activo",
   "badge.inactive": "Inactivo",
+  "members.add.title": "Agregar miembro",
+  "members.add.intro":
+    "Agregá a la persona directamente al espacio, sin enviar invitación. Le pasás vos el email y la contraseña.",
+  "members.add.hint":
+    "Si el email ya tiene una cuenta, se agrega al espacio sin cambiar su contraseña ni sus datos.",
+  "members.add.submit": "Agregar miembro",
+  "members.add.error": "No pudimos agregar al miembro",
+  "members.add.done": "Miembro agregado",
+  "members.add.doneHint": "Ya puede ingresar al espacio con los permisos asignados.",
   "members.invite.title": "Invitar miembro",
   "members.invite.sent": "Invitación enviada",
   "members.invite.sentHint":
