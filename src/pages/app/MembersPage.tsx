@@ -4,6 +4,7 @@ import PageHeader from "@/components/common/PageHeader"
 import Button from "@/components/common/Button"
 import Badge from "@/components/common/Badge"
 import InviteModal from "@/components/common/InviteModal"
+import AddMemberModal from "@/components/common/AddMemberModal"
 import MemberEditSheet from "@/components/members/MemberEditSheet"
 import { useMembers } from "@/hooks/useMembers"
 import {
@@ -50,6 +51,7 @@ const LABELLED =
 export default function MembersPage() {
   const { t, locale } = useT()
   const [inviteOpen, setInviteOpen] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
   // Inviting is admin-only on the backend, so a member gets no button rather
   // than a 403 behind one.
   const { isAdmin } = useCan()
@@ -74,9 +76,18 @@ export default function MembersPage() {
         }
         action={
           isAdmin ? (
-            <Button icon={<UserPlus size={14} />} onClick={() => setInviteOpen(true)}>
-              {t("members.invite.title")}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                icon={<UserPlus size={14} />}
+                onClick={() => setAddOpen(true)}
+              >
+                {t("members.add.title")}
+              </Button>
+              <Button icon={<UserPlus size={14} />} onClick={() => setInviteOpen(true)}>
+                {t("members.invite.title")}
+              </Button>
+            </div>
           ) : undefined
         }
       />
@@ -281,6 +292,7 @@ export default function MembersPage() {
       </div>
 
       <InviteModal open={inviteOpen} onClose={() => setInviteOpen(false)} />
+      <AddMemberModal open={addOpen} onClose={() => setAddOpen(false)} />
       {editing && <MemberEditSheet member={editing} onClose={() => setEditing(null)} />}
     </AppShell>
   )

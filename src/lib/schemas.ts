@@ -95,6 +95,16 @@ export type DVRFormValues = z.infer<typeof dvrSchema>
 export const inviteSchema = z.object({ email: emailField })
 export type InviteValues = z.infer<typeof inviteSchema>
 
+/** POST /members: same profile rules as registration, minus the repeat field. */
+export const addMemberSchema = z.object({
+  email: emailField,
+  firstName: required(),
+  lastName: required(),
+  phone: phoneField,
+  password: z.string().min(12, "validation.min12"),
+})
+export type AddMemberValues = z.infer<typeof addMemberSchema>
+
 /** POST /spaces and PATCH /spaces/current: trimmed, 1..80 (SpaceNameDto). */
 export const spaceNameSchema = z.object({ name: required().max(80, "validation.max80") })
 export type SpaceNameValues = z.infer<typeof spaceNameSchema>

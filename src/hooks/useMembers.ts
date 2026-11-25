@@ -74,6 +74,15 @@ export function useSetMemberAlerts() {
   })
 }
 
+export function useCreateMember() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: membersApi.createMember,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: memberKeys.list }),
+  })
+}
+
 export function useUpdateMember() {
   const queryClient = useQueryClient()
 

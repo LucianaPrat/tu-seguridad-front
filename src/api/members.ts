@@ -1,5 +1,6 @@
 import { request } from "@/lib/http"
 import { memberListResponseSchema, memberResponseSchema } from "@/lib/schemas"
+import type { Locale } from "@/lib/i18n"
 import type { MenuKey } from "@/lib/permissions"
 import type { MemberListResponse, MemberResponse, SpaceRole } from "@/lib/schemas"
 
@@ -10,6 +11,31 @@ import type { MemberListResponse, MemberResponse, SpaceRole } from "@/lib/schema
  */
 export async function listMembers(): Promise<MemberListResponse> {
   return memberListResponseSchema.parse(await request<unknown>("/members"))
+}
+
+export interface CreateMemberPayload {
+  email: string
+  role: SpaceRole
+  /** Left out: the back applies the role defaults. */
+  menuAccess?: MenuKey[]
+  /** Left out: no cameras. */
+  cameraIds?: string[]
+  locale?: Locale
+  /** Required by the back only when the email has no account yet; otherwise ignored. */
+  firstName?: string
+  lastName?: string
+  phone?: string
+  password?: string
+}
+
+/**
+ * Admin only. Adds the member straight to the space, no invitation email. A 409
+ * (already a member / pending invitation) and a 400 carry a message for the operator.
+ */
+export async function createMember(payload: CreateMemberPayload): Promise<MemberResponse> {
+  return memberResponseSchema.parse(
+    await request<unknown>("/members", { method: "POST", body: payload }),
+  )
 }
 
 export interface UpdateMemberPayload {
