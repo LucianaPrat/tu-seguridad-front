@@ -5,7 +5,6 @@ import Button from "@/components/common/Button"
 import Badge from "@/components/common/Badge"
 import InviteModal from "@/components/common/InviteModal"
 import AddMemberModal from "@/components/common/AddMemberModal"
-import MemberActivityCharts from "@/components/members/MemberActivityCharts"
 import MemberEditSheet from "@/components/members/MemberEditSheet"
 import { useMembers } from "@/hooks/useMembers"
 import {
@@ -291,8 +290,6 @@ export default function MembersPage() {
           </table>
         )}
       </div>
-
-      {isAdmin && <MemberActivityCharts />}
 
       <InviteModal open={inviteOpen} onClose={() => setInviteOpen(false)} />
       <AddMemberModal open={addOpen} onClose={() => setAddOpen(false)} />

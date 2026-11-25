@@ -31,6 +31,7 @@ interface PhoneFieldProps {
   hint?: string
   name?: string
   placeholder?: string
+  disabled?: boolean
 }
 
 const COUNTRIES = getCountries()
@@ -59,6 +60,7 @@ export default function PhoneField({
   hint,
   name,
   placeholder,
+  disabled,
 }: PhoneFieldProps) {
   const { t, locale } = useT()
   const [country, setCountry] = useState<CountryCode>(() => detectCountry(value) ?? "UY")
@@ -82,9 +84,10 @@ export default function PhoneField({
             <button
               type="button"
               role="combobox"
+              disabled={disabled}
               aria-expanded={open}
               aria-label={t("phone.country")}
-              className="flex shrink-0 items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-2.5 text-sm transition-colors hover:border-ring/40 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30"
+              className="flex shrink-0 items-center gap-1.5 disabled:opacity-50 rounded-lg border border-input bg-card px-3 py-2.5 text-sm transition-colors hover:border-ring/40 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30"
             >
               <span>{flag(country)}</span>
               <span>+{getCountryCallingCode(country)}</span>
@@ -128,6 +131,7 @@ export default function PhoneField({
           type="tel"
           value={text}
           placeholder={placeholder}
+          disabled={disabled}
           aria-invalid={Boolean(error)}
           aria-describedby={describedBy}
           className="h-auto min-w-0 flex-1 bg-card py-2.5"

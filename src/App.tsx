@@ -33,6 +33,7 @@ import CameraLivePage from "@/pages/app/CameraLivePage"
 import EventsPage from "@/pages/app/EventsPage"
 import EventDetailPage from "@/pages/app/EventDetailPage"
 import MembersPage from "@/pages/app/MembersPage"
+import StatsPage from "@/pages/app/StatsPage"
 import CommChannelsPage from "@/pages/app/CommChannelsPage"
 import ProfilePage from "@/pages/app/ProfilePage"
 import HelpChatPage from "@/pages/app/HelpChatPage"
@@ -115,6 +116,14 @@ function SpaceNotConfigured() {
 function RequireMenu({ menu, children }: { menu: MenuKey; children: ReactNode }) {
   const { canView } = useCan()
   if (canView(menu)) return <>{children}</>
+  const first = MENU_KEYS.find(canView)
+  return <Navigate to={first ? MENU_ROUTES[first] : "/profile"} replace />
+}
+
+/** Admin-only screens that are not a MenuKey (stats). Same fallback as RequireMenu. */
+function RequireAdmin({ children }: { children: ReactNode }) {
+  const { isAdmin, canView } = useCan()
+  if (isAdmin) return <>{children}</>
   const first = MENU_KEYS.find(canView)
   return <Navigate to={first ? MENU_ROUTES[first] : "/profile"} replace />
 }
@@ -235,6 +244,16 @@ export function AppRoutes() {
             <RequireMenu menu="members">
               <MembersPage />
             </RequireMenu>
+          </RequireDVR>
+        }
+      />
+      <Route
+        path="/stats"
+        element={
+          <RequireDVR>
+            <RequireAdmin>
+              <StatsPage />
+            </RequireAdmin>
           </RequireDVR>
         }
       />

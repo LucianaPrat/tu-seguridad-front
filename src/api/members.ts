@@ -52,6 +52,11 @@ export interface UpdateMemberPayload {
   menuAccess?: MenuKey[]
   cameraIds?: string[]
   receiveAlerts?: boolean
+  /** Profile fields: 403 if the user belongs to other spaces; a new email logs them out everywhere. */
+  firstName?: string
+  lastName?: string
+  phone?: string
+  email?: string
 }
 
 /**

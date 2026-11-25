@@ -9,6 +9,7 @@ import {
   User,
   Users,
   Bell,
+  BarChart3,
   LogOut,
   ChevronRight,
   MessageCircle,
@@ -30,6 +31,8 @@ interface NavItem {
   tour?: string
   /** Section gate; absent = always visible (profile, help, placeholders). */
   menu?: MenuKey
+  /** Admins only, and not a MenuKey (stats). */
+  adminOnly?: true
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -79,6 +82,13 @@ const SERVICE_ITEMS: NavItem[] = [
     tour: "nav-members",
     menu: "members",
   },
+  {
+    label: "nav.stats",
+    icon: <BarChart3 size={18} />,
+    to: "/stats",
+    tour: "nav-stats",
+    adminOnly: true,
+  },
 ]
 
 const ACCOUNT_ITEMS: NavItem[] = [
@@ -87,10 +97,7 @@ const ACCOUNT_ITEMS: NavItem[] = [
   // Help hidden for now; the /help route stays. Restore with onboarding step 15.
 ]
 
-const SECTIONS: [TranslationKey, NavItem[]][] = [
-  ["nav.services", SERVICE_ITEMS],
-  ["nav.account", ACCOUNT_ITEMS],
-]
+const SECTIONS: [TranslationKey, NavItem[]][] = [["nav.services", SERVICE_ITEMS]]
 
 /** A row is a tap target before it is a link: 44px is the phone floor. */
 const ROW = "flex items-center gap-3 px-3 py-2.5 min-h-11 rounded-lg text-sm font-medium"
@@ -138,9 +145,14 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
  */
 export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useT()
-  const { canView, showNotImplemented } = useCan()
+  const { canView, isAdmin, showNotImplemented } = useCan()
   const visible = (items: NavItem[]) =>
-    items.filter((i) => (!i.menu || canView(i.menu)) && (!i.disabled || showNotImplemented))
+    items.filter(
+      (i) =>
+        (!i.menu || canView(i.menu)) &&
+        (!i.adminOnly || isAdmin) &&
+        (!i.disabled || showNotImplemented),
+    )
   const { mutate: logout } = useLogout()
   const navigate = useNavigate()
 
@@ -183,12 +195,23 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             </div>
           )
         })}
+      </nav>
 
+      {/* Account: outside the flex-1 nav so it stays pinned above the support card. */}
+      <div className="px-3">
+        <div className="pt-4 pb-1">
+          <p className="px-3 text-white/40 text-xs font-semibold uppercase tracking-wider">
+            {t("nav.account")}
+          </p>
+        </div>
+        {visible(ACCOUNT_ITEMS).map((item) => (
+          <NavItemLink key={item.label} item={item} onNavigate={onNavigate} />
+        ))}
         <button onClick={handleLogout} className={`w-full ${ROW} ${ROW_IDLE}`}>
           <LogOut size={18} className="shrink-0" />
           {t("nav.logout")}
         </button>
-      </nav>
+      </div>
 
       {/* Support card */}
       <div className="m-3 mt-4 p-3 rounded-xl bg-white/10 border border-white/10">
